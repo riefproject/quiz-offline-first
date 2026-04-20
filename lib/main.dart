@@ -1,14 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:py_4/features/auth/login.dart';
+import 'package:py_4/features/quiz/quiz_list_page.dart';
 
 // Impor dari core module
 import 'theme/theme_config.dart';
 import 'theme/colors_config.dart';
 
-// Impor dari presentation module
-import 'components/pulse_button.dart';
-import 'components/pulse_card.dart';
-import 'components/pulse_input.dart';
+// Impor dari reusable widgets module
+import 'widgets/components/app_button.dart';
+import 'widgets/components/app_card.dart';
+import 'widgets/components/app_input.dart';
 
 void main() {
   runApp(const QuizApp());
@@ -20,9 +21,12 @@ class QuizApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Intelligent Pulse',
+      title: 'Intelligent Quiz',
       theme: ThemeConfig.lightTheme,
-      home: const LoginPage(),
+      home: const QuizListPage(),
+      routes: {
+        '/login': (_) => const LoginPage(),
+      },
       debugShowCheckedModeBanner: false,
     );
   }
@@ -38,12 +42,12 @@ class StyleGuideShowcasePage extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('Intelligent Pulse', style: textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.bold)),
+        title: Text('Intelligent Quiz', style: textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.bold)),
         backgroundColor: colors.surfaceLowest,
         elevation: 0,
         scrolledUnderElevation: 0,
       ),
-      floatingActionButton: PulseFAB(
+      floatingActionButton: AppFab(
         icon: Icons.bolt,
         onPressed: () {},
       ),
@@ -60,7 +64,7 @@ class StyleGuideShowcasePage extends StatelessWidget {
           const _SectionHeader('02. Typography'),
           Text('Intelligent', style: textTheme.displayLarge),
           const SizedBox(height: 16),
-          Text('The Modern Pulse of Quizzes', style: textTheme.headlineLarge),
+          Text('The Modern Quiz Experience', style: textTheme.headlineLarge),
           const SizedBox(height: 16),
           Text('SYSTEM ARCHITECTURE', style: textTheme.labelSmall),
 
@@ -69,20 +73,20 @@ class StyleGuideShowcasePage extends StatelessWidget {
             spacing: 16,
             runSpacing: 16,
             children: [
-              PulseButton.primary(label: 'Primary Action', onPressed: () {}),
-              PulseButton.container(label: 'Container', onPressed: () {}),
-              PulseButton.outlined(label: 'Outlined', onPressed: () {}),
-              PulseButton.text(label: 'Text Button', onPressed: () {}),
+              AppButton.primary(label: 'Primary Action', onPressed: () {}),
+              AppButton.container(label: 'Container', onPressed: () {}),
+              AppButton.outlined(label: 'Outlined', onPressed: () {}),
+              AppButton.text(label: 'Text Button', onPressed: () {}),
             ],
           ),
 
           const _SectionHeader('04. Controls'),
-          const PulseTextField(
+          const AppTextField(
             label: 'Email Address',
             hintText: 'name@example.com',
           ),
           const SizedBox(height: 16),
-          PulseCard(
+          AppCard(
             surface: CardSurface.low,
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -105,7 +109,7 @@ class StyleGuideShowcasePage extends StatelessWidget {
           ),
 
           const _SectionHeader('05. Cards'),
-          PulseCard(
+          AppCard(
             surface: CardSurface.primary,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,

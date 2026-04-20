@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
+
 import '../../theme/colors_config.dart';
 
-/// Input teks standar (Email, Username, dll)
-class PulseTextField extends StatelessWidget {
+class AppTextField extends StatelessWidget {
   final String label;
   final String hintText;
   final TextEditingController? controller;
   final TextInputType keyboardType;
 
-  const PulseTextField({
+  const AppTextField({
     super.key,
     required this.label,
     required this.hintText,
@@ -40,15 +40,12 @@ class PulseTextField extends StatelessWidget {
   }
 }
 
-/// Input khusus Password.
-/// Diisolasi menjadi StatefulWidget agar toggle visibilitas TIDAK memicu 
-/// rebuild pada halaman utama (Parent Widget). Ini adalah optimasi performa.
-class PulsePasswordField extends StatefulWidget {
+class AppPasswordField extends StatefulWidget {
   final String label;
   final String hintText;
   final TextEditingController? controller;
 
-  const PulsePasswordField({
+  const AppPasswordField({
     super.key,
     this.label = 'Password',
     this.hintText = '••••••••',
@@ -56,10 +53,10 @@ class PulsePasswordField extends StatefulWidget {
   });
 
   @override
-  State<PulsePasswordField> createState() => _PulsePasswordFieldState();
+  State<AppPasswordField> createState() => _AppPasswordFieldState();
 }
 
-class _PulsePasswordFieldState extends State<PulsePasswordField> {
+class _AppPasswordFieldState extends State<AppPasswordField> {
   bool _obscureText = true;
 
   void _toggleVisibility() {
@@ -78,7 +75,7 @@ class _PulsePasswordFieldState extends State<PulsePasswordField> {
       children: [
         Text(
           widget.label,
-          style: textTheme.labelSmall?.copyWith(color: colors.textOnSurface.withValues(alpha:0.6)),
+          style: textTheme.labelSmall?.copyWith(color: colors.textOnSurface.withValues(alpha: 0.6)),
         ),
         const SizedBox(height: 8),
         TextField(
@@ -88,24 +85,27 @@ class _PulsePasswordFieldState extends State<PulsePasswordField> {
             suffixIcon: IconButton(
               icon: Icon(
                 _obscureText ? Icons.visibility_outlined : Icons.visibility_off_outlined,
-                color: colors.textOnSurface.withValues(alpha:0.5),
+                color: colors.textOnSurface.withValues(alpha: 0.5),
               ),
               onPressed: _toggleVisibility,
               splashRadius: 20,
             ),
           ),
-          style: TextStyle(color: colors.textOnSurface, fontWeight: FontWeight.w500, letterSpacing: _obscureText ? 2.0 : 0.0),
+          style: TextStyle(
+            color: colors.textOnSurface,
+            fontWeight: FontWeight.w500,
+            letterSpacing: _obscureText ? 2.0 : 0.0,
+          ),
         ),
       ],
     );
   }
 }
 
-/// Helper method agar dekorasi tetap DRY (Don't Repeat Yourself)
 InputDecoration _buildInputDecoration(ColorsConfig colors, String hintText) {
   return InputDecoration(
     hintText: hintText,
-    hintStyle: TextStyle(color: colors.textOnSurface.withValues(alpha:0.3), letterSpacing: 0),
+    hintStyle: TextStyle(color: colors.textOnSurface.withValues(alpha: 0.3), letterSpacing: 0),
     filled: true,
     fillColor: colors.surfaceLow,
     contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),

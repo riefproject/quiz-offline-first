@@ -1,14 +1,15 @@
 import 'package:flutter/material.dart';
+
 import '../../theme/colors_config.dart';
 
 enum CardSurface { lowest, low, high, primary }
 
-class PulseCard extends StatelessWidget {
+class AppCard extends StatelessWidget {
   final Widget child;
   final CardSurface surface;
   final EdgeInsetsGeometry padding;
 
-  const PulseCard({
+  const AppCard({
     super.key,
     required this.child,
     this.surface = CardSurface.lowest,
@@ -18,13 +19,21 @@ class PulseCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).extension<ColorsConfig>()!;
-    
+
     Color bgColor;
-    switch(surface) {
-      case CardSurface.lowest: bgColor = colors.surfaceLowest; break;
-      case CardSurface.low: bgColor = colors.surfaceLow; break;
-      case CardSurface.high: bgColor = colors.surfaceHigh; break;
-      case CardSurface.primary: bgColor = colors.primary; break;
+    switch (surface) {
+      case CardSurface.lowest:
+        bgColor = colors.surfaceLowest;
+        break;
+      case CardSurface.low:
+        bgColor = colors.surfaceLow;
+        break;
+      case CardSurface.high:
+        bgColor = colors.surfaceHigh;
+        break;
+      case CardSurface.primary:
+        bgColor = colors.primary;
+        break;
     }
 
     return Container(
@@ -32,7 +41,7 @@ class PulseCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: bgColor,
         borderRadius: BorderRadius.circular(24),
-        boxShadow: surface == CardSurface.lowest 
+        boxShadow: surface == CardSurface.lowest
             ? [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4))]
             : null,
       ),

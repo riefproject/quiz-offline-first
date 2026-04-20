@@ -11,20 +11,19 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:py_4/main.dart';
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
+  testWidgets('shows quiz list layout', (WidgetTester tester) async {
     await tester.pumpWidget(const QuizApp());
+    await tester.pumpAndSettle();
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
+    expect(find.text('Intelligent Pulse'), findsOneWidget);
+    expect(find.text('My Quizzes'), findsOneWidget);
+    expect(find.text('Molecular Biology Basics'), findsOneWidget);
+    expect(find.text('Quizzes'), findsWidgets);
+    expect(find.byIcon(Icons.menu_rounded), findsNothing);
 
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
+    await tester.drag(find.byType(ListView), const Offset(0, -1200));
+    await tester.pumpAndSettle();
 
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+    expect(find.text('Create New Quiz'), findsOneWidget);
   });
 }

@@ -1,35 +1,36 @@
 import 'package:flutter/material.dart';
-import '../theme/colors_config.dart';
+
+import '../../theme/colors_config.dart';
 
 enum ButtonVariant { primary, container, outlined, text }
 
-class PulseButton extends StatelessWidget {
+class AppButton extends StatelessWidget {
   final String label;
   final VoidCallback? onPressed;
   final ButtonVariant variant;
 
-  const PulseButton._({
+  const AppButton._({
     required this.label,
     required this.onPressed,
     required this.variant,
   });
 
-  factory PulseButton.primary({required String label, VoidCallback? onPressed}) =>
-      PulseButton._(label: label, onPressed: onPressed, variant: ButtonVariant.primary);
+  factory AppButton.primary({required String label, VoidCallback? onPressed}) =>
+      AppButton._(label: label, onPressed: onPressed, variant: ButtonVariant.primary);
 
-  factory PulseButton.container({required String label, VoidCallback? onPressed}) =>
-      PulseButton._(label: label, onPressed: onPressed, variant: ButtonVariant.container);
+  factory AppButton.container({required String label, VoidCallback? onPressed}) =>
+      AppButton._(label: label, onPressed: onPressed, variant: ButtonVariant.container);
 
-  factory PulseButton.outlined({required String label, VoidCallback? onPressed}) =>
-      PulseButton._(label: label, onPressed: onPressed, variant: ButtonVariant.outlined);
+  factory AppButton.outlined({required String label, VoidCallback? onPressed}) =>
+      AppButton._(label: label, onPressed: onPressed, variant: ButtonVariant.outlined);
 
-  factory PulseButton.text({required String label, VoidCallback? onPressed}) =>
-      PulseButton._(label: label, onPressed: onPressed, variant: ButtonVariant.text);
+  factory AppButton.text({required String label, VoidCallback? onPressed}) =>
+      AppButton._(label: label, onPressed: onPressed, variant: ButtonVariant.text);
 
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).extension<ColorsConfig>()!;
-    
+
     Color backgroundColor;
     Color foregroundColor;
     BorderSide borderSide = BorderSide.none;
@@ -86,16 +87,16 @@ class PulseButton extends StatelessWidget {
   }
 }
 
-class PulseFAB extends StatelessWidget {
+class AppFab extends StatelessWidget {
   final IconData icon;
   final VoidCallback onPressed;
 
-  const PulseFAB({super.key, required this.icon, required this.onPressed});
+  const AppFab({super.key, required this.icon, required this.onPressed});
 
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).extension<ColorsConfig>()!;
-    
+
     return FloatingActionButton(
       onPressed: onPressed,
       backgroundColor: colors.secondary,
