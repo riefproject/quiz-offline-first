@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:py_4/features/auth/login.dart';
 import 'package:py_4/features/quiz/quiz_list_page.dart';
 
@@ -10,8 +11,15 @@ import 'theme/colors_config.dart';
 import 'widgets/components/app_button.dart';
 import 'widgets/components/app_card.dart';
 import 'widgets/components/app_input.dart';
+import 'services/mongodb_service.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await dotenv.load(fileName: ".env");
+
+  // Inisialisasi koneksi MongoDB saat aplikasi berjalan
+  await MongoDatabase.connect();
+
   runApp(const QuizApp());
 }
 
@@ -21,9 +29,9 @@ class QuizApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Intelligent Quiz',
+      title: 'Pulse Quiz',
       theme: ThemeConfig.lightTheme,
-      home: const QuizListPage(),
+      home: const LoginPage(),
       routes: {
         '/login': (_) => const LoginPage(),
       },

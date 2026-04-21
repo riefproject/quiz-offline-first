@@ -35,15 +35,16 @@ class LoginPage extends StatelessWidget {
               Align(
                 alignment: Alignment.center,
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                  padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
                   decoration: BoxDecoration(
-                    color: colors.primaryContainer,
-                    borderRadius: BorderRadius.circular(100),
+                    color: colors.primary,
+                    borderRadius: BorderRadius.circular(24),
                   ),
                   child: Text(
-                    'KAHOOF!',
+                    'Kahoof!',
                     style: textTheme.headlineLarge?.copyWith(
                       color: colors.textOnPrimary,
+                      fontWeight: FontWeight.w800,
                       fontStyle: FontStyle.italic,
                     ),
                   ),
