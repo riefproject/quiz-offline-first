@@ -12,12 +12,16 @@ import 'widgets/components/app_button.dart';
 import 'widgets/components/app_card.dart';
 import 'widgets/components/app_input.dart';
 import 'services/mongodb_service.dart';
+import 'services/hive_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await dotenv.load(fileName: ".env");
 
-  // Inisialisasi koneksi MongoDB saat aplikasi berjalan
+  // Local Database Initiation (Hive - Offline First)
+  await HiveService.init();
+
+  // Cloud Database Initiation (MongoDB Sync Base)
   await MongoDatabase.connect();
 
   runApp(const QuizApp());

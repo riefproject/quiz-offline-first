@@ -8,21 +8,31 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:py_4/main.dart';
+import 'package:py_4/features/quiz/quiz_list_page.dart';
+import 'package:py_4/theme/theme_config.dart';
 
 void main() {
   testWidgets('shows quiz list layout', (WidgetTester tester) async {
-    await tester.pumpWidget(const QuizApp());
-    await tester.pumpAndSettle();
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: ThemeConfig.lightTheme,
+        home: const QuizListPage(),
+      ),
+    );
+    await tester.pump();
 
-    expect(find.text('Intelligent Pulse'), findsOneWidget);
+    expect(find.text('Intelligent Quiz'), findsOneWidget);
     expect(find.text('My Quizzes'), findsOneWidget);
     expect(find.text('Molecular Biology Basics'), findsOneWidget);
     expect(find.text('Quizzes'), findsWidgets);
     expect(find.byIcon(Icons.menu_rounded), findsNothing);
 
-    await tester.drag(find.byType(ListView), const Offset(0, -1200));
-    await tester.pumpAndSettle();
+    await tester.scrollUntilVisible(
+      find.text('Create New Quiz'),
+      300,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.pump(const Duration(milliseconds: 300));
 
     expect(find.text('Create New Quiz'), findsOneWidget);
   });

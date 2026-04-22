@@ -1,31 +1,35 @@
-class AppUser {
+import 'package:hive/hive.dart';
+
+part 'db_models.g.dart';
+
+@HiveType(typeId: 0)
+class AppUser extends HiveObject {
+  @HiveField(0)
   final String id;
+  @HiveField(1)
   final String namaLengkap;
 
-  AppUser({
-    required this.id,
-    required this.namaLengkap,
-  });
+  AppUser({required this.id, required this.namaLengkap});
 
-  factory AppUser.fromJson(Map<String, dynamic> json) {
-    return AppUser(
-      id: json['_id'] ?? json['id'],
-      namaLengkap: json['nama_lengkap'],
-    );
-  }
-
-  Map<String, dynamic> toJson() {
-    return {
-      'id': id,
-      'nama_lengkap': namaLengkap,
-    };
-  }
+  factory AppUser.fromJson(Map<String, dynamic> json) => AppUser(
+    id: json['_id'] as String,
+    namaLengkap: json['nama_lengkap'] as String,
+  );
+  Map<String, dynamic> toJson() => {
+    '_id': id,
+    'nama_lengkap': namaLengkap,
+  };
 }
 
-class Quiz {
+@HiveType(typeId: 1)
+class Quiz extends HiveObject {
+  @HiveField(0)
   final String id;
+  @HiveField(1)
   final String judul;
+  @HiveField(2)
   final String deskripsi;
+  @HiveField(3)
   final String pembuat;
 
   Quiz({
@@ -35,213 +39,211 @@ class Quiz {
     required this.pembuat,
   });
 
-  factory Quiz.fromJson(Map<String, dynamic> json) {
-    return Quiz(
-      id: json['_id'] ?? json['id'],
-      judul: json['judul'],
-      deskripsi: json['deskripsi'],
-      pembuat: json['pembuat'],
-    );
-  }
-
-  Map<String, dynamic> toJson() {
-    return {
-      'id': id,
-      'judul': judul,
-      'deskripsi': deskripsi,
-      'pembuat': pembuat,
-    };
-  }
+  factory Quiz.fromJson(Map<String, dynamic> json) => Quiz(
+    id: json['_id'] as String,
+    judul: json['judul'] as String,
+    deskripsi: json['deskripsi'] as String,
+    pembuat: json['pembuat'] as String,
+  );
+  Map<String, dynamic> toJson() => {
+    '_id': id,
+    'judul': judul,
+    'deskripsi': deskripsi,
+    'pembuat': pembuat,
+  };
 }
 
-class Soal {
-  final String idKuis;
-  final String idSoal;
-  final String teks;
+@HiveType(typeId: 2)
+class Soal extends HiveObject {
+  @HiveField(0)
+  final String id;
+  @HiveField(1)
+  final String idQuiz;
+  @HiveField(2)
+  final String teksSoal;
+  @HiveField(3)
+  final List<String> idPilihan;
+  @HiveField(4)
+  final String idJawabanBenar;
 
   Soal({
-    required this.idKuis,
-    required this.idSoal,
-    required this.teks,
-  });
-
-  factory Soal.fromJson(Map<String, dynamic> json) {
-    return Soal(
-      idKuis: json['id_kuis'],
-      idSoal: json['_id'] ?? json['id_soal'],
-      teks: json['teks'],
-    );
-  }
-
-  Map<String, dynamic> toJson() {
-    return {
-      'id_kuis': idKuis,
-      'id_soal': idSoal,
-      'teks': teks,
-    };
-  }
-}
-
-class PilihanJawaban {
-  final String idPilihan;
-  final String idSoal;
-  final bool isBenar;
-
-  PilihanJawaban({
+    required this.id,
+    required this.idQuiz,
+    required this.teksSoal,
     required this.idPilihan,
-    required this.idSoal,
-    required this.isBenar,
+    required this.idJawabanBenar,
   });
 
-  factory PilihanJawaban.fromJson(Map<String, dynamic> json) {
-    return PilihanJawaban(
-      idPilihan: json['_id'] ?? json['id_pilihan'],
-      idSoal: json['id_soal'],
-      isBenar: json['is_benar'],
-    );
-  }
-
-  Map<String, dynamic> toJson() {
-    return {
-      'id_pilihan': idPilihan,
-      'id_soal': idSoal,
-      'is_benar': isBenar,
-    };
-  }
+  factory Soal.fromJson(Map<String, dynamic> json) => Soal(
+    id: json['_id'] as String,
+    idQuiz: json['id_quiz'] as String,
+    teksSoal: json['teks_soal'] as String,
+    idPilihan: List<String>.from(json['id_pilihan']),
+    idJawabanBenar: json['id_jawaban_benar'] as String,
+  );
+  Map<String, dynamic> toJson() => {
+    '_id': id,
+    'id_quiz': idQuiz,
+    'teks_soal': teksSoal,
+    'id_pilihan': idPilihan,
+    'id_jawaban_benar': idJawabanBenar,
+  };
 }
 
-class SesiKuis {
-  final String idSesi;
-  final String idKuis;
+@HiveType(typeId: 3)
+class PilihanJawaban extends HiveObject {
+  @HiveField(0)
+  final String id;
+  @HiveField(1)
+  final String teksPilihan;
+
+  PilihanJawaban({required this.id, required this.teksPilihan});
+
+  factory PilihanJawaban.fromJson(Map<String, dynamic> json) => PilihanJawaban(
+    id: json['_id'] as String,
+    teksPilihan: json['teks_pilihan'] as String,
+  );
+  Map<String, dynamic> toJson() => {
+    '_id': id,
+    'teks_pilihan': teksPilihan,
+  };
+}
+
+@HiveType(typeId: 4)
+class SesiKuis extends HiveObject {
+  @HiveField(0)
+  final String id;
+  @HiveField(1)
+  final String idQuiz;
+  @HiveField(2)
   final DateTime waktuMulai;
+  @HiveField(3)
+  final DateTime? waktuSelesai;
+  @HiveField(4)
   final String status;
 
   SesiKuis({
-    required this.idSesi,
-    required this.idKuis,
+    required this.id,
+    required this.idQuiz,
     required this.waktuMulai,
+    this.waktuSelesai,
     required this.status,
   });
 
-  factory SesiKuis.fromJson(Map<String, dynamic> json) {
-    return SesiKuis(
-      idSesi: json['_id'] ?? json['id_sesi'],
-      idKuis: json['id_kuis'],
-      waktuMulai: DateTime.parse(json['waktu_mulai']),
-      status: json['status'],
-    );
-  }
-
-  Map<String, dynamic> toJson() {
-    return {
-      'id_sesi': idSesi,
-      'id_kuis': idKuis,
-      'waktu_mulai': waktuMulai.toIso8601String(),
-      'status': status,
-    };
-  }
+  factory SesiKuis.fromJson(Map<String, dynamic> json) => SesiKuis(
+    id: json['_id'] as String,
+    idQuiz: json['id_quiz'] as String,
+    waktuMulai: DateTime.parse(json['waktu_mulai']),
+    waktuSelesai: json['waktu_selesai'] != null ? DateTime.parse(json['waktu_selesai']) : null,
+    status: json['status'] as String,
+  );
+  Map<String, dynamic> toJson() => {
+    '_id': id,
+    'id_quiz': idQuiz,
+    'waktu_mulai': waktuMulai.toIso8601String(),
+    'waktu_selesai': waktuSelesai?.toIso8601String(),
+    'status': status,
+  };
 }
 
-class PesertaSesi {
-  final String idPesertaSesi;
+@HiveType(typeId: 5)
+class PesertaSesi extends HiveObject {
+  @HiveField(0)
+  final String id;
+  @HiveField(1)
   final String idSesi;
-  final String idPeserta;
-  final DateTime waktuGabung;
+  @HiveField(2)
+  final String idUser;
 
-  PesertaSesi({
-    required this.idPesertaSesi,
-    required this.idSesi,
-    required this.idPeserta,
-    required this.waktuGabung,
-  });
+  PesertaSesi({required this.id, required this.idSesi, required this.idUser});
 
-  factory PesertaSesi.fromJson(Map<String, dynamic> json) {
-    return PesertaSesi(
-      idPesertaSesi: json['_id'] ?? json['id_peserta_sesi'],
-      idSesi: json['id_sesi'],
-      idPeserta: json['id_peserta'],
-      waktuGabung: DateTime.parse(json['waktu_gabung']),
-    );
-  }
-
-  Map<String, dynamic> toJson() {
-    return {
-      'id_peserta_sesi': idPesertaSesi,
-      'id_sesi': idSesi,
-      'id_peserta': idPeserta,
-      'waktu_gabung': waktuGabung.toIso8601String(),
-    };
-  }
+  factory PesertaSesi.fromJson(Map<String, dynamic> json) => PesertaSesi(
+    id: json['_id'] as String,
+    idSesi: json['id_sesi'] as String,
+    idUser: json['id_user'] as String,
+  );
+  Map<String, dynamic> toJson() => {
+    '_id': id,
+    'id_sesi': idSesi,
+    'id_user': idUser,
+  };
 }
 
-class JawabanPeserta {
-  final String idJawaban;
-  final String idPesertaSesi;
+@HiveType(typeId: 6)
+class JawabanPeserta extends HiveObject {
+  @HiveField(0)
+  final String id;
+  @HiveField(1)
+  final String idSesi;
+  @HiveField(2)
+  final String idUser;
+  @HiveField(3)
   final String idSoal;
-  final String idPilihan;
-  final DateTime waktuJawabLokal;
-  final bool isSynced;
+  @HiveField(4)
+  final String idPilihanJawaban;
+  @HiveField(5)
+  final int waktuMenjawab;
 
   JawabanPeserta({
-    required this.idJawaban,
-    required this.idPesertaSesi,
+    required this.id,
+    required this.idSesi,
+    required this.idUser,
     required this.idSoal,
-    required this.idPilihan,
-    required this.waktuJawabLokal,
-    this.isSynced = false,
+    required this.idPilihanJawaban,
+    required this.waktuMenjawab,
   });
 
-  factory JawabanPeserta.fromJson(Map<String, dynamic> json) {
-    return JawabanPeserta(
-      idJawaban: json['_id'] ?? json['id_jawaban'],
-      idPesertaSesi: json['id_peserta_sesi'],
-      idSoal: json['id_soal'],
-      idPilihan: json['id_pilihan'],
-      waktuJawabLokal: DateTime.parse(json['waktu_jawab_lokal']),
-      isSynced: json['is_synced'] ?? false,
-    );
-  }
-
-  Map<String, dynamic> toJson() {
-    return {
-      'id_jawaban': idJawaban,
-      'id_peserta_sesi': idPesertaSesi,
-      'id_soal': idSoal,
-      'id_pilihan': idPilihan,
-      'waktu_jawab_lokal': waktuJawabLokal.toIso8601String(),
-      'is_synced': isSynced,
-    };
-  }
+  factory JawabanPeserta.fromJson(Map<String, dynamic> json) => JawabanPeserta(
+    id: json['_id'] as String,
+    idSesi: json['id_sesi'] as String,
+    idUser: json['id_user'] as String,
+    idSoal: json['id_soal'] as String,
+    idPilihanJawaban: json['id_pilihan_jawaban'] as String,
+    waktuMenjawab: json['waktu_menjawab'] as int,
+  );
+  Map<String, dynamic> toJson() => {
+    '_id': id,
+    'id_sesi': idSesi,
+    'id_user': idUser,
+    'id_soal': idSoal,
+    'id_pilihan_jawaban': idPilihanJawaban,
+    'waktu_menjawab': waktuMenjawab,
+  };
 }
 
-class HasilAkhir {
-  final String idHasil;
-  final String idPesertaSesi;
+@HiveType(typeId: 7)
+class HasilAkhir extends HiveObject {
+  @HiveField(0)
+  final String id;
+  @HiveField(1)
+  final String idSesi;
+  @HiveField(2)
+  final String idUser;
+  @HiveField(3)
   final int totalSkor;
+  @HiveField(4)
   final int peringkat;
 
   HasilAkhir({
-    required this.idHasil,
-    required this.idPesertaSesi,
+    required this.id,
+    required this.idSesi,
+    required this.idUser,
     required this.totalSkor,
     required this.peringkat,
   });
 
-  factory HasilAkhir.fromJson(Map<String, dynamic> json) {
-    return HasilAkhir(
-      idHasil: json['_id'] ?? json['id_hasil'],
-      idPesertaSesi: json['id_peserta_sesi'],
-      totalSkor: json['total_skor'],
-      peringkat: json['peringkat'],
-    );
-  }
-
-  Map<String, dynamic> toJson() {
-    return {
-      'id_hasil': idHasil,
-      'id_peserta_sesi': idPesertaSesi,
-      'total_skor': totalSkor,
-      'peringkat': peringkat,
-    };
-  }
+  factory HasilAkhir.fromJson(Map<String, dynamic> json) => HasilAkhir(
+    id: json['_id'] as String,
+    idSesi: json['id_sesi'] as String,
+    idUser: json['id_user'] as String,
+    totalSkor: json['total_skor'] as int,
+    peringkat: json['peringkat'] as int,
+  );
+  Map<String, dynamic> toJson() => {
+    '_id': id,
+    'id_sesi': idSesi,
+    'id_user': idUser,
+    'total_skor': totalSkor,
+    'peringkat': peringkat,
+  };
 }

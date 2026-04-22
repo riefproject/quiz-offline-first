@@ -55,31 +55,31 @@ void main() {
       );
 
       // 2. Clear data existing (jika ada sisa error sebelumnya)
-      await usersCollection.deleteOne({'id': testId});
+      await usersCollection.deleteOne(where.eq('_id', testId));
 
       // 3. Create (Insert)
       final writeResult = await usersCollection.insertOne(testUser.toJson());
       expect(writeResult.isSuccess, isTrue, reason: 'Gagal memasukkan data user');
 
       // 4. Read (Find)
-      final foundUser = await usersCollection.findOne(where.eq('id', testId));
+      final foundUser = await usersCollection.findOne(where.eq('_id', testId));
       expect(foundUser, isNotNull, reason: 'Data user tidak ditemukan di database');
       expect(foundUser?['nama_lengkap'], equals('Tester via Unit Test'));
 
       // 5. Update (Modify)
       await usersCollection.updateOne(
-        where.eq('id', testId),
+        where.eq('_id', testId),
         modify.set('nama_lengkap', 'Tester via Unit Test Updated'),
       );
-      final updatedUser = await usersCollection.findOne(where.eq('id', testId));
+      final updatedUser = await usersCollection.findOne(where.eq('_id', testId));
       expect(updatedUser?['nama_lengkap'], equals('Tester via Unit Test Updated'));
 
       // 6. Delete (Remove)
-      final deleteResult = await usersCollection.deleteOne(where.eq('id', testId));
+      final deleteResult = await usersCollection.deleteOne(where.eq('_id', testId));
       expect(deleteResult.isSuccess, isTrue);
       
       // Verifikasi Delete
-      final checkDeleted = await usersCollection.findOne(where.eq('id', testId));
+      final checkDeleted = await usersCollection.findOne(where.eq('_id', testId));
       expect(checkDeleted, isNull);
     });
   });
