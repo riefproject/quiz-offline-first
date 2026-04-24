@@ -19,17 +19,35 @@ class AppUserAdapter extends TypeAdapter<AppUser> {
     return AppUser(
       id: fields[0] as String,
       namaLengkap: fields[1] as String,
+      email: fields[2] as String?,
+      nomorHp: fields[3] as String?,
+      password: fields[4] as String?,
+      isGuest: fields[5] as bool,
+      isSynced: fields[6] as bool,
+      createdAt: fields[7] as DateTime,
     );
   }
 
   @override
   void write(BinaryWriter writer, AppUser obj) {
     writer
-      ..writeByte(2)
+      ..writeByte(8)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
-      ..write(obj.namaLengkap);
+      ..write(obj.namaLengkap)
+      ..writeByte(2)
+      ..write(obj.email)
+      ..writeByte(3)
+      ..write(obj.nomorHp)
+      ..writeByte(4)
+      ..write(obj.password)
+      ..writeByte(5)
+      ..write(obj.isGuest)
+      ..writeByte(6)
+      ..write(obj.isSynced)
+      ..writeByte(7)
+      ..write(obj.createdAt);
   }
 
   @override

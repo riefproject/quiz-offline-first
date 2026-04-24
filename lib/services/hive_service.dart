@@ -3,6 +3,7 @@ import '../models/db_models.dart';
 
 class HiveService {
   static const String _usersBox = 'usersBox';
+  static const String _sessionBox = 'sessionBox';
   static const String _quizBox = 'quizBox';
   static const String _soalBox = 'soalBox';
   static const String _pilihanJawabanBox = 'pilihanJawabanBox';
@@ -28,6 +29,7 @@ class HiveService {
     // Membuka semua kotak (boxes) yang diperlukan aplikasi
     await Future.wait([
       Hive.openBox<AppUser>(_usersBox),
+      Hive.openBox(_sessionBox),
       Hive.openBox<Quiz>(_quizBox),
       Hive.openBox<Soal>(_soalBox),
       Hive.openBox<PilihanJawaban>(_pilihanJawabanBox),
@@ -42,6 +44,7 @@ class HiveService {
 
   // --- Akses Boxes ---
   static Box<AppUser> get usersBox => Hive.box<AppUser>(_usersBox);
+  static Box get sessionBox => Hive.box(_sessionBox);
   static Box<Quiz> get quizBox => Hive.box<Quiz>(_quizBox);
   static Box<Soal> get soalBox => Hive.box<Soal>(_soalBox);
   static Box<PilihanJawaban> get pilihanJawabanBox => Hive.box<PilihanJawaban>(_pilihanJawabanBox);
@@ -59,6 +62,7 @@ class HiveService {
   /// Membersihkan penyimpanan lokal dari memori (Clear Cache).
   static Future<void> clearAllData() async {
     await usersBox.clear();
+    await sessionBox.clear();
     await quizBox.clear();
     await soalBox.clear();
     await pilihanJawabanBox.clear();

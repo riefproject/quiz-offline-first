@@ -8,17 +8,74 @@ class AppUser extends HiveObject {
   final String id;
   @HiveField(1)
   final String namaLengkap;
+  @HiveField(2)
+  final String? email;
+  @HiveField(3)
+  final String? nomorHp;
+  @HiveField(4)
+  final String? password;
+  @HiveField(5)
+  final bool isGuest;
+  @HiveField(6)
+  final bool isSynced;
+  @HiveField(7)
+  final DateTime createdAt;
 
-  AppUser({required this.id, required this.namaLengkap});
+  AppUser({
+    required this.id,
+    required this.namaLengkap,
+    this.email,
+    this.nomorHp,
+    this.password,
+    this.isGuest = false,
+    this.isSynced = false,
+    DateTime? createdAt,
+  }) : createdAt = createdAt ?? DateTime.now();
 
   factory AppUser.fromJson(Map<String, dynamic> json) => AppUser(
     id: json['_id'] as String,
     namaLengkap: json['nama_lengkap'] as String,
+    email: json['email'] as String?,
+    nomorHp: json['nomor_hp'] as String?,
+    password: json['password'] as String?,
+    isGuest: json['is_guest'] as bool? ?? false,
+    isSynced: true,
+    createdAt: json['created_at'] != null
+        ? DateTime.parse(json['created_at'] as String)
+        : DateTime.now(),
   );
+
   Map<String, dynamic> toJson() => {
     '_id': id,
     'nama_lengkap': namaLengkap,
+    'email': email,
+    'nomor_hp': nomorHp,
+    'password': password,
+    'is_guest': isGuest,
+    'created_at': createdAt.toIso8601String(),
   };
+
+  AppUser copyWith({
+    String? id,
+    String? namaLengkap,
+    String? email,
+    String? nomorHp,
+    String? password,
+    bool? isGuest,
+    bool? isSynced,
+    DateTime? createdAt,
+  }) {
+    return AppUser(
+      id: id ?? this.id,
+      namaLengkap: namaLengkap ?? this.namaLengkap,
+      email: email ?? this.email,
+      nomorHp: nomorHp ?? this.nomorHp,
+      password: password ?? this.password,
+      isGuest: isGuest ?? this.isGuest,
+      isSynced: isSynced ?? this.isSynced,
+      createdAt: createdAt ?? this.createdAt,
+    );
+  }
 }
 
 @HiveType(typeId: 1)

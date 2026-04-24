@@ -1,11 +1,60 @@
 import 'package:flutter/material.dart';
-import '../../widgets/layout/app_shell.dart';
+
 import '../../theme/colors_config.dart';
 import '../../widgets/components/app_button.dart';
 import '../../widgets/components/app_input.dart';
+import '../../widgets/layout/app_shell.dart';
+import '../../services/auth_service.dart';
 
-class LoginPage extends StatelessWidget {
+class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
+
+  @override
+  State<LoginPage> createState() => _LoginPageState();
+}
+
+class _LoginPageState extends State<LoginPage> {
+  final _identifierController = TextEditingController();
+  final _passwordController = TextEditingController();
+  bool _isSubmitting = false;
+
+  @override
+  void dispose() {
+    _identifierController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _handleLogin() async {
+    setState(() {
+      _isSubmitting = true;
+    });
+
+    try {
+      await AuthService.login(
+        identifier: _identifierController.text,
+        password: _passwordController.text,
+      );
+      if (!mounted) return;
+      Navigator.of(context).pushReplacementNamed('/app');
+    } on AuthException catch (e) {
+      _showMessage(e.message);
+    } catch (e) {
+      _showMessage('Login gagal: $e');
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isSubmitting = false;
+        });
+      }
+    }
+  }
+
+  void _showMessage(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message)),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -27,13 +76,11 @@ class LoginPage extends StatelessWidget {
       ),
       body: Center(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 32.0),
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Align(
-                alignment: Alignment.center,
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
                   decoration: BoxDecoration(
@@ -52,27 +99,30 @@ class LoginPage extends StatelessWidget {
               ),
               const SizedBox(height: 24),
               Text(
-                'Quiz smarter, compete together',
+                'Masuk untuk membuat atau mengikuti kuis. Jika belum punya akun, daftar dengan email atau nomor HP untuk pemulihan akun.',
                 textAlign: TextAlign.center,
                 style: textTheme.bodyLarge?.copyWith(
                   fontWeight: FontWeight.w700,
                   color: colors.textOnSurface,
                 ),
               ),
-              const SizedBox(height: 48),
-              const AppTextField(
-                label: 'Email Address',
-                hintText: 'name@example.com',
+              const SizedBox(height: 40),
+              AppTextField(
+                label: 'Email atau Nomor HP',
+                hintText: 'name@example.com / 0812xxxxxxx',
+                controller: _identifierController,
                 keyboardType: TextInputType.emailAddress,
               ),
               const SizedBox(height: 20),
-              const AppPasswordField(),
+              AppPasswordField(
+                controller: _passwordController,
+              ),
               Align(
                 alignment: Alignment.centerRight,
                 child: TextButton(
-                  onPressed: () {
-                    // TODO: Implement forgot password routing
-                  },
+                  onPressed: _isSubmitting
+                      ? null
+                      : () => Navigator.of(context).pushNamed('/forgot-password'),
                   style: TextButton.styleFrom(
                     foregroundColor: colors.primary,
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -85,12 +135,10 @@ class LoginPage extends StatelessWidget {
                   ),
                 ),
               ),
-              const SizedBox(height: 32),
+              const SizedBox(height: 28),
               AppButton.primary(
-                label: 'Log In',
-                onPressed: () {
-                  // TODO: Implement login logic
-                },
+                label: _isSubmitting ? 'Signing In...' : 'Log In',
+                onPressed: _isSubmitting ? null : _handleLogin,
               ),
               const SizedBox(height: 16),
               Row(
@@ -99,13 +147,13 @@ class LoginPage extends StatelessWidget {
                   Text(
                     "Doesn't have an account? ",
                     style: textTheme.labelSmall?.copyWith(
-                      color: colors.textOnSurface.withValues(alpha:0.8),
+                      color: colors.textOnSurface.withValues(alpha: 0.8),
                     ),
                   ),
                   GestureDetector(
-                    onTap: () {
-                      // TODO: Implement register routing
-                    },
+                    onTap: _isSubmitting
+                        ? null
+                        : () => Navigator.of(context).pushNamed('/register'),
                     child: Text(
                       'Register',
                       style: textTheme.labelSmall?.copyWith(
@@ -119,25 +167,25 @@ class LoginPage extends StatelessWidget {
               const SizedBox(height: 32),
               Row(
                 children: [
-                  Expanded(child: Divider(color: colors.textOnSurface.withValues(alpha:0.1))),
+                  Expanded(child: Divider(color: colors.textOnSurface.withValues(alpha: 0.1))),
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16),
                     child: Text(
                       'or',
                       style: textTheme.labelSmall?.copyWith(
-                        color: colors.textOnSurface.withValues(alpha:0.5),
+                        color: colors.textOnSurface.withValues(alpha: 0.5),
                       ),
                     ),
                   ),
-                  Expanded(child: Divider(color: colors.textOnSurface.withValues(alpha:0.1))),
+                  Expanded(child: Divider(color: colors.textOnSurface.withValues(alpha: 0.1))),
                 ],
               ),
-              const SizedBox(height: 32),
+              const SizedBox(height: 24),
               AppButton.outlined(
                 label: 'Join as a Guest',
-                onPressed: () {
-                  // TODO: Implement guest logic
-                },
+                onPressed: _isSubmitting
+                    ? null
+                    : () => Navigator.of(context).pushNamed('/guest'),
               ),
             ],
           ),

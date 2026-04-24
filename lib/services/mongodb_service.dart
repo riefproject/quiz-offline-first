@@ -7,6 +7,8 @@ class MongoDatabase {
   // Variabel untuk menyuntikkan URI dari unit test secara manual
   static String? testUri;
 
+  static bool get isConnected => _db != null && _db!.state == State.open;
+
   static String get _connectionString {
     if (testUri != null) return testUri!;
     
@@ -19,7 +21,7 @@ class MongoDatabase {
 
   /// Membuka koneksi ke database MongoDB
   static Future<void> connect() async {
-    if (_db != null && _db!.state == State.open) return;
+    if (isConnected) return;
 
     try {
       _db = await Db.create(_connectionString);
@@ -28,6 +30,16 @@ class MongoDatabase {
     } catch (e) {
       print('Gagal terhubung ke database MongoDB: $e');
       rethrow;
+    }
+  }
+
+  static Future<bool> tryConnect() async {
+    try {
+      await connect();
+      return true;
+    } catch (e) {
+      print('MongoDB berjalan dalam mode offline-first: $e');
+      return false;
     }
   }
 

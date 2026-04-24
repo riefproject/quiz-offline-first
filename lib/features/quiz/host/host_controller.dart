@@ -9,5 +9,5 @@ class HostController {
     await _bleService.init();
   }
 
-  Future<void> start_game() async {}
+  Future<void> startGame() async {}
 }

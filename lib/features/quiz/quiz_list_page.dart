@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../services/auth_service.dart';
 import '../../widgets/app_search_field.dart';
 import '../../widgets/app_section_label.dart';
 import '../../widgets/layout/app_bottom_navigation.dart';
@@ -26,24 +27,54 @@ class _QuizListPageState extends State<QuizListPage> {
     });
   }
 
+  Future<void> _logout() async {
+    await AuthService.logout();
+    if (!mounted) return;
+    Navigator.of(context).pushNamedAndRemoveUntil('/login', (route) => false);
+  }
+
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).extension<ColorsConfig>()!;
+    final session = AuthService.currentSession;
+    final initials = _buildInitials(session?.displayName ?? 'AR');
 
     return AppShell(
       header: AppTopHeader(
         title: 'Intelligent Quiz',
         subtitle: 'Offline quiz workspace',
-        trailing: CircleAvatar(
-          radius: 20,
-          backgroundColor: colors.primary.withValues(alpha: 0.14),
-          child: Text(
-            'AR',
-            style: TextStyle(
-              color: colors.primary,
-              fontWeight: FontWeight.w800,
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              decoration: BoxDecoration(
+                color: colors.surfaceLowest.withValues(alpha: 0.9),
+                borderRadius: BorderRadius.circular(999),
+                border: Border.all(color: colors.outline),
+              ),
+              child: IconButton(
+                onPressed: _logout,
+                tooltip: 'Log Out',
+                icon: Icon(
+                  Icons.logout_rounded,
+                  color: colors.primary,
+                  size: 20,
+                ),
+              ),
             ),
-          ),
+            const SizedBox(width: 10),
+            CircleAvatar(
+              radius: 20,
+              backgroundColor: colors.primary.withValues(alpha: 0.14),
+              child: Text(
+                initials,
+                style: TextStyle(
+                  color: colors.primary,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ),
+          ],
         ),
       ),
       bottomNavigationBar: AppBottomNavigationBar(
@@ -95,5 +126,18 @@ class _QuizListPageState extends State<QuizListPage> {
         ],
       ),
     );
+  }
+
+  String _buildInitials(String name) {
+    final parts = name
+        .trim()
+        .split(RegExp(r'\s+'))
+        .where((part) => part.isNotEmpty)
+        .toList();
+    if (parts.isEmpty) return 'AR';
+    if (parts.length == 1) {
+      return parts.first.substring(0, parts.first.length >= 2 ? 2 : 1).toUpperCase();
+    }
+    return '${parts.first[0]}${parts.last[0]}'.toUpperCase();
   }
 }
