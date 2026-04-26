@@ -181,11 +181,19 @@ class _LoginPageState extends State<LoginPage> {
                 ],
               ),
               const SizedBox(height: 24),
+              const SizedBox(height: 12),
               AppButton.outlined(
                 label: 'Join as a Guest',
                 onPressed: _isSubmitting
                     ? null
                     : () => Navigator.of(context).pushNamed('/guest'),
+              ),
+              const SizedBox(height: 12),
+              AppButton.text(
+                label: 'Play Live Quiz',
+                onPressed: _isSubmitting
+                    ? null
+                    : () => Navigator.of(context).pushNamed('/play'),
               ),
             ],
           ),
