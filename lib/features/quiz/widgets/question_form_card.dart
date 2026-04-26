@@ -217,7 +217,7 @@ class _QuestionFormCardState extends State<QuestionFormCard> {
                         margin: const EdgeInsets.only(right: 12),
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          color: isCorrect ? const Color(0xFF8B6B2B) : Colors.transparent,
+                          color: isCorrect ? colors.secondary : Colors.transparent,
                           border: isCorrect ? null : Border.all(color: colors.mutedText.withValues(alpha: 0.5), width: 1.5),
                         ),
                         child: isCorrect

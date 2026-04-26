@@ -1,9 +1,9 @@
 import 'package:flutter/foundation.dart';
 
 
-import '../models/db_models.dart';
-import '../services/hive_service.dart';
-import '../services/quiz_sync_service.dart';
+import '../../../models/db_models.dart';
+import '../../../services/hive_service.dart';
+import '../../../services/quiz_sync_service.dart';
 
 class QuizController extends ChangeNotifier {
   List<Quiz> get quizzes => HiveService.quizBox.values.toList();

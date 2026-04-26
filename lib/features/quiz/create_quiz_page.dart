@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../controllers/quiz_controller.dart';
+import 'controllers/quiz_controller.dart';
 import '../../models/db_models.dart';
 import '../../services/auth_service.dart';
 import '../../theme/colors_config.dart';

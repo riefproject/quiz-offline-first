@@ -38,20 +38,20 @@ class ColorsConfig extends ThemeExtension<ColorsConfig> {
 
   factory ColorsConfig.light() {
     return const ColorsConfig(
-      primary: Color(0xFF7F30C3),
-      primaryContainer: Color(0xFFC484FF),
-      primaryFixed: Color(0xFF9A70FF),
-      secondary: Color(0xFFFFCA4D),
-      tertiary: Color(0xFFFF9475),
-      background: Color(0xFFF9F0FF),
-      backgroundSoft: Color(0xFFFFF7FC),
-      surfaceLowest: Color(0xFFFFFFFF),
-      surfaceLow: Color(0xFFFEEBFF),
-      surfaceHigh: Color(0xFFF9D8FF),
-      outline: Color(0xFFE6C7EE),
-      mutedText: Color(0xFF7C6A86),
+      primary: Color(0xFF3072A6), // Main Blue
+      primaryContainer: Color(0xFF6CA6DD), // Light Blue
+      primaryFixed: Color(0xFF4A8BBE), // Slightly lighter blue for active states
+      secondary: Color(0xFFE19E20), // Orange/Yellow accent
+      tertiary: Color(0xFFF3B744), // Lighter orange
+      background: Color(0xFFF0F9FF), // Very soft blue-ish white
+      backgroundSoft: Color(0xFFD7F3FF), // Provided light blue background
+      surfaceLowest: Color(0xFFFFFFFF), // White
+      surfaceLow: Color(0xFFEAF6FF), // Soft blue for cards
+      surfaceHigh: Color(0xFFCBE9FE), // Slightly darker soft blue
+      outline: Color(0xFFB3D8F5), // Blue outline
+      mutedText: Color(0xFF637C90), // Grey-blue for text
       textOnPrimary: Color(0xFFFFFFFF),
-      textOnSurface: Color(0xFF1E1E1E),
+      textOnSurface: Color(0xFF1E2A34), // Dark blue-grey text
     );
   }
 
