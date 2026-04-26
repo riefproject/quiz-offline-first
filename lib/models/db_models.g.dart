@@ -24,7 +24,7 @@ class AppUserAdapter extends TypeAdapter<AppUser> {
       password: fields[4] as String?,
       isGuest: fields[5] as bool,
       isSynced: fields[6] as bool,
-      createdAt: fields[7] as DateTime,
+      createdAt: fields[7] as DateTime?,
     );
   }
 
@@ -76,13 +76,14 @@ class QuizAdapter extends TypeAdapter<Quiz> {
       judul: fields[1] as String,
       deskripsi: fields[2] as String,
       pembuat: fields[3] as String,
+      isSynced: fields[4] as bool,
     );
   }
 
   @override
   void write(BinaryWriter writer, Quiz obj) {
     writer
-      ..writeByte(4)
+      ..writeByte(5)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -90,7 +91,9 @@ class QuizAdapter extends TypeAdapter<Quiz> {
       ..writeByte(2)
       ..write(obj.deskripsi)
       ..writeByte(3)
-      ..write(obj.pembuat);
+      ..write(obj.pembuat)
+      ..writeByte(4)
+      ..write(obj.isSynced);
   }
 
   @override
@@ -120,13 +123,14 @@ class SoalAdapter extends TypeAdapter<Soal> {
       teksSoal: fields[2] as String,
       idPilihan: (fields[3] as List).cast<String>(),
       idJawabanBenar: fields[4] as String,
+      isSynced: fields[5] as bool,
     );
   }
 
   @override
   void write(BinaryWriter writer, Soal obj) {
     writer
-      ..writeByte(5)
+      ..writeByte(6)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -136,7 +140,9 @@ class SoalAdapter extends TypeAdapter<Soal> {
       ..writeByte(3)
       ..write(obj.idPilihan)
       ..writeByte(4)
-      ..write(obj.idJawabanBenar);
+      ..write(obj.idJawabanBenar)
+      ..writeByte(5)
+      ..write(obj.isSynced);
   }
 
   @override

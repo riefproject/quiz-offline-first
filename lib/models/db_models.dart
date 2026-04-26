@@ -88,12 +88,15 @@ class Quiz extends HiveObject {
   final String deskripsi;
   @HiveField(3)
   final String pembuat;
+  @HiveField(4)
+  final bool isSynced;
 
   Quiz({
     required this.id,
     required this.judul,
     required this.deskripsi,
     required this.pembuat,
+    this.isSynced = false,
   });
 
   factory Quiz.fromJson(Map<String, dynamic> json) => Quiz(
@@ -101,6 +104,7 @@ class Quiz extends HiveObject {
     judul: json['judul'] as String,
     deskripsi: json['deskripsi'] as String,
     pembuat: json['pembuat'] as String,
+    isSynced: true,
   );
   Map<String, dynamic> toJson() => {
     '_id': id,
@@ -108,6 +112,22 @@ class Quiz extends HiveObject {
     'deskripsi': deskripsi,
     'pembuat': pembuat,
   };
+  
+  Quiz copyWith({
+    String? id,
+    String? judul,
+    String? deskripsi,
+    String? pembuat,
+    bool? isSynced,
+  }) {
+    return Quiz(
+      id: id ?? this.id,
+      judul: judul ?? this.judul,
+      deskripsi: deskripsi ?? this.deskripsi,
+      pembuat: pembuat ?? this.pembuat,
+      isSynced: isSynced ?? this.isSynced,
+    );
+  }
 }
 
 @HiveType(typeId: 2)
@@ -122,6 +142,8 @@ class Soal extends HiveObject {
   final List<String> idPilihan;
   @HiveField(4)
   final String idJawabanBenar;
+  @HiveField(5)
+  final bool isSynced;
 
   Soal({
     required this.id,
@@ -129,6 +151,7 @@ class Soal extends HiveObject {
     required this.teksSoal,
     required this.idPilihan,
     required this.idJawabanBenar,
+    this.isSynced = false,
   });
 
   factory Soal.fromJson(Map<String, dynamic> json) => Soal(
@@ -137,6 +160,7 @@ class Soal extends HiveObject {
     teksSoal: json['teks_soal'] as String,
     idPilihan: List<String>.from(json['id_pilihan']),
     idJawabanBenar: json['id_jawaban_benar'] as String,
+    isSynced: true,
   );
   Map<String, dynamic> toJson() => {
     '_id': id,
@@ -145,6 +169,24 @@ class Soal extends HiveObject {
     'id_pilihan': idPilihan,
     'id_jawaban_benar': idJawabanBenar,
   };
+
+  Soal copyWith({
+    String? id,
+    String? idQuiz,
+    String? teksSoal,
+    List<String>? idPilihan,
+    String? idJawabanBenar,
+    bool? isSynced,
+  }) {
+    return Soal(
+      id: id ?? this.id,
+      idQuiz: idQuiz ?? this.idQuiz,
+      teksSoal: teksSoal ?? this.teksSoal,
+      idPilihan: idPilihan ?? this.idPilihan,
+      idJawabanBenar: idJawabanBenar ?? this.idJawabanBenar,
+      isSynced: isSynced ?? this.isSynced,
+    );
+  }
 }
 
 @HiveType(typeId: 3)
@@ -160,10 +202,7 @@ class PilihanJawaban extends HiveObject {
     id: json['_id'] as String,
     teksPilihan: json['teks_pilihan'] as String,
   );
-  Map<String, dynamic> toJson() => {
-    '_id': id,
-    'teks_pilihan': teksPilihan,
-  };
+  Map<String, dynamic> toJson() => {'_id': id, 'teks_pilihan': teksPilihan};
 }
 
 @HiveType(typeId: 4)
@@ -191,7 +230,9 @@ class SesiKuis extends HiveObject {
     id: json['_id'] as String,
     idQuiz: json['id_quiz'] as String,
     waktuMulai: DateTime.parse(json['waktu_mulai']),
-    waktuSelesai: json['waktu_selesai'] != null ? DateTime.parse(json['waktu_selesai']) : null,
+    waktuSelesai: json['waktu_selesai'] != null
+        ? DateTime.parse(json['waktu_selesai'])
+        : null,
     status: json['status'] as String,
   );
   Map<String, dynamic> toJson() => {

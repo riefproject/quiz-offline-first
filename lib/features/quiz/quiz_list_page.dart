@@ -1,15 +1,21 @@
 import 'package:flutter/material.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 
 import '../../services/auth_service.dart';
+import '../../services/hive_service.dart';
+import '../../services/quiz_sync_service.dart';
+import '../../controllers/quiz_controller.dart';
+import '../../models/db_models.dart';
 import '../../widgets/app_search_field.dart';
 import '../../widgets/app_section_label.dart';
 import '../../widgets/layout/app_bottom_navigation.dart';
 import '../../widgets/layout/app_shell.dart';
 import '../../widgets/layout/app_top_header.dart';
-import '../../models/quiz_collection_item.dart';
 import '../../theme/colors_config.dart';
+import '../../widgets/components/app_confirm_modal.dart';
 import 'widgets/create_quiz_card.dart';
 import 'widgets/quiz_card.dart';
+import 'create_quiz_page.dart';
 
 class QuizListPage extends StatefulWidget {
   const QuizListPage({super.key});
@@ -20,6 +26,17 @@ class QuizListPage extends StatefulWidget {
 
 class _QuizListPageState extends State<QuizListPage> {
   int _currentNavIndex = 1;
+  final _quizController = QuizController();
+  
+  String _searchQuery = '';
+  int _currentPage = 1;
+  static const int _itemsPerPage = 5;
+
+  @override
+  void initState() {
+    super.initState();
+    QuizSyncService().initialize();
+  }
 
   void _handleNavigationTap(int index) {
     setState(() {
@@ -31,6 +48,26 @@ class _QuizListPageState extends State<QuizListPage> {
     await AuthService.logout();
     if (!mounted) return;
     Navigator.of(context).pushNamedAndRemoveUntil('/login', (route) => false);
+  }
+
+  Future<void> _deleteQuiz(String quizId) async {
+    final confirm = await AppConfirmModal.show(
+      context,
+      title: 'Hapus Kuis',
+      content: 'Apakah Anda yakin ingin menghapus kuis ini beserta seluruh pertanyaannya?',
+      confirmText: 'Hapus',
+      cancelText: 'Batal',
+      isDestructive: true,
+    );
+
+    if (confirm == true) {
+      await _quizController.deleteQuiz(quizId);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Kuis berhasil dihapus')),
+        );
+      }
+    }
   }
 
   @override
@@ -101,26 +138,158 @@ class _QuizListPageState extends State<QuizListPage> {
       body: ListView(
         physics: const BouncingScrollPhysics(),
         children: [
-          const AppSearchField(),
+          ValueListenableBuilder<bool>(
+            valueListenable: QuizSyncService().isOnline,
+            builder: (context, isOnline, child) {
+              if (isOnline) return const SizedBox.shrink();
+              return Container(
+                margin: const EdgeInsets.only(bottom: 16),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                decoration: BoxDecoration(
+                  color: Colors.redAccent.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.redAccent.withValues(alpha: 0.3)),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.wifi_off_rounded, color: Colors.redAccent, size: 20),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        'Anda sedang offline. Perubahan akan disimpan secara lokal dan disinkronisasi saat koneksi pulih.',
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: Colors.redAccent,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+          ValueListenableBuilder<String?>(
+            valueListenable: QuizSyncService().syncError,
+            builder: (context, errorMsg, child) {
+              if (errorMsg == null) return const SizedBox.shrink();
+              return Container(
+                margin: const EdgeInsets.only(bottom: 16),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                decoration: BoxDecoration(
+                  color: Colors.orangeAccent.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.orangeAccent.withValues(alpha: 0.3)),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.cloud_off_rounded, color: Colors.orangeAccent, size: 20),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        errorMsg,
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: Colors.orange.shade800,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+          AppSearchField(
+            onChanged: (value) {
+              setState(() {
+                _searchQuery = value;
+                _currentPage = 1; // Reset pagination when searching
+              });
+            },
+          ),
           const SizedBox(height: 20),
           const AppSectionLabel(
             eyebrow: 'YOUR COLLECTION',
             title: 'My Quizzes',
           ),
           const SizedBox(height: 18),
-          ...QuizCollectionItem.samples.map(
-            (quiz) => Padding(
-              padding: const EdgeInsets.only(bottom: 16),
-              child: QuizCard(
-                quiz: quiz,
-                onEdit: () {},
-                onStart: () {},
-              ),
-            ),
+          ValueListenableBuilder<Box<Quiz>>(
+            valueListenable: HiveService.quizBox.listenable(),
+            builder: (context, box, _) {
+              final allQuizzes = box.values.toList();
+              
+              // 1. Filter by Search Query
+              final filteredQuizzes = allQuizzes.where((quiz) {
+                if (_searchQuery.isEmpty) return true;
+                return quiz.judul.toLowerCase().contains(_searchQuery.toLowerCase());
+              }).toList();
+
+              if (filteredQuizzes.isEmpty) {
+                return Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 20),
+                  child: Center(
+                    child: Text(
+                      _searchQuery.isNotEmpty 
+                          ? 'Tidak ada kuis yang cocok dengan pencarian Anda.' 
+                          : 'Belum ada kuis. Buat kuis pertama Anda!',
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: colors.mutedText,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                );
+              }
+              
+              // 2. Pagination Logic
+              final int limit = _currentPage * _itemsPerPage;
+              final displayedQuizzes = filteredQuizzes.take(limit).toList();
+              final hasMore = limit < filteredQuizzes.length;
+
+              return Column(
+                children: [
+                  ...displayedQuizzes.map(
+                    (quiz) => Padding(
+                      padding: const EdgeInsets.only(bottom: 16),
+                      child: QuizCard(
+                        quiz: quiz,
+                        onEdit: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(builder: (_) => CreateQuizPage(editQuiz: quiz)),
+                          );
+                        },
+                        onDelete: () => _deleteQuiz(quiz.id),
+                        onStart: () {},
+                      ),
+                    ),
+                  ),
+                  if (hasMore)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 8.0, bottom: 16.0),
+                      child: TextButton.icon(
+                        onPressed: () {
+                          setState(() {
+                            _currentPage++;
+                          });
+                        },
+                        icon: const Icon(Icons.expand_more_rounded),
+                        label: const Text('Tampilkan Lebih Banyak'),
+                        style: TextButton.styleFrom(
+                          foregroundColor: colors.primary,
+                          textStyle: const TextStyle(fontWeight: FontWeight.w600),
+                        ),
+                      ),
+                    ),
+                ],
+              );
+            },
           ),
           const SizedBox(height: 4),
           CreateQuizCard(
-            onTap: () {},
+            onTap: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const CreateQuizPage()),
+              );
+            },
           ),
           const SizedBox(height: 12),
         ],

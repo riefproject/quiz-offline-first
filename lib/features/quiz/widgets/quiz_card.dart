@@ -2,26 +2,32 @@ import 'package:flutter/material.dart';
 
 import '../../../widgets/components/app_button.dart';
 import '../../../widgets/components/app_card.dart';
-import '../../../models/quiz_collection_item.dart';
+import '../../../models/db_models.dart';
 import '../../../theme/colors_config.dart';
 import '../../../widgets/app_info_chip.dart';
+import '../../../services/hive_service.dart';
 
 class QuizCard extends StatelessWidget {
-  final QuizCollectionItem quiz;
+  final Quiz quiz;
   final VoidCallback onStart;
   final VoidCallback? onEdit;
+  final VoidCallback? onDelete;
 
   const QuizCard({
     super.key,
     required this.quiz,
     required this.onStart,
     this.onEdit,
+    this.onDelete,
   });
 
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).extension<ColorsConfig>()!;
     final textTheme = Theme.of(context).textTheme;
+
+    // Menghitung jumlah pertanyaan (dari hive box soalBox)
+    final questionCount = HiveService.soalBox.values.where((s) => s.idQuiz == quiz.id).length;
 
     return AppCard(
       surface: CardSurface.lowest,
@@ -34,20 +40,6 @@ class QuizCard extends StatelessWidget {
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Container(
-                  width: 44,
-                  height: 44,
-                  decoration: BoxDecoration(
-                    color: quiz.accentColor.withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                  child: Icon(
-                    quiz.icon,
-                    color: quiz.accentColor,
-                    size: 22,
-                  ),
-                ),
-                const SizedBox(width: 12),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -57,7 +49,7 @@ class QuizCard extends StatelessWidget {
                         children: [
                           Expanded(
                             child: Text(
-                              quiz.title,
+                              quiz.judul,
                               style: textTheme.titleMedium?.copyWith(
                                 color: colors.textOnSurface,
                                 fontWeight: FontWeight.w800,
@@ -78,11 +70,25 @@ class QuizCard extends StatelessWidget {
                               constraints: const BoxConstraints(),
                               splashRadius: 18,
                             ),
+                          const SizedBox(width: 8),
+                          if (onDelete != null)
+                            IconButton(
+                              onPressed: onDelete,
+                              icon: const Icon(
+                                Icons.delete_outline,
+                                size: 18,
+                                color: Colors.redAccent,
+                              ),
+                              visualDensity: VisualDensity.compact,
+                              padding: EdgeInsets.zero,
+                              constraints: const BoxConstraints(),
+                              splashRadius: 18,
+                            ),
                         ],
                       ),
                       const SizedBox(height: 6),
                       Text(
-                        quiz.description,
+                        quiz.deskripsi,
                         style: textTheme.bodyMedium?.copyWith(
                           color: colors.mutedText,
                           height: 1.35,
@@ -97,16 +103,48 @@ class QuizCard extends StatelessWidget {
             Wrap(
               spacing: 10,
               runSpacing: 10,
+              crossAxisAlignment: WrapCrossAlignment.center,
               children: [
                 AppInfoChip(
                   icon: Icons.quiz_outlined,
-                  label: '${quiz.questionCount} Qs',
-                  tintColor: quiz.accentColor,
+                  label: '$questionCount Qs',
+                  tintColor: colors.primary,
                 ),
                 AppInfoChip(
-                  icon: Icons.schedule_rounded,
-                  label: '${quiz.estimatedMinutes} min',
-                  tintColor: colors.primary,
+                  icon: Icons.person_outline,
+                  label: quiz.pembuat,
+                  tintColor: Colors.blueAccent,
+                ),
+                // Sync Indicator
+                Tooltip(
+                  message: quiz.isSynced ? 'Tersinkronisasi' : 'Belum Tersinkronisasi',
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: quiz.isSynced 
+                          ? Colors.green.withValues(alpha: 0.1) 
+                          : Colors.orange.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          quiz.isSynced ? Icons.cloud_done : Icons.cloud_upload,
+                          size: 14,
+                          color: quiz.isSynced ? Colors.green : Colors.orange,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          quiz.isSynced ? 'Synced' : 'Pending',
+                          style: textTheme.bodySmall?.copyWith(
+                            color: quiz.isSynced ? Colors.green : Colors.orange,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
               ],
             ),

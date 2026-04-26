@@ -6,12 +6,14 @@ class AppTopHeader extends StatelessWidget {
   final String title;
   final String? subtitle;
   final Widget? trailing;
+  final Widget? leading;
 
   const AppTopHeader({
     super.key,
     required this.title,
     this.subtitle,
     this.trailing,
+    this.leading,
   });
 
   @override
@@ -21,19 +23,22 @@ class AppTopHeader extends StatelessWidget {
 
     return Row(
       children: [
-        Container(
-          width: 44,
-          height: 44,
-          decoration: BoxDecoration(
-            color: colors.primary.withValues(alpha: 0.12),
-            borderRadius: BorderRadius.circular(16),
+        if (leading != null)
+          leading!
+        else
+          Container(
+            width: 44,
+            height: 44,
+            decoration: BoxDecoration(
+              color: colors.primary.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Icon(
+              Icons.auto_awesome_rounded,
+              color: colors.primary,
+              size: 22,
+            ),
           ),
-          child: Icon(
-            Icons.auto_awesome_rounded,
-            color: colors.primary,
-            size: 22,
-          ),
-        ),
         const SizedBox(width: 12),
         Expanded(
           child: Column(
