@@ -25,7 +25,10 @@ class AppSectionLabel extends StatelessWidget {
         Text(
           eyebrow,
           style: textTheme.labelSmall?.copyWith(
-            color: colors.primary,
+            color: colors.mutedText,
+            fontSize: 11,
+            fontWeight: FontWeight.w500,
+            letterSpacing: 0.08 * 11, // 0.08em
           ),
         ),
         const SizedBox(height: 4),
@@ -33,7 +36,9 @@ class AppSectionLabel extends StatelessWidget {
           title,
           style: textTheme.headlineLarge?.copyWith(
             color: colors.textOnSurface,
-            letterSpacing: -0.5,
+            fontWeight: FontWeight.w600,
+            fontSize: 22,
+            letterSpacing: -0.3,
           ),
         ),
         if (subtitle != null) ...[

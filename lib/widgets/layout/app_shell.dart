@@ -32,39 +32,24 @@ class AppShell extends StatelessWidget {
 
     return Scaffold(
       resizeToAvoidBottomInset: true,
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: backgroundGradient ??
-              LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [
-                  colors.background,
-                  colors.backgroundSoft,
-                ],
+      backgroundColor: colors.background,
+      body: SafeArea(
+        child: Column(
+          children: [
+            if (showHeader && header != null)
+              Padding(
+                padding: headerPadding,
+                child: header,
               ),
-        ),
-        child: SafeArea(
-          child: Column(
-            children: [
-              if (showHeader && header != null)
-                Padding(
-                  padding: headerPadding,
-                  child: header,
-                ),
-              Expanded(
-                child: Padding(
-                  padding: bodyPadding,
-                  child: body,
-                ),
+            Expanded(
+              child: Padding(
+                padding: bodyPadding,
+                child: body,
               ),
-              if (showBottomNavigation && bottomNavigationBar != null)
-                Padding(
-                  padding: bottomNavigationPadding,
-                  child: bottomNavigationBar,
-                ),
-            ],
-          ),
+            ),
+            if (showBottomNavigation && bottomNavigationBar != null)
+              bottomNavigationBar!,
+          ],
         ),
       ),
     );

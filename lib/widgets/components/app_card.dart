@@ -39,11 +39,9 @@ class AppCard extends StatelessWidget {
     return Container(
       padding: padding,
       decoration: BoxDecoration(
-        color: bgColor,
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: surface == CardSurface.lowest
-            ? [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4))]
-            : null,
+        color: colors.surfaceLowest, // Always white
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: colors.outline),
       ),
       child: child,
     );

@@ -31,18 +31,12 @@ class AppBottomNavigationBar extends StatelessWidget {
     final colors = Theme.of(context).extension<ColorsConfig>()!;
 
     return Container(
-      padding: const EdgeInsets.all(10),
+      height: 56,
       decoration: BoxDecoration(
         color: colors.surfaceLowest,
-        borderRadius: BorderRadius.circular(28),
-        border: Border.all(color: colors.outline.withValues(alpha: 0.7)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.08),
-            blurRadius: 24,
-            offset: const Offset(0, 10),
-          ),
-        ],
+        border: Border(
+          top: BorderSide(color: colors.outline),
+        ),
       ),
       child: Row(
         children: List.generate(destinations.length, (index) {
@@ -51,34 +45,25 @@ class AppBottomNavigationBar extends StatelessWidget {
 
           return Expanded(
             child: InkWell(
-              borderRadius: BorderRadius.circular(20),
               onTap: () => onTap(index),
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 220),
-                curve: Curves.easeOut,
-                padding: const EdgeInsets.symmetric(vertical: 10),
-                decoration: BoxDecoration(
-                  color: selected ? colors.primary.withValues(alpha: 0.12) : Colors.transparent,
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      selected ? destination.activeIcon : destination.icon,
-                      color: selected ? colors.primary : colors.mutedText,
-                      size: 22,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    selected ? destination.activeIcon : destination.icon,
+                    color: selected ? colors.textOnSurface : colors.mutedText,
+                    size: 20,
+                  ),
+                  const SizedBox(height: 3),
+                  Text(
+                    destination.label,
+                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                      color: selected ? colors.textOnSurface : colors.mutedText,
+                      fontWeight: selected ? FontWeight.w700 : FontWeight.w400,
+                      fontSize: 10,
                     ),
-                    const SizedBox(height: 4),
-                    Text(
-                      destination.label,
-                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                        color: selected ? colors.primary : colors.mutedText,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
           );

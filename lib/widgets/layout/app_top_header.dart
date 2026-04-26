@@ -27,16 +27,16 @@ class AppTopHeader extends StatelessWidget {
           leading!
         else
           Container(
-            width: 44,
-            height: 44,
+            width: 36,
+            height: 36,
             decoration: BoxDecoration(
-              color: colors.primary.withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(16),
+              color: colors.outline,
+              borderRadius: BorderRadius.circular(8),
             ),
             child: Icon(
               Icons.auto_awesome_rounded,
               color: colors.primary,
-              size: 22,
+              size: 18,
             ),
           ),
         const SizedBox(width: 12),

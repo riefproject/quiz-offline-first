@@ -303,21 +303,54 @@ class _QuizListPageState extends State<QuizListPage> {
                     ),
                   ),
                 ),
-                if (hasMore)
+                if (hasMore || _currentPage > 1)
                   Padding(
-                    padding: const EdgeInsets.only(top: 8.0, bottom: 16.0),
-                    child: TextButton.icon(
-                      onPressed: () {
-                        setState(() {
-                          _currentPage++;
-                        });
-                      },
-                      icon: const Icon(Icons.expand_more_rounded),
-                      label: const Text('Tampilkan Lebih Banyak'),
-                      style: TextButton.styleFrom(
-                        foregroundColor: colors.primary,
-                        textStyle: const TextStyle(fontWeight: FontWeight.w600),
-                      ),
+                    padding: const EdgeInsets.only(top: 8.0, bottom: 4.0),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        if (_currentPage > 1)
+                          TextButton.icon(
+                            onPressed: () {
+                              setState(() {
+                                _currentPage--;
+                              });
+                            },
+                            icon: const Icon(Icons.expand_less_rounded, size: 18),
+                            label: const Text('Lebih Sedikit'),
+                            style: TextButton.styleFrom(
+                              foregroundColor: colors.mutedText,
+                              textStyle: const TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ),
+                        if (hasMore && _currentPage > 1)
+                          Container(
+                            width: 1,
+                            height: 16,
+                            margin: const EdgeInsets.symmetric(horizontal: 4),
+                            color: colors.outline,
+                          ),
+                        if (hasMore)
+                          TextButton.icon(
+                            onPressed: () {
+                              setState(() {
+                                _currentPage++;
+                              });
+                            },
+                            icon: const Icon(Icons.expand_more_rounded, size: 18),
+                            label: const Text('Lebih Banyak'),
+                            style: TextButton.styleFrom(
+                              foregroundColor: colors.primary,
+                              textStyle: const TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                      ],
                     ),
                   ),
               ],
