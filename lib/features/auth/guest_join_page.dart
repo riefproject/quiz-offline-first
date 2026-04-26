@@ -2,12 +2,16 @@ import 'package:flutter/material.dart';
 
 import '../../services/auth_service.dart';
 import '../../services/ble_service.dart';
+import '../../services/ble_service_base.dart';
 import '../../theme/colors_config.dart';
 import '../../widgets/components/app_button.dart';
 import '../../widgets/components/app_input.dart';
 
 class GuestJoinPage extends StatefulWidget {
-  const GuestJoinPage({super.key});
+  final BleServiceBase bleService;
+
+  GuestJoinPage({super.key, BleServiceBase? bleService})
+      : bleService = bleService ?? BleService();
 
   @override
   State<GuestJoinPage> createState() => _GuestJoinPageState();
@@ -16,9 +20,9 @@ class GuestJoinPage extends StatefulWidget {
 class _GuestJoinPageState extends State<GuestJoinPage> {
   final _nameController = TextEditingController();
   final _codeController = TextEditingController();
-  final BleService _bleService = BleService();
 
   bool _isSubmitting = false;
+  bool _isScanning = false;
   bool _isInitializingBle = true;
   String? _scanError;
 
@@ -30,7 +34,7 @@ class _GuestJoinPageState extends State<GuestJoinPage> {
 
   Future<void> _initializeBle() async {
     try {
-      await _bleService.init();
+      await widget.bleService.init();
     } catch (e) {
       _scanError = 'BLE belum siap: $e';
     } finally {
@@ -46,25 +50,32 @@ class _GuestJoinPageState extends State<GuestJoinPage> {
   void dispose() {
     _nameController.dispose();
     _codeController.dispose();
-    _bleService.dispose();
+    widget.bleService.dispose();
     super.dispose();
   }
 
   Future<void> _startScan() async {
+    if (_isScanning) return;
     setState(() {
+      _isScanning = true;
       _scanError = null;
     });
 
     try {
-      await _bleService.startScan(timeout: const Duration(seconds: 10));
-      final results = _bleService.scanResults.value;
-      if (results.isNotEmpty) {
+      await widget.bleService.startScan(timeout: const Duration(seconds: 10));
+      if (widget.bleService.rawScanData.value.isNotEmpty) {
         setState(() {
-          _codeController.text = results.first.device.remoteId.toString();
+          _isScanning = false;
+        });
+      } else {
+        setState(() {
+          _isScanning = false;
+          _scanError = 'No broadcasts found';
         });
       }
     } catch (e) {
       setState(() {
+        _isScanning = false;
         _scanError = 'Scan broadcast gagal: $e';
       });
     }
@@ -234,8 +245,10 @@ class _GuestJoinPageState extends State<GuestJoinPage> {
                     AppButton.text(
                       label: _isInitializingBle
                           ? 'Preparing Bluetooth...'
-                          : 'Scan Bluetooth Broadcast',
-                      onPressed: _isInitializingBle ? null : _startScan,
+                          : _isScanning
+                              ? 'Scanning...'
+                              : 'Scan Bluetooth Broadcast',
+                      onPressed: _isInitializingBle || _isScanning ? null : _startScan,
                     ),
                     if (_scanError != null) ...[
                       const SizedBox(height: 8),

@@ -61,7 +61,8 @@ class ClientPayload implements ByteSerializable {
   factory ClientPayload.fromBytes(Uint8List bytes) {
     final decoded = msgpack.deserialize(bytes);
     if (decoded is Map) {
-      if ((decoded as Map<String, dynamic>)['t'] != CLIENT_PAYLOAD_TYPE) {
+      final map = (decoded as Map).cast<String, dynamic>();
+      if (map['t'] != CLIENT_PAYLOAD_TYPE) {
         throw FormatException('Invalid payload type');
       }
       return ClientPayload.fromMsgpackMap(Map<String, dynamic>.from(decoded));

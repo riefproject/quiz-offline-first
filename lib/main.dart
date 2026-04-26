@@ -35,7 +35,7 @@ class QuizApp extends StatelessWidget {
         '/login': (_) => const LoginPage(),
         '/register': (_) => const RegisterPage(),
         '/forgot-password': (_) => const ForgotPasswordPage(),
-        '/guest': (_) => const GuestJoinPage(),
+        '/guest': (_) => GuestJoinPage(),
         '/app': (_) => const AuthGate(),
         '/play': (_) => const RoleChoicePage(),
         '/host': (_) => const HostView(),

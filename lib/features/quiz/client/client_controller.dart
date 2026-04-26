@@ -4,6 +4,8 @@ import 'package:flutter/foundation.dart';
 import 'package:py_4/models/client_payload.dart';
 import 'package:py_4/models/master_payload.dart';
 import 'package:py_4/services/ble_service.dart';
+import 'package:py_4/services/ble_service_base.dart';
+import 'package:py_4/services/mock_ble_service.dart';
 import 'package:py_4/services/quiz/client_publisher.dart';
 import 'package:py_4/services/quiz/master_list_listener.dart';
 import 'package:py_4/services/quiz/master_listener.dart';
@@ -11,7 +13,7 @@ import 'package:py_4/services/quiz/master_listener.dart';
 enum ClientPhase { scanning, lobby, question, finished }
 
 class ClientController extends ChangeNotifier {
-  final BleService _bleService = BleService();
+  final BleServiceBase _bleService;
 
   ClientPhase _phase = ClientPhase.scanning;
   ClientPhase get phase => _phase;
@@ -44,6 +46,9 @@ class ClientController extends ChangeNotifier {
 
   StreamSubscription? _masterListSub;
   StreamSubscription? _masterSub;
+
+  ClientController({BleServiceBase? bleService})
+    : _bleService = bleService ?? MockBleService();
 
   set playerName(String value) {
     _playerName = value;
@@ -83,14 +88,17 @@ class ClientController extends ChangeNotifier {
     _joinedGameId = game.gameID;
     _clientId = DateTime.now().millisecondsSinceEpoch % 100000;
 
-    await _bleService.stopScan();
+    // await _bleService.stopScan();
 
     _masterListSub?.cancel();
     _masterListSub = null;
     _masterListListener?.dispose();
     _masterListListener = null;
 
-    _masterListener = MasterListener(bleService: _bleService, gameId: game.gameID);
+    _masterListener = MasterListener(
+      bleService: _bleService,
+      gameId: game.gameID,
+    );
     _masterSub = _masterListener!.stream.listen(_onQuestion);
 
     _clientPublisher = ClientPublisher(bleService: _bleService);
@@ -117,7 +125,8 @@ class ClientController extends ChangeNotifier {
   void submitAnswer(int answerIndex) {
     if (_currentPayload == null) return;
 
-    final offset = DateTime.now().millisecondsSinceEpoch - _currentPayload!.masterTimeMs;
+    final offset =
+        DateTime.now().millisecondsSinceEpoch - _currentPayload!.masterTimeMs;
     final answer = ClientAnswer(answer: answerIndex, answerMsOffset: offset);
     _myAnswers = List.from(_myAnswers)..add(answer);
 

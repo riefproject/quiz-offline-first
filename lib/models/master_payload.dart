@@ -12,11 +12,11 @@ class MasterPayload implements ByteSerializable {
   // next question in ms after the master time
   final List<int> nextQuestion;
   // flag for is game finished
-  final bool? gameFinished;
+  bool? gameFinished = false;
   // game ID. randomly generated
   final int gameID;
 
-  const MasterPayload({
+  MasterPayload({
     required this.masterTimeMs,
     this.nextQuestion = const [],
     this.gameFinished,
@@ -47,6 +47,7 @@ class MasterPayload implements ByteSerializable {
   factory MasterPayload.fromMsgpackMap(Map<String, dynamic> map) =>
       MasterPayload(
         masterTimeMs: map['mt'] as int,
+        nextQuestion: (map['nq'] as List?)?.cast<int>() ?? const [],
         gameFinished: map.containsKey('f') && map['f'] == 1,
         gameID: map['g'] as int,
       );
@@ -54,7 +55,8 @@ class MasterPayload implements ByteSerializable {
   factory MasterPayload.fromBytes(Uint8List bytes) {
     final decoded = msgpack.deserialize(bytes);
     if (decoded is Map) {
-      if ((decoded as Map<String, dynamic>)['t'] != MASTER_PAYLOAD_TYPE) {
+      final map = (decoded as Map).cast<String, dynamic>();
+      if (map['t'] != MASTER_PAYLOAD_TYPE) {
         throw FormatException('Invalid payload type');
       }
       return MasterPayload.fromMsgpackMap(Map<String, dynamic>.from(decoded));

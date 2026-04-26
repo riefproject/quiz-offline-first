@@ -1,27 +1,27 @@
 import 'dart:async';
+import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter_ble_peripheral/flutter_ble_peripheral.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:py_4/services/ble_service_base.dart';
 
 const int kManufacturerId = 0xFFFF;
 const String kMasterLocalName = 'KahoofMaster';
 const String kNodeLocalNamePrefix = 'KahoofNode';
 
-class BleService {
+class BleService extends BleServiceBase {
   final FlutterBlePeripheral _peripheral = FlutterBlePeripheral();
 
-  final ValueNotifier<bool> isAdvertising = ValueNotifier(false);
   final ValueNotifier<String> advertisingStatus = ValueNotifier('Idle');
-  final ValueNotifier<bool> isScanning = ValueNotifier(false);
-  final ValueNotifier<List<ScanResult>> scanResults = ValueNotifier([]);
 
   StreamSubscription? _advStateSub;
   StreamSubscription? _adapterStateSub;
   StreamSubscription? _isScanningSub;
   StreamSubscription? _scanResultsSub;
 
+  @override
   Future<void> init() async {
     _advStateSub = _peripheral.onPeripheralStateChanged?.listen((state) {
       isAdvertising.value = state == PeripheralState.advertising;
@@ -37,12 +37,20 @@ class BleService {
     });
 
     _scanResultsSub = FlutterBluePlus.scanResults.listen((results) {
-      scanResults.value = results;
+      final bytesList = <Uint8List>[];
+      for (final result in results) {
+        final data = result.advertisementData.manufacturerData[kManufacturerId];
+        if (data != null) {
+          bytesList.add(Uint8List.fromList(data));
+        }
+      }
+      rawScanData.value = bytesList;
     });
 
     FlutterBluePlus.setLogLevel(LogLevel.verbose, color: true);
   }
 
+  @override
   Future<bool> requestAllPermissions() async {
     final status = await [
       Permission.bluetoothScan,
@@ -53,6 +61,7 @@ class BleService {
     return status.values.every((s) => s.isGranted);
   }
 
+  @override
   Future<bool> requestScanPermissions() async {
     final status = await [
       Permission.bluetoothScan,
@@ -62,6 +71,7 @@ class BleService {
     return status.values.every((s) => s.isGranted);
   }
 
+  @override
   Future<bool> requestAdvertisePermissions() async {
     final status = await [
       Permission.bluetoothAdvertise,
@@ -71,6 +81,7 @@ class BleService {
     return status.values.every((s) => s.isGranted);
   }
 
+  @override
   Future<void> startAdvertising(
     Uint8List data, {
     String localName = kMasterLocalName,
@@ -96,17 +107,19 @@ class BleService {
     await _peripheral.start(advertiseData: advertiseData);
   }
 
+  @override
   Future<void> stopAdvertising() async {
     await _peripheral.stop();
   }
 
+  @override
   Future<void> startScan({
     Duration timeout = const Duration(seconds: 30),
   }) async {
     final hasPerms = await requestScanPermissions();
     if (!hasPerms) throw Exception('Missing BLE scan permissions');
 
-    scanResults.value = [];
+    rawScanData.value = [];
 
     await FlutterBluePlus.startScan(
       timeout: timeout,
@@ -114,22 +127,12 @@ class BleService {
     );
   }
 
+  @override
   Future<void> stopScan() async {
     await FlutterBluePlus.stopScan();
   }
 
-  static Uint8List? getManufacturerData(ScanResult result) {
-    final data = result.advertisementData.manufacturerData[kManufacturerId];
-    if (data == null) return null;
-    return Uint8List.fromList(data);
-  }
-
-  static bool hasManufacturerData(ScanResult result) {
-    return result.advertisementData.manufacturerData.containsKey(
-      kManufacturerId,
-    );
-  }
-
+  @override
   void dispose() {
     _advStateSub?.cancel();
     _adapterStateSub?.cancel();
