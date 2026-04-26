@@ -1,58 +1,63 @@
 import 'dart:typed_data';
 
 import 'package:msgpack_dart/msgpack_dart.dart' as msgpack;
-import 'package:py_4/models/question.dart';
+import 'package:py_4/models/byte_serializable.dart';
 
-enum GamePhase {
-  idle,
-  syncing,
-  waitingQuestion,
-  questionActive,
-  showingResults,
-  finished,
-}
+const MASTER_PAYLOAD_TYPE = "m";
 
-class MasterMessage {
+class MasterPayload implements ByteSerializable {
+  final payloadType = MASTER_PAYLOAD_TYPE;
+  // anchored time
   final int masterTimeMs;
-  final Question? question;
-  final int? questionStartTimeMs;
+  // next question in ms after the master time
+  final List<int> nextQuestion;
+  // flag for is game finished
   final bool? gameFinished;
+  // game ID. randomly generated
+  final int gameID;
 
-  const MasterMessage({
+  const MasterPayload({
     required this.masterTimeMs,
-    this.question,
-    this.questionStartTimeMs,
+    this.nextQuestion = const [],
     this.gameFinished,
+    required this.gameID,
   });
 
   Map<String, dynamic> toMsgpackMap() {
-    final map = <String, dynamic>{'t': 'm', 'mt': masterTimeMs};
-    if (question != null) {
-      map['q'] = question!.toMsgpackMap();
-      map['s'] = questionStartTimeMs!;
+    final map = <String, dynamic>{
+      't': MASTER_PAYLOAD_TYPE,
+      'mt': masterTimeMs,
+      'g': gameID,
+    };
+
+    if (nextQuestion.isNotEmpty) {
+      map['nq'] = nextQuestion;
     }
+
     if (gameFinished == true) {
       map['f'] = 1;
     }
+
     return map;
   }
 
+  @override
   Uint8List toBytes() => Uint8List.fromList(msgpack.serialize(toMsgpackMap()));
 
-  factory MasterMessage.fromMsgpackMap(Map<String, dynamic> map) =>
-      MasterMessage(
+  factory MasterPayload.fromMsgpackMap(Map<String, dynamic> map) =>
+      MasterPayload(
         masterTimeMs: map['mt'] as int,
-        question: map.containsKey('q')
-            ? Question.fromMsgpackMap(map['q'] as Map<String, dynamic>)
-            : null,
-        questionStartTimeMs: map['s'] as int?,
         gameFinished: map.containsKey('f') && map['f'] == 1,
+        gameID: map['g'] as int,
       );
 
-  factory MasterMessage.fromBytes(Uint8List bytes) {
+  factory MasterPayload.fromBytes(Uint8List bytes) {
     final decoded = msgpack.deserialize(bytes);
     if (decoded is Map) {
-      return MasterMessage.fromMsgpackMap(Map<String, dynamic>.from(decoded));
+      if ((decoded as Map<String, dynamic>)['t'] != MASTER_PAYLOAD_TYPE) {
+        throw FormatException('Invalid payload type');
+      }
+      return MasterPayload.fromMsgpackMap(Map<String, dynamic>.from(decoded));
     }
     throw FormatException('Invalid MasterMessage format');
   }

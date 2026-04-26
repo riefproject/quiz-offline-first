@@ -118,6 +118,18 @@ class BleService {
     await FlutterBluePlus.stopScan();
   }
 
+  static Uint8List? getManufacturerData(ScanResult result) {
+    final data = result.advertisementData.manufacturerData[kManufacturerId];
+    if (data == null) return null;
+    return Uint8List.fromList(data);
+  }
+
+  static bool hasManufacturerData(ScanResult result) {
+    return result.advertisementData.manufacturerData.containsKey(
+      kManufacturerId,
+    );
+  }
+
   void dispose() {
     _advStateSub?.cancel();
     _adapterStateSub?.cancel();
