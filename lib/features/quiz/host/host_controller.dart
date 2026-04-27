@@ -2,9 +2,11 @@ import 'dart:async';
 import 'dart:math';
 
 import 'package:flutter/foundation.dart';
+import 'package:py_4/config.dart';
 import 'package:py_4/models/client_payload.dart';
 import 'package:py_4/models/master_payload.dart';
 import 'package:py_4/services/ble_service_base.dart';
+import 'package:py_4/services/ble_service.dart';
 import 'package:py_4/services/mock_ble_service.dart';
 import 'package:py_4/services/quiz/client_listener.dart';
 import 'package:py_4/services/quiz/master_publisher.dart';
@@ -98,7 +100,9 @@ class HostController extends ChangeNotifier {
   );
 
   HostController({BleServiceBase? bleService})
-    : _bleService = bleService ?? MockBleService();
+    : _bleService = Config.isSessionMocked
+          ? MockBleService()
+          : bleService ?? BleService();
 
   Future<void> startGame() async {
     _gameId = Random().nextInt(999999) + 100000;

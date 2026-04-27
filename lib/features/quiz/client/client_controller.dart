@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
+import 'package:py_4/config.dart';
 import 'package:py_4/models/client_payload.dart';
 import 'package:py_4/models/master_payload.dart';
 import 'package:py_4/services/ble_service.dart';
@@ -48,7 +49,9 @@ class ClientController extends ChangeNotifier {
   StreamSubscription? _masterSub;
 
   ClientController({BleServiceBase? bleService})
-    : _bleService = bleService ?? MockBleService();
+    : _bleService = Config.isSessionMocked
+          ? MockBleService()
+          : bleService ?? BleService();
 
   set playerName(String value) {
     _playerName = value;
