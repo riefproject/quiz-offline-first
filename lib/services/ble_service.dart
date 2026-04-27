@@ -1,11 +1,12 @@
 import 'dart:async';
-import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter_ble_peripheral/flutter_ble_peripheral.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:py_4/services/ble_payload_formatter.dart';
 import 'package:py_4/services/ble_service_base.dart';
+import 'package:py_4/services/logger.dart';
 
 const int kManufacturerId = 0xFFFF;
 const String kMasterLocalName = 'KahoofMaster';
@@ -23,13 +24,16 @@ class BleService extends BleServiceBase {
 
   @override
   Future<void> init() async {
+    log.i('BLE: initialized');
+
     _advStateSub = _peripheral.onPeripheralStateChanged?.listen((state) {
       isAdvertising.value = state == PeripheralState.advertising;
       advertisingStatus.value = state.name;
+      log.d('BLE: peripheral state → ${state.name}');
     });
 
     _adapterStateSub = FlutterBluePlus.adapterState.listen((state) {
-      debugPrint('BLE Adapter State: $state');
+      log.d('BLE: adapter state → $state');
     });
 
     _isScanningSub = FlutterBluePlus.isScanning.listen((scanning) {
@@ -43,6 +47,9 @@ class BleService extends BleServiceBase {
         if (data != null) {
           bytesList.add(Uint8List.fromList(data));
         }
+      }
+      if (bytesList.isNotEmpty) {
+        log.d('BLE: scan results → ${bytesList.length} entries');
       }
       rawScanData.value = bytesList;
     });
@@ -58,7 +65,9 @@ class BleService extends BleServiceBase {
       Permission.bluetoothAdvertise,
       Permission.location,
     ].request();
-    return status.values.every((s) => s.isGranted);
+    final granted = status.values.every((s) => s.isGranted);
+    log.i('BLE: permissions requested (all) → $granted');
+    return granted;
   }
 
   @override
@@ -68,7 +77,9 @@ class BleService extends BleServiceBase {
       Permission.bluetoothConnect,
       Permission.location,
     ].request();
-    return status.values.every((s) => s.isGranted);
+    final granted = status.values.every((s) => s.isGranted);
+    log.i('BLE: permissions requested (scan) → $granted');
+    return granted;
   }
 
   @override
@@ -78,7 +89,9 @@ class BleService extends BleServiceBase {
       Permission.bluetoothConnect,
       Permission.location,
     ].request();
-    return status.values.every((s) => s.isGranted);
+    final granted = status.values.every((s) => s.isGranted);
+    log.i('BLE: permissions requested (advertise) → $granted');
+    return granted;
   }
 
   @override
@@ -87,10 +100,16 @@ class BleService extends BleServiceBase {
     String localName = kMasterLocalName,
   }) async {
     final hasPerms = await requestAdvertisePermissions();
-    if (!hasPerms) throw Exception('Missing BLE advertise permissions');
+    if (!hasPerms) {
+      log.e('BLE: advertise failed — missing permissions');
+      throw Exception('Missing BLE advertise permissions');
+    }
 
     final isOn = await _peripheral.isBluetoothOn;
-    if (!isOn) throw Exception('Bluetooth is off');
+    if (!isOn) {
+      log.e('BLE: advertise failed — bluetooth off');
+      throw Exception('Bluetooth is off');
+    }
 
     try {
       await _peripheral.stop();
@@ -104,11 +123,15 @@ class BleService extends BleServiceBase {
       manufacturerData: data,
     );
 
+    log.i(
+      'BLE: advertising started (localName=$localName, ${data.length} bytes)\n${formatBlePayload(data)}',
+    );
     await _peripheral.start(advertiseData: advertiseData);
   }
 
   @override
   Future<void> stopAdvertising() async {
+    log.d('BLE: advertising stopped');
     await _peripheral.stop();
   }
 
@@ -117,23 +140,26 @@ class BleService extends BleServiceBase {
     Duration timeout = const Duration(seconds: 30),
   }) async {
     final hasPerms = await requestScanPermissions();
-    if (!hasPerms) throw Exception('Missing BLE scan permissions');
+    if (!hasPerms) {
+      log.e('BLE: scan failed — missing permissions');
+      throw Exception('Missing BLE scan permissions');
+    }
 
     rawScanData.value = [];
+    log.i('BLE: scan started (timeout=${timeout.inSeconds}s)');
 
-    await FlutterBluePlus.startScan(
-      timeout: timeout,
-      androidUsesFineLocation: true,
-    );
+    await FlutterBluePlus.startScan(androidUsesFineLocation: true);
   }
 
   @override
   Future<void> stopScan() async {
+    log.d('BLE: scan stopped');
     await FlutterBluePlus.stopScan();
   }
 
   @override
   void dispose() {
+    log.d('BLE: dispose');
     _advStateSub?.cancel();
     _adapterStateSub?.cancel();
     _isScanningSub?.cancel();

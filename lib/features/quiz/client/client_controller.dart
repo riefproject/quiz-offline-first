@@ -107,6 +107,14 @@ class ClientController extends ChangeNotifier {
     _clientPublisher = ClientPublisher(bleService: _bleService);
 
     _phase = ClientPhase.lobby;
+    _clientPublisher!.publish(
+      ClientPayload(
+        name: _playerName,
+        answers: [],
+        gameId: _joinedGameId!,
+        clientId: _clientId,
+      ),
+    );
     notifyListeners();
   }
 
@@ -120,9 +128,16 @@ class ClientController extends ChangeNotifier {
     }
 
     if (payload.nextQuestion.isNotEmpty) {
-      _phase = ClientPhase.question;
-      notifyListeners();
+      if (myAnswers.length < payload.nextQuestion.length) {
+        _phase = ClientPhase.question;
+        notifyListeners();
+      }
     }
+
+    // if (payload.nextQuestion.isNotEmpty) {
+    //   _phase = ClientPhase.question;
+    //   notifyListeners();
+    // }
   }
 
   void submitAnswer(int answerIndex) {

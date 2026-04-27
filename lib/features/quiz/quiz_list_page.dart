@@ -294,11 +294,9 @@ class _QuizListPageState extends State<QuizListPage> {
                       },
                       onDelete: () => _deleteQuiz(quiz.id),
                       onStart: () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (_) => const LobbySessionPage(),
-                          ),
-                        );
+                        Navigator.of(
+                          context,
+                        ).pushNamed("/host", arguments: quiz.id);
                       },
                     ),
                   ),
@@ -316,7 +314,10 @@ class _QuizListPageState extends State<QuizListPage> {
                                 _currentPage--;
                               });
                             },
-                            icon: const Icon(Icons.expand_less_rounded, size: 18),
+                            icon: const Icon(
+                              Icons.expand_less_rounded,
+                              size: 18,
+                            ),
                             label: const Text('Lebih Sedikit'),
                             style: TextButton.styleFrom(
                               foregroundColor: colors.mutedText,
@@ -340,7 +341,10 @@ class _QuizListPageState extends State<QuizListPage> {
                                 _currentPage++;
                               });
                             },
-                            icon: const Icon(Icons.expand_more_rounded, size: 18),
+                            icon: const Icon(
+                              Icons.expand_more_rounded,
+                              size: 18,
+                            ),
                             label: const Text('Lebih Banyak'),
                             style: TextButton.styleFrom(
                               foregroundColor: colors.primary,

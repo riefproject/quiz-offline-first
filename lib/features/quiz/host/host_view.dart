@@ -4,7 +4,9 @@ import '../../../widgets/components/app_button.dart';
 import 'host_controller.dart';
 
 class HostView extends StatefulWidget {
-  const HostView({super.key});
+  final String quizId;
+
+  const HostView({super.key, required this.quizId});
 
   @override
   State<HostView> createState() => _HostViewState();
@@ -16,7 +18,7 @@ class _HostViewState extends State<HostView> {
   @override
   void initState() {
     super.initState();
-    _controller = HostController();
+    _controller = HostController(quizId: widget.quizId);
     _controller.addListener(_onControllerChange);
   }
 
@@ -56,7 +58,10 @@ class _HostViewState extends State<HostView> {
               child: Row(
                 children: [
                   IconButton(
-                    icon: Icon(Icons.arrow_back_rounded, color: colors.textOnSurface),
+                    icon: Icon(
+                      Icons.arrow_back_rounded,
+                      color: colors.textOnSurface,
+                    ),
                     onPressed: () => Navigator.of(context).pop(),
                   ),
                   const SizedBox(width: 8),
@@ -71,7 +76,10 @@ class _HostViewState extends State<HostView> {
                   ),
                   if (_controller.phase == HostPhase.lobby)
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 4,
+                      ),
                       decoration: BoxDecoration(
                         color: _controller.isAdvertising
                             ? Colors.green.shade100
@@ -172,11 +180,17 @@ class _HostViewState extends State<HostView> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.people_outline_rounded, size: 48, color: colors.mutedText),
+                      Icon(
+                        Icons.people_outline_rounded,
+                        size: 48,
+                        color: colors.mutedText,
+                      ),
                       const SizedBox(height: 12),
                       Text(
                         'Waiting for participants to join...',
-                        style: textTheme.bodyMedium?.copyWith(color: colors.mutedText),
+                        style: textTheme.bodyMedium?.copyWith(
+                          color: colors.mutedText,
+                        ),
                       ),
                     ],
                   ),
@@ -184,7 +198,9 @@ class _HostViewState extends State<HostView> {
               : ListView.builder(
                   itemCount: _controller.participants.length,
                   itemBuilder: (context, index) {
-                    final entry = _controller.participants.entries.elementAt(index);
+                    final entry = _controller.participants.entries.elementAt(
+                      index,
+                    );
                     return Container(
                       margin: const EdgeInsets.only(bottom: 8),
                       padding: const EdgeInsets.all(12),
@@ -197,20 +213,33 @@ class _HostViewState extends State<HostView> {
                         children: [
                           CircleAvatar(
                             radius: 16,
-                            backgroundColor: colors.primary.withValues(alpha: 0.14),
+                            backgroundColor: colors.primary.withValues(
+                              alpha: 0.14,
+                            ),
                             child: Text(
-                              entry.value.isNotEmpty ? entry.value[0].toUpperCase() : '?',
-                              style: TextStyle(color: colors.primary, fontWeight: FontWeight.w700),
+                              entry.value.isNotEmpty
+                                  ? entry.value[0].toUpperCase()
+                                  : '?',
+                              style: TextStyle(
+                                color: colors.primary,
+                                fontWeight: FontWeight.w700,
+                              ),
                             ),
                           ),
                           const SizedBox(width: 12),
                           Expanded(
                             child: Text(
                               entry.value,
-                              style: textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
+                              style: textTheme.bodyMedium?.copyWith(
+                                fontWeight: FontWeight.w600,
+                              ),
                             ),
                           ),
-                          Icon(Icons.check_circle_rounded, color: Colors.green.shade400, size: 20),
+                          Icon(
+                            Icons.check_circle_rounded,
+                            color: Colors.green.shade400,
+                            size: 20,
+                          ),
                         ],
                       ),
                     );
@@ -256,7 +285,7 @@ class _HostViewState extends State<HostView> {
           child: Column(
             children: [
               Text(
-                'Question ${_controller.currentQuestionIndex + 1} of ${mockQuestions.length}',
+                'Question ${_controller.currentQuestionIndex + 1} of ${_controller.questions.length}',
                 style: textTheme.labelLarge?.copyWith(
                   color: Colors.white70,
                   fontWeight: FontWeight.w700,
@@ -307,7 +336,9 @@ class _HostViewState extends State<HostView> {
                 Expanded(
                   child: Text(
                     q.options[i],
-                    style: textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w600),
+                    style: textTheme.bodyLarge?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ),
               ],
@@ -329,20 +360,26 @@ class _HostViewState extends State<HostView> {
                 '${_controller.answers.length} answer(s) received',
                 style: textTheme.bodyMedium?.copyWith(color: colors.mutedText),
               ),
-              ..._controller.answers.map((a) => Padding(
-                padding: const EdgeInsets.only(left: 8),
-                child: Chip(
-                  label: Text('${a.name}: ${optionLabels[a.answer]}',
-                    style: textTheme.labelSmall),
-                  visualDensity: VisualDensity.compact,
-                ),
-              )),
+              // ..._controller.answers.map(
+              //   (a) => Padding(
+              //     padding: const EdgeInsets.only(left: 8),
+              //     child: Chip(
+              //       label: Text(
+              //         '${a.name}: ${optionLabels[a.answer]}',
+              //         style: textTheme.labelSmall,
+              //       ),
+              //       visualDensity: VisualDensity.compact,
+              //     ),
+              //   ),
+              // ),
             ],
           ),
         ),
         const SizedBox(height: 12),
         AppButton.primary(
-          label: _controller.currentQuestionIndex < mockQuestions.length - 1
+          label:
+              _controller.currentQuestionIndex <
+                  _controller.questions.length - 1
               ? 'Next Question'
               : 'Finish Game',
           onPressed: () => _controller.nextQuestion(),
@@ -363,18 +400,20 @@ class _HostViewState extends State<HostView> {
           const SizedBox(height: 24),
           Text(
             'Game Over!',
-            style: textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.w800),
+            style: textTheme.headlineMedium?.copyWith(
+              fontWeight: FontWeight.w800,
+            ),
           ),
           const SizedBox(height: 8),
           Text(
             '${_controller.participants.length} participant(s) joined',
             style: textTheme.bodyLarge?.copyWith(color: colors.mutedText),
           ),
-          const SizedBox(height: 8),
-          Text(
-            '${_controller.answers.length} total answer(s) received',
-            style: textTheme.bodyMedium?.copyWith(color: colors.mutedText),
-          ),
+          // const SizedBox(height: 8),
+          // Text(
+          //   '${_controller.answers.length} total answer(s) received',
+          //   style: textTheme.bodyMedium?.copyWith(color: colors.mutedText),
+          // ),
           const SizedBox(height: 32),
           AppButton.primary(
             label: 'Done',

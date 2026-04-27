@@ -1,39 +1,37 @@
+import 'package:py_4/models/db_models.dart';
+import 'package:py_4/services/hive_service.dart';
+
 class Question {
-  final int id;
+  final String id;
   final String text;
   final List<String> options;
+  final int correctAnswerIndex;
 
-  const Question({required this.id, required this.text, required this.options});
+  const Question({
+    required this.id,
+    required this.text,
+    required this.options,
+    this.correctAnswerIndex = -1,
+  });
 
-  Map<String, dynamic> toMsgpackMap() => {'i': id, 'x': text, 'o': options};
+  static List<Question> fromQuizId(String quizId) {
+    final soals = HiveService.soalBox.values
+        .where((soal) => soal.idQuiz == quizId)
+        .toList();
+    return soals.map((soal) => fromSoal(soal)).toList();
+  }
 
-  factory Question.fromMsgpackMap(Map<String, dynamic> map) => Question(
-    id: map['i'] as int,
-    text: map['x'] as String,
-    options: List<String>.from(map['o'] as List),
-  );
-
-  static const List<Question> defaults = [
-    Question(
-      id: 1,
-      text: 'What is the capital of France?',
-      options: ['London', 'Berlin', 'Paris', 'Madrid'],
-    ),
-    Question(
-      id: 2,
-      text: 'Which planet is closest to the Sun?',
-      options: ['Venus', 'Mercury', 'Mars', 'Earth'],
-    ),
-    Question(id: 3, text: 'What is 2 + 2?', options: ['3', '4', '5', '6']),
-    Question(
-      id: 4,
-      text: 'What color is the sky on a clear day?',
-      options: ['Red', 'Green', 'Blue', 'Yellow'],
-    ),
-    Question(
-      id: 5,
-      text: 'Which ocean is the largest?',
-      options: ['Atlantic', 'Indian', 'Arctic', 'Pacific'],
-    ),
-  ];
+  static Question fromSoal(Soal soal) {
+    final options = soal.idPilihan.map((id) {
+      final pilihan = HiveService.pilihanJawabanBox.get(id);
+      return pilihan?.teksPilihan ?? id;
+    }).toList();
+    final correctIndex = soal.idPilihan.indexOf(soal.idJawabanBenar);
+    return Question(
+      id: soal.id,
+      text: soal.teksSoal,
+      options: options,
+      correctAnswerIndex: correctIndex,
+    );
+  }
 }

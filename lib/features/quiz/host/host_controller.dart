@@ -5,53 +5,15 @@ import 'package:flutter/foundation.dart';
 import 'package:py_4/config.dart';
 import 'package:py_4/models/client_payload.dart';
 import 'package:py_4/models/master_payload.dart';
+import 'package:py_4/models/question.dart';
 import 'package:py_4/services/ble_service_base.dart';
 import 'package:py_4/services/ble_service.dart';
+import 'package:py_4/services/logger.dart';
 import 'package:py_4/services/mock_ble_service.dart';
 import 'package:py_4/services/quiz/client_listener.dart';
 import 'package:py_4/services/quiz/master_publisher.dart';
 
 enum HostPhase { lobby, question, results }
-
-class MockQuestion {
-  final String text;
-  final List<String> options;
-  final int correctIndex;
-
-  const MockQuestion({
-    required this.text,
-    required this.options,
-    required this.correctIndex,
-  });
-}
-
-const List<MockQuestion> mockQuestions = [
-  MockQuestion(
-    text: 'What is 2 + 2?',
-    options: ['3', '4', '5', '6'],
-    correctIndex: 1,
-  ),
-  MockQuestion(
-    text: 'What is the capital of France?',
-    options: ['London', 'Berlin', 'Paris', 'Madrid'],
-    correctIndex: 2,
-  ),
-  MockQuestion(
-    text: 'Which planet is closest to the Sun?',
-    options: ['Venus', 'Mercury', 'Mars', 'Earth'],
-    correctIndex: 1,
-  ),
-  MockQuestion(
-    text: 'What is H2O commonly known as?',
-    options: ['Salt', 'Water', 'Oxygen', 'Carbon'],
-    correctIndex: 1,
-  ),
-  MockQuestion(
-    text: 'How many continents are there?',
-    options: ['5', '6', '7', '8'],
-    correctIndex: 2,
-  ),
-];
 
 class ParticipantAnswer {
   final String name;
@@ -68,7 +30,7 @@ class ParticipantAnswer {
 }
 
 class HostController extends ChangeNotifier {
-  final BleServiceBase _bleService;
+  late BleServiceBase _bleService;
   MasterPublisher? _publisher;
   ClientListener? _clientListener;
 
@@ -79,8 +41,11 @@ class HostController extends ChangeNotifier {
   HostPhase get phase => _phase;
 
   int _currentQuestionIndex = -1;
+  final String quizId;
+  List<Question> questions = [];
+
   int get currentQuestionIndex => _currentQuestionIndex;
-  MockQuestion get currentQuestion => mockQuestions[_currentQuestionIndex];
+  Question get currentQuestion => questions[_currentQuestionIndex];
 
   List<ParticipantAnswer> _answers = [];
   List<ParticipantAnswer> get answers => _answers;
@@ -99,11 +64,13 @@ class HostController extends ChangeNotifier {
     gameID: 0,
   );
 
-  HostController({BleServiceBase? bleService})
-    : _bleService = Config.isSessionMocked
-          ? MockBleService()
-          : bleService ?? BleService();
-
+  HostController({BleServiceBase? bleService, required this.quizId}) {
+    _bleService = Config.isSessionMocked
+        ? MockBleService()
+        : bleService ?? BleService();
+    questions = Question.fromQuizId(quizId);
+    log.i('HostController: loaded ${questions.length} questions for quiz $quizId');
+  }
   Future<void> startGame() async {
     _gameId = Random().nextInt(999999) + 100000;
 
@@ -112,6 +79,7 @@ class HostController extends ChangeNotifier {
 
     _publisher = MasterPublisher(bleService: _bleService);
     _clientListener = ClientListener(bleService: _bleService, gameId: _gameId);
+    _bleService.startScan(timeout: Duration(seconds: 120));
 
     _clientSub = _clientListener!.stream.listen(_onClientPayload);
 
@@ -153,7 +121,7 @@ class HostController extends ChangeNotifier {
 
   Future<void> nextQuestion() async {
     _currentQuestionIndex++;
-    if (_currentQuestionIndex >= mockQuestions.length) {
+    if (_currentQuestionIndex >= questions.length) {
       await endGame();
       return;
     }

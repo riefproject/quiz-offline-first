@@ -38,8 +38,16 @@ class QuizApp extends StatelessWidget {
         '/guest': (_) => GuestJoinPage(),
         '/app': (_) => const AuthGate(),
         '/play': (_) => const RoleChoicePage(),
-        '/host': (_) => const HostView(),
         '/client': (_) => const ClientView(),
+      },
+      onGenerateRoute: (settings) {
+        if (settings.name == '/host') {
+          final quizId = settings.arguments as String;
+          return MaterialPageRoute(
+            builder: (context) => HostView(quizId: quizId),
+          );
+        }
+        return null;
       },
       debugShowCheckedModeBanner: false,
     );
