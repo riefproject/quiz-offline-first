@@ -249,7 +249,7 @@ class _CreateQuizPageState extends State<CreateQuizPage> {
                             '${_questions.length} QUESTIONS ADDED',
                             style: textTheme.labelSmall?.copyWith(
                               fontWeight: FontWeight.w800,
-                              color: colors.primary,
+                              color: colors.textOnPrimary,
                               letterSpacing: 0.5,
                             ),
                           ),
@@ -281,11 +281,11 @@ class _CreateQuizPageState extends State<CreateQuizPage> {
                       alignment: Alignment.center,
                       child: ElevatedButton.icon(
                         onPressed: _addEmptyQuestion,
-                        icon: const Icon(Icons.add_circle, color: Colors.black87),
+                        icon: const Icon(Icons.add_circle, color: Colors.white),
                         label: const Text(
                           'ADD QUESTION',
                           style: TextStyle(
-                            color: Colors.black87,
+                            color: Colors.white,
                             fontWeight: FontWeight.w800,
                             letterSpacing: 0.5,
                           ),
