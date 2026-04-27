@@ -51,8 +51,6 @@ class QuizSyncService {
       final isMongoConnected = await MongoDatabase.tryConnect();
       if (!isMongoConnected) {
         _isSyncing = false;
-        syncError.value =
-            "Gagal terhubung ke MongoDB (Cek URI atau Whitelist IP)";
         return;
       }
 
@@ -128,7 +126,11 @@ class QuizSyncService {
       syncError.value = null;
     } catch (e) {
       debugPrint("Sync failed: $e");
-      syncError.value = "Gagal sinkronisasi: $e";
+      if (e.toString().contains('No master connection')) {
+        syncError.value = null;
+      } else {
+        syncError.value = "Gagal sinkronisasi: $e";
+      }
     } finally {
       _isSyncing = false;
     }

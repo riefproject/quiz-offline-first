@@ -300,14 +300,19 @@ class AuthService {
     }
     if (filters.isEmpty) return null;
 
-    final document = await MongoDatabase.usersCollection.findOne({
-      r'$or': filters,
-    });
-    if (document == null) return null;
+    try {
+      final document = await MongoDatabase.usersCollection.findOne({
+        r'$or': filters,
+      });
+      if (document == null) return null;
 
-    final user = AppUser.fromJson(document);
-    await HiveService.usersBox.put(user.id, user);
-    return user;
+      final user = AppUser.fromJson(document);
+      await HiveService.usersBox.put(user.id, user);
+      return user;
+    } catch (e) {
+      print('Error _findUserByIdentifier remote: $e');
+      return null;
+    }
   }
 
   static Future<AppUser?> _findRemoteUser(String identifier) async {
@@ -323,10 +328,15 @@ class AuthService {
     }
     if (filters.isEmpty) return null;
 
-    final document = await MongoDatabase.usersCollection.findOne({
-      r'$or': filters,
-    });
-    return document == null ? null : AppUser.fromJson(document);
+    try {
+      final document = await MongoDatabase.usersCollection.findOne({
+        r'$or': filters,
+      });
+      return document == null ? null : AppUser.fromJson(document);
+    } catch (e) {
+      print('Error _findRemoteUser: $e');
+      return null;
+    }
   }
 
   static Future<AppUser> _persistUser(AppUser user) async {
