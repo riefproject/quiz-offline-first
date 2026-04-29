@@ -3,7 +3,6 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 import 'features/auth/auth_gate.dart';
 import 'features/auth/forgot_password_page.dart';
-import 'features/auth/guest_join_page.dart';
 import 'features/auth/login.dart';
 import 'features/auth/register_page.dart';
 import 'features/quiz/client/client_view.dart';
@@ -35,7 +34,6 @@ class QuizApp extends StatelessWidget {
         '/login': (_) => const LoginPage(),
         '/register': (_) => const RegisterPage(),
         '/forgot-password': (_) => const ForgotPasswordPage(),
-        '/guest': (_) => GuestJoinPage(),
         '/app': (_) => const AuthGate(),
         '/play': (_) => const RoleChoicePage(),
         '/client': (_) => const ClientView(),

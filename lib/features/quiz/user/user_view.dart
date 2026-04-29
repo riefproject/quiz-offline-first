@@ -80,7 +80,9 @@ class UserView extends StatelessWidget {
           const SizedBox(height: 18),
           AppButton.outlined(
             label: 'Scan / Change Session',
-            onPressed: () => Navigator.of(context).pushReplacementNamed('/guest'),
+            onPressed: () {
+              Navigator.of(context).pushReplacementNamed('/login');
+            },
           ),
           const SizedBox(height: 12),
           AppButton.text(

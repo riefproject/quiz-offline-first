@@ -5,6 +5,7 @@ import '../../widgets/components/app_button.dart';
 import '../../widgets/components/app_input.dart';
 import '../../widgets/layout/app_shell.dart';
 import '../../services/auth_service.dart';
+import 'guest_join_page.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -196,7 +197,14 @@ class _LoginPageState extends State<LoginPage> {
                 label: 'Join as a Guest',
                 onPressed: _isSubmitting
                     ? null
-                    : () => Navigator.of(context).pushNamed('/guest'),
+                    : () {
+                        showModalBottomSheet(
+                          context: context,
+                          isScrollControlled: true,
+                          backgroundColor: Colors.transparent,
+                          builder: (context) => GuestJoinPage(),
+                        );
+                      },
               ),
               const SizedBox(height: 12),
               AppButton.text(
