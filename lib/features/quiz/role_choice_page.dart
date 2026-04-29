@@ -29,7 +29,7 @@ class RoleChoicePage extends StatelessWidget {
                       borderRadius: BorderRadius.circular(24),
                     ),
                     child: Text(
-                      'Kahoof!',
+                      'AlpenQuiz',
                       style: textTheme.headlineLarge?.copyWith(
                         color: colors.textOnPrimary,
                         fontWeight: FontWeight.w800,
