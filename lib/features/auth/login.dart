@@ -51,9 +51,9 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   void _showMessage(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message)),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
   }
 
   @override
@@ -69,10 +69,7 @@ class _LoginPageState extends State<LoginPage> {
         begin: Alignment.topCenter,
         end: Alignment.bottomCenter,
         stops: const [0.0, 0.4],
-        colors: [
-          colors.tertiary.withValues(alpha: 0.15),
-          colors.surfaceLowest,
-        ],
+        colors: [colors.tertiary.withValues(alpha: 0.15), colors.surfaceLowest],
       ),
       body: Center(
         child: SingleChildScrollView(
@@ -82,13 +79,16 @@ class _LoginPageState extends State<LoginPage> {
             children: [
               Align(
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 32,
+                    vertical: 16,
+                  ),
                   decoration: BoxDecoration(
                     color: colors.primary,
                     borderRadius: BorderRadius.circular(24),
                   ),
                   child: Text(
-                    'Kahoof!',
+                    'AlpenQuiz',
                     style: textTheme.headlineLarge?.copyWith(
                       color: colors.textOnPrimary,
                       fontWeight: FontWeight.w800,
@@ -99,7 +99,7 @@ class _LoginPageState extends State<LoginPage> {
               ),
               const SizedBox(height: 24),
               Text(
-                'Masuk untuk membuat atau mengikuti kuis. Jika belum punya akun, daftar dengan email atau nomor HP untuk pemulihan akun.',
+                'Host locally, Learn globally.',
                 textAlign: TextAlign.center,
                 style: textTheme.bodyLarge?.copyWith(
                   fontWeight: FontWeight.w700,
@@ -114,18 +114,20 @@ class _LoginPageState extends State<LoginPage> {
                 keyboardType: TextInputType.emailAddress,
               ),
               const SizedBox(height: 20),
-              AppPasswordField(
-                controller: _passwordController,
-              ),
+              AppPasswordField(controller: _passwordController),
               Align(
                 alignment: Alignment.centerRight,
                 child: TextButton(
                   onPressed: _isSubmitting
                       ? null
-                      : () => Navigator.of(context).pushNamed('/forgot-password'),
+                      : () =>
+                            Navigator.of(context).pushNamed('/forgot-password'),
                   style: TextButton.styleFrom(
                     foregroundColor: colors.primary,
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
                     minimumSize: Size.zero,
                     tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                   ),
@@ -167,7 +169,11 @@ class _LoginPageState extends State<LoginPage> {
               const SizedBox(height: 32),
               Row(
                 children: [
-                  Expanded(child: Divider(color: colors.textOnSurface.withValues(alpha: 0.1))),
+                  Expanded(
+                    child: Divider(
+                      color: colors.textOnSurface.withValues(alpha: 0.1),
+                    ),
+                  ),
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16),
                     child: Text(
@@ -177,7 +183,11 @@ class _LoginPageState extends State<LoginPage> {
                       ),
                     ),
                   ),
-                  Expanded(child: Divider(color: colors.textOnSurface.withValues(alpha: 0.1))),
+                  Expanded(
+                    child: Divider(
+                      color: colors.textOnSurface.withValues(alpha: 0.1),
+                    ),
+                  ),
                 ],
               ),
               const SizedBox(height: 24),

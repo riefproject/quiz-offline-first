@@ -69,7 +69,9 @@ class HostController extends ChangeNotifier {
         ? MockBleService()
         : bleService ?? BleService();
     questions = Question.fromQuizId(quizId);
-    log.i('HostController: loaded ${questions.length} questions for quiz $quizId');
+    log.i(
+      'HostController: loaded ${questions.length} questions for quiz $quizId',
+    );
   }
   Future<void> startGame() async {
     _gameId = Random().nextInt(999999) + 100000;
@@ -96,7 +98,7 @@ class HostController extends ChangeNotifier {
   }
 
   void _onClientPayload(ClientPayload payload) {
-    if (payload.gameId != _gameId) return;
+    if (payload.gameID != _gameId) return;
 
     _participants[payload.clientId] = payload.name;
 

@@ -21,13 +21,16 @@ class RoleChoicePage extends StatelessWidget {
             children: [
               Align(
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 32,
+                    vertical: 16,
+                  ),
                   decoration: BoxDecoration(
                     color: colors.primary,
                     borderRadius: BorderRadius.circular(24),
                   ),
                   child: Text(
-                    'Kahoof!',
+                    'AlpenQuiz',
                     style: textTheme.headlineLarge?.copyWith(
                       color: colors.textOnPrimary,
                       fontWeight: FontWeight.w800,
@@ -49,9 +52,7 @@ class RoleChoicePage extends StatelessWidget {
               Text(
                 'Choose your role to start a real-time quiz session over Bluetooth.',
                 textAlign: TextAlign.center,
-                style: textTheme.bodyMedium?.copyWith(
-                  color: colors.mutedText,
-                ),
+                style: textTheme.bodyMedium?.copyWith(color: colors.mutedText),
               ),
               const Spacer(),
               AppCard(
@@ -71,7 +72,9 @@ class RoleChoicePage extends StatelessWidget {
                     const SizedBox(height: 4),
                     Text(
                       'Create a quiz session and broadcast questions. You control the pace.',
-                      style: textTheme.bodyMedium?.copyWith(color: colors.mutedText),
+                      style: textTheme.bodyMedium?.copyWith(
+                        color: colors.mutedText,
+                      ),
                     ),
                     const SizedBox(height: 16),
                     AppButton.primary(
@@ -87,7 +90,11 @@ class RoleChoicePage extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Icon(Icons.phonelink_rounded, size: 40, color: colors.secondary),
+                    Icon(
+                      Icons.phonelink_rounded,
+                      size: 40,
+                      color: colors.secondary,
+                    ),
                     const SizedBox(height: 12),
                     Text(
                       'Client',
@@ -99,12 +106,15 @@ class RoleChoicePage extends StatelessWidget {
                     const SizedBox(height: 4),
                     Text(
                       'Scan for nearby quiz sessions and answer questions in real time.',
-                      style: textTheme.bodyMedium?.copyWith(color: colors.mutedText),
+                      style: textTheme.bodyMedium?.copyWith(
+                        color: colors.mutedText,
+                      ),
                     ),
                     const SizedBox(height: 16),
                     AppButton.outlined(
                       label: 'Join a Game',
-                      onPressed: () => Navigator.of(context).pushNamed('/client'),
+                      onPressed: () =>
+                          Navigator.of(context).pushNamed('/client'),
                     ),
                   ],
                 ),
@@ -114,7 +124,9 @@ class RoleChoicePage extends StatelessWidget {
                 onPressed: () => Navigator.of(context).pop(),
                 child: Text(
                   'Back',
-                  style: textTheme.bodyMedium?.copyWith(color: colors.mutedText),
+                  style: textTheme.bodyMedium?.copyWith(
+                    color: colors.mutedText,
+                  ),
                 ),
               ),
             ],

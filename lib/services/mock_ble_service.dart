@@ -47,9 +47,14 @@ class MockBleService extends BleServiceBase {
   }
 
   @override
-  Future<void> startAdvertising(Uint8List data, {String localName = 'KahoofMaster'}) async {
+  Future<void> startAdvertising(
+    Uint8List data, {
+    String localName = 'KahoofMaster',
+  }) async {
     _advertiseCount++;
-    log.i('MockBLE: ADVERTISE #$_advertiseCount (localName=$localName, ${data.length} bytes)\n${formatBlePayload(data)}');
+    log.i(
+      'MockBLE: ADVERTISE #$_advertiseCount (localName=$localName, ${data.length} bytes)\n${formatBlePayload(data)}',
+    );
     isAdvertising.value = true;
 
     try {
@@ -57,7 +62,9 @@ class MockBleService extends BleServiceBase {
       _clientSimulationActive = true;
       _runMockClientSimulation(payload);
     } catch (e) {
-      log.w('MockBLE: could not decode host payload for client simulation — $e');
+      log.w(
+        'MockBLE: could not decode host payload for client simulation — $e',
+      );
     }
   }
 
@@ -78,13 +85,16 @@ class MockBleService extends BleServiceBase {
         final joinPayload = ClientPayload(
           name: client.name,
           answers: [],
-          gameId: hostPayload.gameID,
+          gameID: hostPayload.gameID,
           clientId: client.clientId,
         );
-        final existing = List<Uint8List>.from(rawScanData.value)..add(joinPayload.toBytes());
+        final existing = List<Uint8List>.from(rawScanData.value)
+          ..add(joinPayload.toBytes());
         rawScanData.value = existing;
 
-        log.i('MockBLE: CLIENT JOINED (name=${client.name}, clientId=${client.clientId})\n${formatBlePayload(joinPayload.toBytes())}');
+        log.i(
+          'MockBLE: CLIENT JOINED (name=${client.name}, clientId=${client.clientId})\n${formatBlePayload(joinPayload.toBytes())}',
+        );
       }
       return;
     }
@@ -96,7 +106,10 @@ class MockBleService extends BleServiceBase {
       final answerIndex = Random().nextInt(4);
       final offsetMs = 1000 + Random().nextInt(3000);
       final previousAnswers = _mockClientAnswers[client.clientId] ?? [];
-      final newAnswer = ClientAnswer(answer: answerIndex, answerMsOffset: offsetMs);
+      final newAnswer = ClientAnswer(
+        answer: answerIndex,
+        answerMsOffset: offsetMs,
+      );
       final allAnswers = [...previousAnswers, newAnswer];
       _mockClientAnswers[client.clientId] = allAnswers;
 
@@ -104,27 +117,36 @@ class MockBleService extends BleServiceBase {
       final answerPayload = ClientPayload(
         name: client.name,
         answers: allAnswers,
-        gameId: hostPayload.gameID,
+        gameID: hostPayload.gameID,
         clientId: client.clientId,
       );
-      final existing = List<Uint8List>.from(rawScanData.value)..add(answerPayload.toBytes());
+      final existing = List<Uint8List>.from(rawScanData.value)
+        ..add(answerPayload.toBytes());
       rawScanData.value = existing;
 
-      log.i('MockBLE: CLIENT ANSWER (name=${client.name}, answer=${answerLabels[answerIndex]} ($answerIndex), offsetMs=${offsetMs}ms, total=${allAnswers.length})\n${formatBlePayload(answerPayload.toBytes())}');
+      log.i(
+        'MockBLE: CLIENT ANSWER (name=${client.name}, answer=${answerLabels[answerIndex]} ($answerIndex), offsetMs=${offsetMs}ms, total=${allAnswers.length})\n${formatBlePayload(answerPayload.toBytes())}',
+      );
     }
   }
 
   @override
   Future<void> stopAdvertising() async {
-    log.i('MockBLE: stopAdvertising() — total advertisements: $_advertiseCount');
+    log.i(
+      'MockBLE: stopAdvertising() — total advertisements: $_advertiseCount',
+    );
     _clientSimulationActive = false;
     isAdvertising.value = false;
   }
 
   @override
-  Future<void> startScan({Duration timeout = const Duration(seconds: 30)}) async {
+  Future<void> startScan({
+    Duration timeout = const Duration(seconds: 30),
+  }) async {
     _scanCount++;
-    log.i('MockBLE: SCAN #$_scanCount started (timeout=${timeout.inSeconds}s) — will simulate: discovery → Q1 → Q2 → finish');
+    log.i(
+      'MockBLE: SCAN #$_scanCount started (timeout=${timeout.inSeconds}s) — will simulate: discovery → Q1 → Q2 → finish',
+    );
 
     rawScanData.value = [];
     isScanning.value = true;
@@ -142,8 +164,11 @@ class MockBleService extends BleServiceBase {
       nextQuestion: [],
       gameID: _mockGameId,
     );
-    rawScanData.value = List<Uint8List>.from(rawScanData.value)..add(lobbyPayload.toBytes());
-    log.i('MockBLE: DISCOVERED game #$_mockGameId (lobby)\n${formatBlePayload(lobbyPayload.toBytes())}');
+    rawScanData.value = List<Uint8List>.from(rawScanData.value)
+      ..add(lobbyPayload.toBytes());
+    log.i(
+      'MockBLE: DISCOVERED game #$_mockGameId (lobby)\n${formatBlePayload(lobbyPayload.toBytes())}',
+    );
 
     await Future.delayed(const Duration(seconds: 3));
     if (!_scanning) return;
@@ -153,8 +178,11 @@ class MockBleService extends BleServiceBase {
       nextQuestion: [5000],
       gameID: _mockGameId,
     );
-    rawScanData.value = List<Uint8List>.from(rawScanData.value)..add(q1Payload.toBytes());
-    log.i('MockBLE: QUESTION 1 broadcast (gameID=$_mockGameId, nextQuestion=[5.0s])\n${formatBlePayload(q1Payload.toBytes())}');
+    rawScanData.value = List<Uint8List>.from(rawScanData.value)
+      ..add(q1Payload.toBytes());
+    log.i(
+      'MockBLE: QUESTION 1 broadcast (gameID=$_mockGameId, nextQuestion=[5.0s])\n${formatBlePayload(q1Payload.toBytes())}',
+    );
 
     await Future.delayed(const Duration(seconds: 3));
     if (!_scanning) return;
@@ -164,8 +192,11 @@ class MockBleService extends BleServiceBase {
       nextQuestion: [5000, 10000],
       gameID: _mockGameId,
     );
-    rawScanData.value = List<Uint8List>.from(rawScanData.value)..add(q2Payload.toBytes());
-    log.i('MockBLE: QUESTION 2 broadcast (gameID=$_mockGameId, nextQuestion=[5.0s, 10.0s])\n${formatBlePayload(q2Payload.toBytes())}');
+    rawScanData.value = List<Uint8List>.from(rawScanData.value)
+      ..add(q2Payload.toBytes());
+    log.i(
+      'MockBLE: QUESTION 2 broadcast (gameID=$_mockGameId, nextQuestion=[5.0s, 10.0s])\n${formatBlePayload(q2Payload.toBytes())}',
+    );
 
     await Future.delayed(const Duration(seconds: 3));
     if (!_scanning) return;
@@ -176,8 +207,11 @@ class MockBleService extends BleServiceBase {
       gameFinished: true,
       gameID: _mockGameId,
     );
-    rawScanData.value = List<Uint8List>.from(rawScanData.value)..add(endPayload.toBytes());
-    log.i('MockBLE: GAME FINISHED broadcast (gameID=$_mockGameId)\n${formatBlePayload(endPayload.toBytes())}');
+    rawScanData.value = List<Uint8List>.from(rawScanData.value)
+      ..add(endPayload.toBytes());
+    log.i(
+      'MockBLE: GAME FINISHED broadcast (gameID=$_mockGameId)\n${formatBlePayload(endPayload.toBytes())}',
+    );
   }
 
   @override

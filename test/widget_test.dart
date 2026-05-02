@@ -14,14 +14,11 @@ import 'package:py_4/theme/theme_config.dart';
 void main() {
   testWidgets('shows quiz list layout', (WidgetTester tester) async {
     await tester.pumpWidget(
-      MaterialApp(
-        theme: ThemeConfig.lightTheme,
-        home: const QuizListPage(),
-      ),
+      MaterialApp(theme: ThemeConfig.lightTheme, home: const QuizListPage()),
     );
     await tester.pump();
 
-    expect(find.text('Intelligent Quiz'), findsOneWidget);
+    expect(find.text('AlpenQuiz'), findsOneWidget);
     expect(find.text('My Quizzes'), findsOneWidget);
     expect(find.text('Molecular Biology Basics'), findsOneWidget);
     expect(find.text('Quizzes'), findsWidgets);

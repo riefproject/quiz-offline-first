@@ -111,7 +111,7 @@ class ClientController extends ChangeNotifier {
       ClientPayload(
         name: _playerName,
         answers: [],
-        gameId: _joinedGameId!,
+        gameID: _joinedGameId!,
         clientId: _clientId,
       ),
     );
@@ -151,7 +151,7 @@ class ClientController extends ChangeNotifier {
     final payload = ClientPayload(
       name: _playerName,
       answers: _myAnswers,
-      gameId: _joinedGameId!,
+      gameID: _joinedGameId!,
       clientId: _clientId,
     );
 

@@ -2,10 +2,11 @@ import 'dart:typed_data';
 
 import 'package:msgpack_dart/msgpack_dart.dart' as msgpack;
 import 'package:py_4/models/byte_serializable.dart';
+import 'package:py_4/models/game_payload.dart';
 
 const MASTER_PAYLOAD_TYPE = "m";
 
-class MasterPayload implements ByteSerializable {
+class MasterPayload implements ByteSerializable, GamePayload {
   final payloadType = MASTER_PAYLOAD_TYPE;
   // anchored time
   final int masterTimeMs;
@@ -14,6 +15,7 @@ class MasterPayload implements ByteSerializable {
   // flag for is game finished
   bool? gameFinished = false;
   // game ID. randomly generated
+  @override
   final int gameID;
 
   MasterPayload({

@@ -28,7 +28,7 @@ class QuizApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Kahoof!',
+      title: 'AlpenQuiz',
       theme: ThemeConfig.lightTheme,
       home: const AuthGate(),
       routes: {

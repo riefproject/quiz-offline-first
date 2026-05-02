@@ -81,8 +81,8 @@ class _QuizListPageState extends State<QuizListPage> {
 
     return AppShell(
       header: AppTopHeader(
-        title: 'Intelligent Quiz',
-        subtitle: 'Offline quiz workspace',
+        title: 'AlpenQuiz',
+        subtitle: '',
         trailing: Row(
           mainAxisSize: MainAxisSize.min,
           children: [

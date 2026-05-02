@@ -44,13 +44,15 @@ String formatBlePayload(Uint8List data) {
         final pretty = <String, dynamic>{
           't': payload.payloadType,
           'name': payload.name,
-          'gameId': payload.gameId,
+          'gameId': payload.gameID,
           'clientId': payload.clientId,
           'answers': payload.answers
-              .map((a) => {
-                    'answer': a.answer,
-                    'offsetMs': '${a.answerMsOffset}ms',
-                  })
+              .map(
+                (a) => {
+                  'answer': a.answer,
+                  'offsetMs': '${a.answerMsOffset}ms',
+                },
+              )
               .toList(),
         };
         return '\n${const JsonEncoder.withIndent('  ').convert(pretty)}';
@@ -61,7 +63,10 @@ String formatBlePayload(Uint8List data) {
 
     return '\n${const JsonEncoder.withIndent('  ').convert(map)}';
   } catch (_) {
-    final hex = data.take(16).map((b) => b.toRadixString(16).padLeft(2, '0')).join(' ');
+    final hex = data
+        .take(16)
+        .map((b) => b.toRadixString(16).padLeft(2, '0'))
+        .join(' ');
     return ' [${data.length} bytes, hex: $hex${data.length > 16 ? ' ...' : ''}]';
   }
 }

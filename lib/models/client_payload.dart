@@ -2,6 +2,7 @@ import 'dart:typed_data';
 
 import 'package:msgpack_dart/msgpack_dart.dart' as msgpack;
 import 'package:py_4/models/byte_serializable.dart';
+import 'package:py_4/models/game_payload.dart';
 
 const CLIENT_PAYLOAD_TYPE = "c";
 
@@ -17,21 +18,22 @@ class ClientAnswer {
       ClientAnswer(answer: map['a'] as int, answerMsOffset: map['o'] as int);
 }
 
-class ClientPayload implements ByteSerializable {
+class ClientPayload implements ByteSerializable, GamePayload {
   final payloadType = CLIENT_PAYLOAD_TYPE;
   // max 20 bytes (20 length)
   final String name;
   // answers submitted to the master
   final List<ClientAnswer> answers;
   // the game ID this payload is for
-  final int gameId;
+  @override
+  final int gameID;
   // the client ID
   final int clientId;
 
   const ClientPayload({
     required this.name,
     required this.answers,
-    required this.gameId,
+    required this.gameID,
     required this.clientId,
   });
 
@@ -41,7 +43,7 @@ class ClientPayload implements ByteSerializable {
   Map<String, dynamic> toMsgpackMap() => {
     "t": payloadType,
     'n': name,
-    'g': gameId,
+    'g': gameID,
     'c': clientId,
     'a': answers.map((e) => e.toMsgpackMap()).toList(),
   };
@@ -49,7 +51,7 @@ class ClientPayload implements ByteSerializable {
   factory ClientPayload.fromMsgpackMap(Map<String, dynamic> map) =>
       ClientPayload(
         name: map['n'] as String,
-        gameId: map['g'] as int,
+        gameID: map['g'] as int,
         clientId: map['c'] as int,
         answers: (map['a'] as List)
             .map(

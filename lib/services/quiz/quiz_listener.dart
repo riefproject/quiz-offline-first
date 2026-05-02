@@ -1,11 +1,12 @@
 import 'dart:async';
 import 'dart:typed_data';
 
+import 'package:py_4/models/game_payload.dart';
 import 'package:py_4/services/ble_payload_formatter.dart';
 import 'package:py_4/services/ble_service_base.dart';
 import 'package:py_4/services/logger.dart';
 
-abstract class QuizListener<T> {
+abstract class QuizListener<T extends GamePayload> {
   final _controller = StreamController<T>();
 
   Stream<T> get stream => _controller.stream;
@@ -16,24 +17,36 @@ abstract class QuizListener<T> {
 
   void _onScanData() {
     final entries = bleService.rawScanData.value;
-    log.d('Listener($_typeName): received ${entries.length} scan entries');
+    final bestPayloads = <int, _PayloadWrapper<T>>{};
+
     for (final bytes in entries) {
       try {
         final payload = parseResult(bytes);
-        if (payload == null) {
-          log.d('Listener($_typeName): payload filtered\n${formatBlePayload(bytes)}');
-          continue;
+        if (payload == null) continue;
+
+        final id = payload.gameID;
+        final weight = bytes.length;
+
+        if (!bestPayloads.containsKey(id) ||
+            bestPayloads[id]!.weight < weight) {
+          bestPayloads[id] = _PayloadWrapper(
+            payload: payload,
+            weight: weight,
+            bytes: bytes,
+          );
         }
-        log.i('Listener($_typeName): payload parsed\n${formatBlePayload(bytes)}');
-        _controller.sink.add(payload);
       } catch (e) {
-        log.w('Listener($_typeName): parse error — $e\n${formatBlePayload(bytes)}');
+        log.w('Listener($_typeName): parse error — $e');
       }
+    }
+
+    for (final wrapper in bestPayloads.values) {
+      _controller.sink.add(wrapper.payload);
     }
   }
 
   QuizListener({required this.bleService, required String typeName})
-      : _typeName = typeName {
+    : _typeName = typeName {
     bleService.rawScanData.addListener(_onScanData);
   }
 
@@ -42,4 +55,16 @@ abstract class QuizListener<T> {
     bleService.rawScanData.removeListener(_onScanData);
     _controller.close();
   }
+}
+
+class _PayloadWrapper<T> {
+  final T payload;
+  final int weight;
+  final Uint8List bytes;
+
+  _PayloadWrapper({
+    required this.payload,
+    required this.weight,
+    required this.bytes,
+  });
 }
