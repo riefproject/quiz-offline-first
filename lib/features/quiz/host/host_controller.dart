@@ -13,7 +13,7 @@ import 'package:AlpenQuiz/services/mock_ble_service.dart';
 import 'package:AlpenQuiz/services/quiz/client_listener.dart';
 import 'package:AlpenQuiz/services/quiz/master_publisher.dart';
 
-enum HostPhase { lobby, question, results }
+enum HostPhase { lobby, countdown, question, results }
 
 class ParticipantAnswer {
   final String name;
@@ -58,6 +58,17 @@ class HostController extends ChangeNotifier {
   StreamSubscription? _clientSub;
   bool _isAdvertising = false;
   bool get isAdvertising => _isAdvertising;
+
+  Timer? _countdownTimer;
+  Timer? _questionTimer;
+
+  int _countdownRemainingMs = 0;
+  int get countdownRemainingMs => _countdownRemainingMs;
+
+  int _questionRemainingMs = 0;
+  int get questionRemainingMs => _questionRemainingMs;
+
+  int questionDuration = 10000;
   var _currentPayload = MasterPayload(
     masterTimeMs: DateTime.now().millisecondsSinceEpoch,
     nextQuestion: [],
@@ -128,23 +139,49 @@ class HostController extends ChangeNotifier {
   }
 
   Future<void> nextQuestion() async {
+    _countdownTimer?.cancel();
+    _countdownTimer = null;
+    _questionTimer?.cancel();
+    _questionTimer = null;
+
     _currentQuestionIndex++;
     if (_currentQuestionIndex >= questions.length) {
       await endGame();
       return;
     }
 
-    _phase = HostPhase.question;
     _answers = [];
     _latestPayloads.clear();
 
+    _phase = HostPhase.countdown;
+    _countdownRemainingMs = 5000;
+    notifyListeners();
+
+    _countdownTimer = Timer.periodic(const Duration(milliseconds: 100), (_) {
+      _countdownRemainingMs -= 100;
+      if (_countdownRemainingMs <= 0) {
+        _countdownTimer?.cancel();
+        _countdownTimer = null;
+        _startQuestion();
+      } else {
+        notifyListeners();
+      }
+    });
+  }
+
+  void skipCountdown() {
+    _countdownTimer?.cancel();
+    _countdownTimer = null;
+    _startQuestion();
+  }
+
+  void _startQuestion() {
     _currentPayload.nextQuestion.add(
       DateTime.now().millisecondsSinceEpoch -
-          _currentPayload.masterTimeMs +
-          Duration(seconds: 5).inMilliseconds,
+          _currentPayload.masterTimeMs,
     );
 
-    _currentPayload.duration.add(Duration(seconds: 10).inMilliseconds);
+    _currentPayload.duration.add(questionDuration);
 
     _currentPayload.choices.add(currentQuestion.options.length);
 
@@ -152,10 +189,25 @@ class HostController extends ChangeNotifier {
 
     _publisher!.publish(_currentPayload);
 
+    _phase = HostPhase.question;
+    _questionRemainingMs = questionDuration;
     notifyListeners();
+
+    _questionTimer = Timer.periodic(const Duration(milliseconds: 100), (_) {
+      _questionRemainingMs -= 100;
+      if (_questionRemainingMs <= 0) {
+        _questionTimer?.cancel();
+        _questionTimer = null;
+        endQuestion();
+      } else {
+        notifyListeners();
+      }
+    });
   }
 
   void endQuestion() {
+    _questionTimer?.cancel();
+    _questionTimer = null;
     if (_currentQuestionIndex < 0 || _currentQuestionIndex >= questions.length)
       return;
     final now =
@@ -168,6 +220,10 @@ class HostController extends ChangeNotifier {
   }
 
   Future<void> endGame() async {
+    _countdownTimer?.cancel();
+    _countdownTimer = null;
+    _questionTimer?.cancel();
+    _questionTimer = null;
     _phase = HostPhase.results;
 
     _currentPayload.gameFinished = true;
@@ -180,6 +236,8 @@ class HostController extends ChangeNotifier {
 
   @override
   void dispose() {
+    _countdownTimer?.cancel();
+    _questionTimer?.cancel();
     _clientSub?.cancel();
     _clientListener?.dispose();
     _publisher?.dispose();
