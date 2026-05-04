@@ -6,12 +6,14 @@ class Question {
   final String text;
   final List<String> options;
   final int correctAnswerIndex;
+  final String? photoUrl;
 
   const Question({
     required this.id,
     required this.text,
     required this.options,
     this.correctAnswerIndex = -1,
+    this.photoUrl,
   });
 
   static List<Question> fromQuizId(String quizId) {
@@ -32,6 +34,7 @@ class Question {
       text: soal.teksSoal,
       options: options,
       correctAnswerIndex: correctIndex,
+      photoUrl: soal.fotoSoal,
     );
   }
 }

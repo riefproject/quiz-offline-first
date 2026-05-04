@@ -1,6 +1,9 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 
 import '../../../models/db_models.dart';
+import '../../../services/cloudinary_service.dart';
 import '../../../theme/colors_config.dart';
 
 class QuestionFormCard extends StatefulWidget {
@@ -25,12 +28,18 @@ class _QuestionFormCardState extends State<QuestionFormCard> {
   late TextEditingController _teksSoalController;
   late List<TextEditingController> _pilihanControllers;
   late String _correctAnswerId;
+  bool _isUploading = false;
+  String? _photoUrl;
 
   @override
   void initState() {
     super.initState();
-    _teksSoalController = TextEditingController(text: widget.initialSoal.teksSoal);
-    _pilihanControllers = widget.initialSoal.idPilihan.map((p) => TextEditingController(text: p)).toList();
+    _teksSoalController = TextEditingController(
+      text: widget.initialSoal.teksSoal,
+    );
+    _pilihanControllers = widget.initialSoal.idPilihan
+        .map((p) => TextEditingController(text: p))
+        .toList();
     if (_pilihanControllers.isEmpty) {
       _pilihanControllers.addAll([
         TextEditingController(),
@@ -39,9 +48,10 @@ class _QuestionFormCardState extends State<QuestionFormCard> {
         TextEditingController(),
       ]);
     }
-    _correctAnswerId = widget.initialSoal.idJawabanBenar.isNotEmpty 
-        ? widget.initialSoal.idJawabanBenar 
+    _correctAnswerId = widget.initialSoal.idJawabanBenar.isNotEmpty
+        ? widget.initialSoal.idJawabanBenar
         : '0';
+    _photoUrl = widget.initialSoal.fotoSoal;
 
     _teksSoalController.addListener(_notifyChange);
     for (var c in _pilihanControllers) {
@@ -63,8 +73,38 @@ class _QuestionFormCardState extends State<QuestionFormCard> {
       teksSoal: _teksSoalController.text,
       idPilihan: _pilihanControllers.map((c) => c.text).toList(),
       idJawabanBenar: _correctAnswerId,
+      fotoSoal: _photoUrl,
     );
     widget.onChanged(updatedSoal);
+  }
+
+  Future<void> _pickAndUploadImage() async {
+    final picker = ImagePicker();
+    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
+    if (pickedFile != null) {
+      setState(() {
+        _isUploading = true;
+      });
+      try {
+        final url = await CloudinaryService.uploadImage(File(pickedFile.path));
+        if (url != null) {
+          setState(() {
+            _photoUrl = url;
+            _isUploading = false;
+          });
+          _notifyChange();
+        }
+      } catch (e) {
+        setState(() {
+          _isUploading = false;
+        });
+        if (mounted) {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(e.toString())));
+        }
+      }
+    }
   }
 
   String _getLetter(int index) {
@@ -94,7 +134,11 @@ class _QuestionFormCardState extends State<QuestionFormCard> {
             children: [
               Row(
                 children: [
-                  Icon(Icons.drag_indicator_rounded, color: colors.mutedText.withValues(alpha: 0.5), size: 20),
+                  Icon(
+                    Icons.drag_indicator_rounded,
+                    color: colors.mutedText.withValues(alpha: 0.5),
+                    size: 20,
+                  ),
                   const SizedBox(width: 8),
                   Text(
                     'QUESTION ${(widget.index + 1).toString().padLeft(2, '0')}',
@@ -107,11 +151,15 @@ class _QuestionFormCardState extends State<QuestionFormCard> {
                 ],
               ),
               IconButton(
-                icon: Icon(Icons.delete_outline_rounded, color: colors.mutedText, size: 22),
+                icon: Icon(
+                  Icons.delete_outline_rounded,
+                  color: colors.mutedText,
+                  size: 22,
+                ),
                 onPressed: widget.onDelete,
                 tooltip: 'Delete Question',
                 visualDensity: VisualDensity.compact,
-              )
+              ),
             ],
           ),
           const SizedBox(height: 12),
@@ -125,7 +173,9 @@ class _QuestionFormCardState extends State<QuestionFormCard> {
             },
             decoration: InputDecoration(
               hintText: 'Enter your question here...',
-              hintStyle: TextStyle(color: colors.mutedText.withValues(alpha: 0.6)),
+              hintStyle: TextStyle(
+                color: colors.mutedText.withValues(alpha: 0.6),
+              ),
               filled: true,
               fillColor: colors.surfaceLow,
               contentPadding: const EdgeInsets.all(20),
@@ -139,6 +189,63 @@ class _QuestionFormCardState extends State<QuestionFormCard> {
             maxLines: 3,
             minLines: 2,
           ),
+          const SizedBox(height: 12),
+          if (_isUploading)
+            Center(
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: CircularProgressIndicator(color: colors.primary),
+              ),
+            )
+          else if (_photoUrl != null && _photoUrl!.isNotEmpty)
+            Stack(
+              children: [
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(16),
+                  child: Image.network(
+                    _photoUrl!,
+                    height: 150,
+                    width: double.infinity,
+                    fit: BoxFit.cover,
+                  ),
+                ),
+                Positioned(
+                  top: 8,
+                  right: 8,
+                  child: IconButton(
+                    icon: const Icon(Icons.close, color: Colors.white),
+                    onPressed: () {
+                      setState(() {
+                        _photoUrl = null;
+                      });
+                      _notifyChange();
+                    },
+                    style: IconButton.styleFrom(
+                      backgroundColor: Colors.black.withValues(alpha: 0.5),
+                    ),
+                  ),
+                ),
+              ],
+            )
+          else
+            Align(
+              alignment: Alignment.centerLeft,
+              child: TextButton.icon(
+                onPressed: _pickAndUploadImage,
+                icon: Icon(
+                  Icons.add_photo_alternate_outlined,
+                  color: colors.primary,
+                  size: 20,
+                ),
+                label: Text(
+                  'Add Photo',
+                  style: TextStyle(
+                    color: colors.primary,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ),
           const SizedBox(height: 16),
           ...List.generate(_pilihanControllers.length, (index) {
             final isCorrect = _correctAnswerId == index.toString();
@@ -154,10 +261,14 @@ class _QuestionFormCardState extends State<QuestionFormCard> {
                 child: Container(
                   padding: const EdgeInsets.only(right: 8),
                   decoration: BoxDecoration(
-                    color: colors.surfaceLow.withValues(alpha: isCorrect ? 1.0 : 0.6),
+                    color: colors.surfaceLow.withValues(
+                      alpha: isCorrect ? 1.0 : 0.6,
+                    ),
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(
-                      color: isCorrect ? colors.primary.withValues(alpha: 0.3) : Colors.transparent,
+                      color: isCorrect
+                          ? colors.primary.withValues(alpha: 0.3)
+                          : Colors.transparent,
                       width: 2,
                     ),
                   ),
@@ -184,26 +295,38 @@ class _QuestionFormCardState extends State<QuestionFormCard> {
                           },
                           decoration: InputDecoration(
                             hintText: 'Add option...',
-                            hintStyle: TextStyle(color: colors.mutedText.withValues(alpha: 0.5)),
+                            hintStyle: TextStyle(
+                              color: colors.mutedText.withValues(alpha: 0.5),
+                            ),
                             border: InputBorder.none,
-                            errorStyle: const TextStyle(color: Colors.redAccent),
+                            errorStyle: const TextStyle(
+                              color: Colors.redAccent,
+                            ),
                           ),
                           style: textTheme.bodyMedium?.copyWith(
                             color: colors.textOnSurface,
-                            fontWeight: isCorrect ? FontWeight.w600 : FontWeight.normal,
+                            fontWeight: isCorrect
+                                ? FontWeight.w600
+                                : FontWeight.normal,
                           ),
                         ),
                       ),
                       if (_pilihanControllers.length > 2)
                         IconButton(
-                          icon: Icon(Icons.close_rounded, size: 18, color: colors.mutedText.withValues(alpha: 0.5)),
+                          icon: Icon(
+                            Icons.close_rounded,
+                            size: 18,
+                            color: colors.mutedText.withValues(alpha: 0.5),
+                          ),
                           onPressed: () {
                             setState(() {
                               _pilihanControllers.removeAt(index).dispose();
                               if (_correctAnswerId == index.toString()) {
                                 _correctAnswerId = '0';
                               } else if (int.parse(_correctAnswerId) > index) {
-                                _correctAnswerId = (int.parse(_correctAnswerId) - 1).toString();
+                                _correctAnswerId =
+                                    (int.parse(_correctAnswerId) - 1)
+                                        .toString();
                               }
                             });
                             _notifyChange();
@@ -217,11 +340,24 @@ class _QuestionFormCardState extends State<QuestionFormCard> {
                         margin: const EdgeInsets.only(right: 12),
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          color: isCorrect ? colors.secondary : Colors.transparent,
-                          border: isCorrect ? null : Border.all(color: colors.mutedText.withValues(alpha: 0.5), width: 1.5),
+                          color: isCorrect
+                              ? colors.secondary
+                              : Colors.transparent,
+                          border: isCorrect
+                              ? null
+                              : Border.all(
+                                  color: colors.mutedText.withValues(
+                                    alpha: 0.5,
+                                  ),
+                                  width: 1.5,
+                                ),
                         ),
                         child: isCorrect
-                            ? const Icon(Icons.check_rounded, color: Colors.white, size: 16)
+                            ? const Icon(
+                                Icons.check_rounded,
+                                color: Colors.white,
+                                size: 16,
+                              )
                             : null,
                       ),
                     ],
@@ -241,7 +377,11 @@ class _QuestionFormCardState extends State<QuestionFormCard> {
                 });
                 _notifyChange();
               },
-              icon: Icon(Icons.add_circle_outline_rounded, color: colors.primary, size: 20),
+              icon: Icon(
+                Icons.add_circle_outline_rounded,
+                color: colors.primary,
+                size: 20,
+              ),
               label: Text(
                 'Add Option',
                 style: TextStyle(

@@ -300,6 +300,18 @@ class _HostViewState extends State<HostView> {
                 ),
                 textAlign: TextAlign.center,
               ),
+              if (q.photoUrl != null && q.photoUrl!.isNotEmpty) ...[
+                const SizedBox(height: 16),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: Image.network(
+                    q.photoUrl!,
+                    height: 180,
+                    width: double.infinity,
+                    fit: BoxFit.cover,
+                  ),
+                ),
+              ],
             ],
           ),
         ),

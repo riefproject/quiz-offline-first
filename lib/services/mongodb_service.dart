@@ -16,7 +16,19 @@ class MongoDatabase {
     if (uri == null || uri.isEmpty) {
       throw Exception('MONGO_URI tidak ditemukan di dalam file .env');
     }
-    return uri;
+    String finalUri = uri;
+    if (finalUri.contains('?')) {
+      final parts = finalUri.split('?');
+      if (parts[0].endsWith('/')) {
+        parts[0] = '${parts[0]}Kahoof';
+      }
+      finalUri = '${parts[0]}?${parts[1]}';
+    } else {
+      if (finalUri.endsWith('/')) {
+        finalUri = '${finalUri}Kahoof';
+      }
+    }
+    return finalUri;
   }
 
   /// Membuka koneksi ke database MongoDB
@@ -35,6 +47,15 @@ class MongoDatabase {
 
   static Future<bool> tryConnect() async {
     try {
+      if (_db != null && _db!.state == State.open) {
+        try {
+          await _db!.pingCommand();
+          return true;
+        } catch (e) {
+          print('Koneksi terputus. Mencoba reconnect...');
+          await close();
+        }
+      }
       await connect();
       return true;
     } catch (e) {

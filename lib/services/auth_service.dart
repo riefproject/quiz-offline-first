@@ -120,7 +120,7 @@ class AuthService {
     final localUser = _findLocalUser(normalizedIdentifier);
     AppUser? user = localUser;
 
-    if (user == null && MongoDatabase.isConnected) {
+    if (user == null && await MongoDatabase.tryConnect()) {
       user = await _findRemoteUser(normalizedIdentifier);
       if (user != null) {
         await HiveService.usersBox.put(user.id, user);
@@ -285,7 +285,7 @@ class AuthService {
       if (localUser != null) return localUser;
     }
 
-    if (!MongoDatabase.isConnected) return null;
+    if (!(await MongoDatabase.tryConnect())) return null;
 
     if (identifier != null) {
       return _findRemoteUser(identifier);
@@ -342,7 +342,7 @@ class AuthService {
   static Future<AppUser> _persistUser(AppUser user) async {
     var storedUser = user;
 
-    if (MongoDatabase.isConnected) {
+    if (await MongoDatabase.tryConnect()) {
       await MongoDatabase.usersCollection.replaceOne(
         where.eq('_id', user.id),
         user.toJson(),

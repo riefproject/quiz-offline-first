@@ -45,6 +45,9 @@ dependencies:
   connectivity_plus: ^7.1.1
   logger: ^2.5.0
   google_fonts: ^8.0.2
+  image_picker: ^1.1.2
+  cloudinary_api: ^1.1.1
+  cloudinary_url_gen: ^1.8.0
 
 dev_dependencies:
   flutter_test:
