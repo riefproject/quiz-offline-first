@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../../../theme/colors_config.dart';
 import '../../../widgets/components/app_button.dart';
 import 'host_controller.dart';
@@ -16,6 +17,23 @@ class HostView extends StatefulWidget {
 
 class _HostViewState extends State<HostView> {
   late HostController _controller;
+  bool _isLandscape = false;
+
+  void _toggleOrientation() {
+    setState(() {
+      _isLandscape = !_isLandscape;
+      if (_isLandscape) {
+        SystemChrome.setPreferredOrientations([
+          DeviceOrientation.landscapeLeft,
+          DeviceOrientation.landscapeRight,
+        ]);
+      } else {
+        SystemChrome.setPreferredOrientations([
+          DeviceOrientation.portraitUp,
+        ]);
+      }
+    });
+  }
 
   @override
   void initState() {
@@ -30,6 +48,12 @@ class _HostViewState extends State<HostView> {
 
   @override
   void dispose() {
+    SystemChrome.setPreferredOrientations([
+      DeviceOrientation.portraitUp,
+      DeviceOrientation.portraitDown,
+      DeviceOrientation.landscapeLeft,
+      DeviceOrientation.landscapeRight,
+    ]);
     _controller.removeListener(_onControllerChange);
     _controller.dispose();
     super.dispose();
@@ -55,56 +79,87 @@ class _HostViewState extends State<HostView> {
       body: SafeArea(
         child: Column(
           children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 18, 20, 12),
-              child: Row(
-                children: [
-                  IconButton(
-                    icon: Icon(
-                      Icons.arrow_back_rounded,
-                      color: colors.textOnSurface,
-                    ),
-                    onPressed: () => Navigator.of(context).pop(),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      title,
-                      style: textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.w800,
+            if (!_isLandscape)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 18, 20, 12),
+                child: Row(
+                  children: [
+                    IconButton(
+                      icon: Icon(
+                        Icons.arrow_back_rounded,
                         color: colors.textOnSurface,
                       ),
+                      onPressed: () => Navigator.of(context).pop(),
                     ),
-                  ),
-                  if (_controller.phase == HostPhase.lobby)
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 4,
-                      ),
-                      decoration: BoxDecoration(
-                        color: _controller.isAdvertising
-                            ? Colors.green.shade100
-                            : Colors.orange.shade100,
-                        borderRadius: BorderRadius.circular(100),
-                      ),
+                    const SizedBox(width: 8),
+                    Expanded(
                       child: Text(
-                        _controller.isAdvertising ? 'LIVE' : 'OFFLINE',
-                        style: textTheme.labelSmall?.copyWith(
+                        title,
+                        style: textTheme.titleLarge?.copyWith(
                           fontWeight: FontWeight.w800,
-                          color: _controller.isAdvertising
-                              ? Colors.green.shade800
-                              : Colors.orange.shade800,
+                          color: colors.textOnSurface,
                         ),
                       ),
                     ),
-                ],
+                    IconButton(
+                      icon: Icon(
+                        Icons.stay_current_landscape,
+                        color: colors.textOnSurface,
+                      ),
+                      onPressed: _toggleOrientation,
+                    ),
+                    if (_controller.phase == HostPhase.lobby)
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: _controller.isAdvertising
+                              ? Colors.green.shade100
+                              : Colors.orange.shade100,
+                          borderRadius: BorderRadius.circular(100),
+                        ),
+                        child: Text(
+                          _controller.isAdvertising ? 'LIVE' : 'OFFLINE',
+                          style: textTheme.labelSmall?.copyWith(
+                            fontWeight: FontWeight.w800,
+                            color: _controller.isAdvertising
+                                ? Colors.green.shade800
+                                : Colors.orange.shade800,
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
               ),
-            ),
             Expanded(
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
-                child: _buildBody(context),
+                padding: MediaQuery.of(context).orientation == Orientation.landscape
+                    ? const EdgeInsets.fromLTRB(16, 16, 16, 8)
+                    : const EdgeInsets.fromLTRB(20, 0, 20, 20),
+                child: Stack(
+                  children: [
+                    _buildBody(context),
+                    if (_isLandscape)
+                      Positioned(
+                        top: 0,
+                        right: 0,
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: Colors.black.withValues(alpha: 0.1),
+                            shape: BoxShape.circle,
+                          ),
+                          child: IconButton(
+                            icon: Icon(Icons.stay_current_portrait, color: colors.textOnSurface, size: 20),
+                            onPressed: _toggleOrientation,
+                            constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+                            padding: EdgeInsets.zero,
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
               ),
             ),
           ],
@@ -263,17 +318,260 @@ class _HostViewState extends State<HostView> {
     );
   }
 
+  Widget _buildPortraitOptionButton(int index, String text, Color color, IconData icon, TextTheme textTheme) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: color,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: color.withValues(alpha: 0.3),
+            blurRadius: 8,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Center(
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Container(
+              width: 32,
+              height: 32,
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.25),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Center(
+                child: Icon(
+                  icon,
+                  color: Colors.white,
+                  size: 20,
+                ),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                text,
+                style: textTheme.bodyLarge?.copyWith(
+                  fontWeight: FontWeight.w700,
+                  color: Colors.white,
+                ),
+                maxLines: 4,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLandscapeOptionButton(int index, String text, Color color, IconData icon, TextTheme textTheme) {
+    return Container(
+      decoration: BoxDecoration(
+        color: color,
+        borderRadius: BorderRadius.circular(6),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.1),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Icon(
+              icon,
+              color: Colors.white,
+              size: 24,
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                text,
+                style: textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w700,
+                  color: Colors.white,
+                ),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLandscapeQuestion(BuildContext context, dynamic q, List<Color> optionColors, List<IconData> optionIcons) {
+    final colors = Theme.of(context).extension<ColorsConfig>()!;
+    final textTheme = Theme.of(context).textTheme;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        // 1. Question Text (Top)
+        Center(
+          child: Container(
+            margin: const EdgeInsets.only(bottom: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 8),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(8),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.1),
+                  blurRadius: 4,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: Text(
+              q.text,
+              style: textTheme.titleMedium?.copyWith(
+                color: Colors.black87,
+                fontWeight: FontWeight.w800,
+              ),
+              textAlign: TextAlign.center,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ),
+
+        // 2. Image (Middle)
+        Expanded(
+          flex: 6,
+          child: (q.localPhotoPath != null && q.localPhotoPath!.isNotEmpty) || (q.photoUrl != null && q.photoUrl!.isNotEmpty)
+              ? Center(
+                  child: Container(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.15),
+                          blurRadius: 8,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(12),
+                      child: q.localPhotoPath != null && q.localPhotoPath!.isNotEmpty
+                          ? Image.file(
+                              File(q.localPhotoPath!),
+                              fit: BoxFit.contain,
+                              errorBuilder: (ctx, err, stack) => Image.network(
+                                q.photoUrl ?? '',
+                                fit: BoxFit.contain,
+                                errorBuilder: (c, e, s) => const Center(child: Icon(Icons.broken_image, color: Colors.grey)),
+                              ),
+                            )
+                          : Image.network(
+                              q.photoUrl!,
+                              fit: BoxFit.contain,
+                            ),
+                    ),
+                  ),
+                )
+              : const SizedBox(),
+        ),
+
+        const SizedBox(height: 8),
+
+        // 3. Options (Bottom)
+        Expanded(
+          flex: 5,
+          child: Column(
+            children: [
+              Expanded(
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Expanded(child: _buildLandscapeOptionButton(0, q.options.isNotEmpty ? q.options[0] : '', optionColors[0], optionIcons[0], textTheme)),
+                    const SizedBox(width: 8),
+                    Expanded(child: _buildLandscapeOptionButton(1, q.options.length > 1 ? q.options[1] : '', optionColors[1], optionIcons[1], textTheme)),
+                  ],
+                ),
+              ),
+              if (q.options.length > 2) ...[
+                const SizedBox(height: 8),
+                Expanded(
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Expanded(child: _buildLandscapeOptionButton(2, q.options[2], optionColors[2], optionIcons[2], textTheme)),
+                      const SizedBox(width: 8),
+                      if (q.options.length > 3)
+                        Expanded(child: _buildLandscapeOptionButton(3, q.options[3], optionColors[3], optionIcons[3], textTheme))
+                      else
+                        const Spacer(),
+                    ],
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+
+        const SizedBox(height: 8),
+        // 4. Bottom bar (Participants + Next Button)
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Row(
+              children: [
+                Icon(Icons.people_rounded, size: 24, color: colors.mutedText),
+                const SizedBox(width: 8),
+                Text(
+                  '${_controller.answers.length} / ${_controller.participants.length} Answered',
+                  style: textTheme.bodyMedium?.copyWith(
+                    color: colors.mutedText,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+            AppButton.primary(
+              label: _controller.currentQuestionIndex < _controller.questions.length - 1
+                  ? 'Next →'
+                  : 'Finish →',
+              onPressed: () => _controller.nextQuestion(),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
   Widget _buildQuestion(BuildContext context) {
     final colors = Theme.of(context).extension<ColorsConfig>()!;
     final textTheme = Theme.of(context).textTheme;
     final q = _controller.currentQuestion;
-    final optionLabels = ['A', 'B', 'C', 'D'];
+    
     final optionColors = [
       Colors.red.shade400,
       Colors.blue.shade400,
       Colors.yellow.shade700,
       Colors.green.shade400,
     ];
+    final optionIcons = [
+      Icons.change_history_rounded,
+      Icons.diamond_rounded,
+      Icons.circle,
+      Icons.square_rounded,
+    ];
+
+    if (MediaQuery.of(context).orientation == Orientation.landscape) {
+      return _buildLandscapeQuestion(context, q, optionColors, optionIcons);
+    }
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -344,44 +642,9 @@ class _HostViewState extends State<HostView> {
         ),
         const SizedBox(height: 16),
         ...List.generate(q.options.length, (i) {
-          return Container(
-            margin: const EdgeInsets.only(bottom: 10),
-            padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(
-              color: optionColors[i].withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: optionColors[i].withValues(alpha: 0.4)),
-            ),
-            child: Row(
-              children: [
-                Container(
-                  width: 32,
-                  height: 32,
-                  decoration: BoxDecoration(
-                    color: optionColors[i],
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Center(
-                    child: Text(
-                      optionLabels[i],
-                      style: textTheme.titleMedium?.copyWith(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    q.options[i],
-                    style: textTheme.bodyLarge?.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-              ],
-            ),
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 10),
+            child: _buildPortraitOptionButton(i, q.options[i], optionColors[i], optionIcons[i], textTheme),
           );
         }),
         const Spacer(),
@@ -399,18 +662,6 @@ class _HostViewState extends State<HostView> {
                 '${_controller.answers.length} answer(s) received',
                 style: textTheme.bodyMedium?.copyWith(color: colors.mutedText),
               ),
-              // ..._controller.answers.map(
-              //   (a) => Padding(
-              //     padding: const EdgeInsets.only(left: 8),
-              //     child: Chip(
-              //       label: Text(
-              //         '${a.name}: ${optionLabels[a.answer]}',
-              //         style: textTheme.labelSmall,
-              //       ),
-              //       visualDensity: VisualDensity.compact,
-              //     ),
-              //   ),
-              // ),
             ],
           ),
         ),
