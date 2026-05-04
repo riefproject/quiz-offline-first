@@ -8,8 +8,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:py_4/features/quiz/quiz_list_page.dart';
-import 'package:py_4/theme/theme_config.dart';
+import 'package:AlpenQuiz/features/quiz/quiz_list_page.dart';
+import 'package:AlpenQuiz/theme/theme_config.dart';
 
 void main() {
   testWidgets('shows quiz list layout', (WidgetTester tester) async {

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-import '../../../widgets/components/app_button.dart';
 import '../../../widgets/components/app_card.dart';
 import '../../../models/db_models.dart';
 import '../../../theme/colors_config.dart';

@@ -1,8 +1,8 @@
 import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mongo_dart/mongo_dart.dart';
-import 'package:py_4/services/mongodb_service.dart';
-import 'package:py_4/models/db_models.dart';
+import 'package:AlpenQuiz/services/mongodb_service.dart';
+import 'package:AlpenQuiz/models/db_models.dart';
 
 void main() {
   // Setup: Dijalankan sekali sebelum semua test dimulai

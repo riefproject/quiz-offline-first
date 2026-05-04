@@ -17,7 +17,6 @@ import '../../widgets/components/under_construction_widget.dart';
 import 'widgets/create_quiz_card.dart';
 import 'widgets/quiz_card.dart';
 import 'create_quiz_page.dart';
-import 'lobby_session_page.dart';
 
 class QuizListPage extends StatefulWidget {
   const QuizListPage({super.key});
@@ -49,7 +48,7 @@ class _QuizListPageState extends State<QuizListPage> {
   Future<void> _logout() async {
     await AuthService.logout();
     if (!mounted) return;
-    Navigator.of(context).pushNamedAndRemoveUntil('/login', (route) => false);
+    Navigator.of(context).pushNamedAndRemoveUntil('/app', (route) => false);
   }
 
   Future<void> _deleteQuiz(String quizId) async {

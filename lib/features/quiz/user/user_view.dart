@@ -11,7 +11,7 @@ class UserView extends StatelessWidget {
   Future<void> _logout(BuildContext context) async {
     await AuthService.logout();
     if (!context.mounted) return;
-    Navigator.of(context).pushNamedAndRemoveUntil('/login', (route) => false);
+    Navigator.of(context).pushNamedAndRemoveUntil('/app', (route) => false);
   }
 
   @override
@@ -81,7 +81,7 @@ class UserView extends StatelessWidget {
           AppButton.outlined(
             label: 'Scan / Change Session',
             onPressed: () {
-              Navigator.of(context).pushReplacementNamed('/login');
+              Navigator.of(context).pushReplacementNamed('/app');
             },
           ),
           const SizedBox(height: 12),

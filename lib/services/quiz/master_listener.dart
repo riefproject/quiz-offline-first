@@ -1,8 +1,8 @@
 import 'dart:typed_data';
 
-import 'package:py_4/models/master_payload.dart';
-import 'package:py_4/services/logger.dart';
-import 'package:py_4/services/quiz/quiz_listener.dart';
+import 'package:AlpenQuiz/models/master_payload.dart';
+import 'package:AlpenQuiz/services/logger.dart';
+import 'package:AlpenQuiz/services/quiz/quiz_listener.dart';
 
 class MasterListener extends QuizListener<MasterPayload> {
   int gameId;

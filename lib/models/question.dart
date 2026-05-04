@@ -1,5 +1,5 @@
-import 'package:py_4/models/db_models.dart';
-import 'package:py_4/services/hive_service.dart';
+import 'package:AlpenQuiz/models/db_models.dart';
+import 'package:AlpenQuiz/services/hive_service.dart';
 
 class Question {
   final String id;

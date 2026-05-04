@@ -1,7 +1,7 @@
 import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hive/hive.dart';
-import 'package:py_4/models/db_models.dart';
+import 'package:AlpenQuiz/models/db_models.dart';
 
 void main() {
   // Setup berjalan sebelum semua test dimulai

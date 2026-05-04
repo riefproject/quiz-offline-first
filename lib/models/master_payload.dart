@@ -1,8 +1,8 @@
 import 'dart:typed_data';
 
 import 'package:msgpack_dart/msgpack_dart.dart' as msgpack;
-import 'package:py_4/models/byte_serializable.dart';
-import 'package:py_4/models/game_payload.dart';
+import 'package:AlpenQuiz/models/byte_serializable.dart';
+import 'package:AlpenQuiz/models/game_payload.dart';
 
 const MASTER_PAYLOAD_TYPE = "m";
 
@@ -57,7 +57,7 @@ class MasterPayload implements ByteSerializable, GamePayload {
   factory MasterPayload.fromBytes(Uint8List bytes) {
     final decoded = msgpack.deserialize(bytes);
     if (decoded is Map) {
-      final map = (decoded as Map).cast<String, dynamic>();
+      final map = (decoded).cast<String, dynamic>();
       if (map['t'] != MASTER_PAYLOAD_TYPE) {
         throw FormatException('Invalid payload type');
       }

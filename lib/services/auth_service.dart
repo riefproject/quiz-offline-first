@@ -1,7 +1,6 @@
 import 'dart:math';
 
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:hive/hive.dart' as hive;
 import 'package:mongo_dart/mongo_dart.dart';
 
 import '../features/auth/password_policy.dart';
@@ -49,6 +48,15 @@ class AuthService {
   static const String _sessionJoinCodeKey = 'current_join_code';
   static const String _passwordResetIdentifierKey = 'password_reset_identifier';
   static const String _passwordResetOtpKey = 'password_reset_otp';
+  static const String _onboardingSeenKey = 'has_seen_onboarding';
+
+  static bool get hasSeenOnboarding {
+    return _prefs.getBool(_onboardingSeenKey) ?? false;
+  }
+
+  static Future<void> completeOnboarding() async {
+    await _prefs.setBool(_onboardingSeenKey, true);
+  }
 
   static AuthSession? get currentSession {
     final userId = _prefs.getString(_sessionUserIdKey);

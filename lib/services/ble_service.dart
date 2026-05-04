@@ -4,9 +4,9 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_ble_peripheral/flutter_ble_peripheral.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:py_4/services/ble_payload_formatter.dart';
-import 'package:py_4/services/ble_service_base.dart';
-import 'package:py_4/services/logger.dart';
+import 'package:AlpenQuiz/services/ble_payload_formatter.dart';
+import 'package:AlpenQuiz/services/ble_service_base.dart';
+import 'package:AlpenQuiz/services/logger.dart';
 
 const int kManufacturerId = 0xFFFF;
 const String kMasterLocalName = 'KahoofMaster';

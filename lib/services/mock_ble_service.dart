@@ -2,11 +2,11 @@ import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart';
-import 'package:py_4/models/client_payload.dart';
-import 'package:py_4/models/master_payload.dart';
-import 'package:py_4/services/ble_payload_formatter.dart';
-import 'package:py_4/services/ble_service_base.dart';
-import 'package:py_4/services/logger.dart';
+import 'package:AlpenQuiz/models/client_payload.dart';
+import 'package:AlpenQuiz/models/master_payload.dart';
+import 'package:AlpenQuiz/services/ble_payload_formatter.dart';
+import 'package:AlpenQuiz/services/ble_service_base.dart';
+import 'package:AlpenQuiz/services/logger.dart';
 
 class MockBleService extends BleServiceBase {
   int _advertiseCount = 0;

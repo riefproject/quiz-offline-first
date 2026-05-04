@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:py_4/theme/colors_config.dart';
+import 'package:AlpenQuiz/theme/colors_config.dart';
 
 /// Konfigurasi Utama Tema
 /// Bertindak sebagai Single Source of Truth untuk inject extension dan text theme.

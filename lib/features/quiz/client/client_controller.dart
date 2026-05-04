@@ -1,15 +1,15 @@
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
-import 'package:py_4/config.dart';
-import 'package:py_4/models/client_payload.dart';
-import 'package:py_4/models/master_payload.dart';
-import 'package:py_4/services/ble_service.dart';
-import 'package:py_4/services/ble_service_base.dart';
-import 'package:py_4/services/mock_ble_service.dart';
-import 'package:py_4/services/quiz/client_publisher.dart';
-import 'package:py_4/services/quiz/master_list_listener.dart';
-import 'package:py_4/services/quiz/master_listener.dart';
+import 'package:AlpenQuiz/config.dart';
+import 'package:AlpenQuiz/models/client_payload.dart';
+import 'package:AlpenQuiz/models/master_payload.dart';
+import 'package:AlpenQuiz/services/ble_service.dart';
+import 'package:AlpenQuiz/services/ble_service_base.dart';
+import 'package:AlpenQuiz/services/mock_ble_service.dart';
+import 'package:AlpenQuiz/services/quiz/client_publisher.dart';
+import 'package:AlpenQuiz/services/quiz/master_list_listener.dart';
+import 'package:AlpenQuiz/services/quiz/master_listener.dart';
 
 enum ClientPhase { scanning, lobby, question, finished }
 

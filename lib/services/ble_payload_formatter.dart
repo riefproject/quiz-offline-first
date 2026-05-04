@@ -1,8 +1,8 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
-import 'package:py_4/models/client_payload.dart';
-import 'package:py_4/models/master_payload.dart';
+import 'package:AlpenQuiz/models/client_payload.dart';
+import 'package:AlpenQuiz/models/master_payload.dart';
 import 'package:msgpack_dart/msgpack_dart.dart' as msgpack;
 
 String _formatTimestamp(int ms) {
