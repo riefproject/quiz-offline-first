@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'features/auth/auth_gate.dart';
 import 'features/auth/forgot_password_page.dart';
@@ -8,6 +9,7 @@ import 'features/auth/register_page.dart';
 import 'features/quiz/client/client_view.dart';
 import 'features/quiz/host/host_view.dart';
 import 'features/quiz/role_choice_page.dart';
+import 'services/auth_service.dart';
 import 'services/hive_service.dart';
 import 'services/mongodb_service.dart';
 import 'theme/theme_config.dart';
@@ -16,6 +18,11 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await dotenv.load(fileName: '.env');
   await HiveService.init();
+  
+  // Inisialisasi SharedPreferences untuk session Auth
+  final prefs = await SharedPreferences.getInstance();
+  AuthService.init(prefs);
+  
   await MongoDatabase.tryConnect();
 
   runApp(const QuizApp());

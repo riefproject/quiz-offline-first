@@ -1,5 +1,6 @@
 import 'dart:math';
 
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:hive/hive.dart' as hive;
 import 'package:mongo_dart/mongo_dart.dart';
 
@@ -34,6 +35,13 @@ class AuthSession {
 }
 
 class AuthService {
+  static late SharedPreferences _prefs;
+
+  static void init(SharedPreferences prefs) {
+    _prefs = prefs;
+  }
+
+  // --- Gunakan SharedPreferences untuk stabilitas session ---
   static const String _sessionUserIdKey = 'current_user_id';
   static const String _sessionDisplayNameKey = 'current_user_name';
   static const String _sessionIsGuestKey = 'current_user_is_guest';
@@ -42,19 +50,17 @@ class AuthService {
   static const String _passwordResetIdentifierKey = 'password_reset_identifier';
   static const String _passwordResetOtpKey = 'password_reset_otp';
 
-  static hive.Box get _sessionBox => HiveService.sessionBox;
-
   static AuthSession? get currentSession {
-    final userId = _sessionBox.get(_sessionUserIdKey) as String?;
-    final displayName = _sessionBox.get(_sessionDisplayNameKey) as String?;
+    final userId = _prefs.getString(_sessionUserIdKey);
+    final displayName = _prefs.getString(_sessionDisplayNameKey);
     if (userId == null || displayName == null) return null;
 
     return AuthSession(
       userId: userId,
       displayName: displayName,
-      isGuest: (_sessionBox.get(_sessionIsGuestKey) as bool?) ?? false,
-      role: (_sessionBox.get(_sessionRoleKey) as String?) ?? 'player',
-      joinCode: _sessionBox.get(_sessionJoinCodeKey) as String?,
+      isGuest: _prefs.getBool(_sessionIsGuestKey) ?? false,
+      role: _prefs.getString(_sessionRoleKey) ?? 'player',
+      joinCode: _prefs.getString(_sessionJoinCodeKey),
     );
   }
 
@@ -185,8 +191,8 @@ class AuthService {
     }
 
     final otp = _generateOtp();
-    await _sessionBox.put(_passwordResetIdentifierKey, normalizedIdentifier);
-    await _sessionBox.put(_passwordResetOtpKey, otp);
+    await _prefs.setString(_passwordResetIdentifierKey, normalizedIdentifier);
+    await _prefs.setString(_passwordResetOtpKey, otp);
     return otp;
   }
 
@@ -194,8 +200,8 @@ class AuthService {
     required String identifier,
     required String otp,
   }) async {
-    final savedIdentifier = _sessionBox.get(_passwordResetIdentifierKey) as String?;
-    final savedOtp = _sessionBox.get(_passwordResetOtpKey) as String?;
+    final savedIdentifier = _prefs.getString(_passwordResetIdentifierKey);
+    final savedOtp = _prefs.getString(_passwordResetOtpKey);
 
     if (savedIdentifier == null || savedOtp == null) {
       throw AuthException('Kode OTP belum dibuat. Mulai lagi dari langkah sebelumnya.');
@@ -218,8 +224,8 @@ class AuthService {
       identifier: identifier,
       newPassword: newPassword,
     );
-    await _sessionBox.delete(_passwordResetIdentifierKey);
-    await _sessionBox.delete(_passwordResetOtpKey);
+    await _prefs.remove(_passwordResetIdentifierKey);
+    await _prefs.remove(_passwordResetOtpKey);
     return user;
   }
 
@@ -253,11 +259,11 @@ class AuthService {
   }
 
   static Future<void> logout() async {
-    await _sessionBox.delete(_sessionUserIdKey);
-    await _sessionBox.delete(_sessionDisplayNameKey);
-    await _sessionBox.delete(_sessionIsGuestKey);
-    await _sessionBox.delete(_sessionRoleKey);
-    await _sessionBox.delete(_sessionJoinCodeKey);
+    await _prefs.remove(_sessionUserIdKey);
+    await _prefs.remove(_sessionDisplayNameKey);
+    await _prefs.remove(_sessionIsGuestKey);
+    await _prefs.remove(_sessionRoleKey);
+    await _prefs.remove(_sessionJoinCodeKey);
   }
 
   static AppUser? _findLocalUser(String identifier) {
@@ -362,14 +368,14 @@ class AuthService {
     required String role,
     String? joinCode,
   }) async {
-    await _sessionBox.put(_sessionUserIdKey, userId);
-    await _sessionBox.put(_sessionDisplayNameKey, displayName);
-    await _sessionBox.put(_sessionIsGuestKey, isGuest);
-    await _sessionBox.put(_sessionRoleKey, role);
+    await _prefs.setString(_sessionUserIdKey, userId);
+    await _prefs.setString(_sessionDisplayNameKey, displayName);
+    await _prefs.setBool(_sessionIsGuestKey, isGuest);
+    await _prefs.setString(_sessionRoleKey, role);
     if (joinCode != null && joinCode.isNotEmpty) {
-      await _sessionBox.put(_sessionJoinCodeKey, joinCode);
+      await _prefs.setString(_sessionJoinCodeKey, joinCode);
     } else {
-      await _sessionBox.delete(_sessionJoinCodeKey);
+      await _prefs.remove(_sessionJoinCodeKey);
     }
   }
 
