@@ -146,6 +146,8 @@ class Soal extends HiveObject {
   final bool isSynced;
   @HiveField(6)
   final String? fotoSoal;
+  @HiveField(7)
+  final String? localFotoPath;
 
   Soal({
     required this.id,
@@ -155,6 +157,7 @@ class Soal extends HiveObject {
     required this.idJawabanBenar,
     this.isSynced = false,
     this.fotoSoal,
+    this.localFotoPath,
   });
 
   factory Soal.fromJson(Map<String, dynamic> json) => Soal(
@@ -165,6 +168,7 @@ class Soal extends HiveObject {
     idJawabanBenar: json['id_jawaban_benar'] as String,
     isSynced: true,
     fotoSoal: json['foto_soal'] as String?,
+    localFotoPath: json['local_foto_path'] as String?,
   );
   Map<String, dynamic> toJson() => {
     '_id': id,
@@ -173,6 +177,7 @@ class Soal extends HiveObject {
     'id_pilihan': idPilihan,
     'id_jawaban_benar': idJawabanBenar,
     'foto_soal': fotoSoal,
+    'local_foto_path': localFotoPath,
   };
 
   Soal copyWith({
@@ -183,6 +188,7 @@ class Soal extends HiveObject {
     String? idJawabanBenar,
     bool? isSynced,
     String? fotoSoal,
+    String? localFotoPath,
   }) {
     return Soal(
       id: id ?? this.id,
@@ -192,6 +198,7 @@ class Soal extends HiveObject {
       idJawabanBenar: idJawabanBenar ?? this.idJawabanBenar,
       isSynced: isSynced ?? this.isSynced,
       fotoSoal: fotoSoal ?? this.fotoSoal,
+      localFotoPath: localFotoPath ?? this.localFotoPath,
     );
   }
 }

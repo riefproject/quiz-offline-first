@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import '../../../theme/colors_config.dart';
 import '../../../widgets/components/app_button.dart';
@@ -300,18 +302,43 @@ class _HostViewState extends State<HostView> {
                 ),
                 textAlign: TextAlign.center,
               ),
-              if (q.photoUrl != null && q.photoUrl!.isNotEmpty) ...[
-                const SizedBox(height: 16),
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(12),
-                  child: Image.network(
-                    q.photoUrl!,
-                    height: 180,
-                    width: double.infinity,
-                    fit: BoxFit.cover,
+              if ((q.localPhotoPath != null && q.localPhotoPath!.isNotEmpty) || (q.photoUrl != null && q.photoUrl!.isNotEmpty))
+                Container(
+                  margin: const EdgeInsets.only(top: 16),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.1),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
+                    child: q.localPhotoPath != null && q.localPhotoPath!.isNotEmpty
+                        ? Image.file(
+                            File(q.localPhotoPath!),
+                            height: 180,
+                            width: double.infinity,
+                            fit: BoxFit.cover,
+                            errorBuilder: (ctx, err, stack) => Image.network(
+                              q.photoUrl ?? '',
+                              height: 180,
+                              width: double.infinity,
+                              fit: BoxFit.cover,
+                              errorBuilder: (c, e, s) => const SizedBox(height: 180, child: Center(child: Icon(Icons.broken_image, color: Colors.white))),
+                            ),
+                          )
+                        : Image.network(
+                            q.photoUrl!,
+                            height: 180,
+                            width: double.infinity,
+                            fit: BoxFit.cover,
+                          ),
                   ),
                 ),
-              ],
             ],
           ),
         ),

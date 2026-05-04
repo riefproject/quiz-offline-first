@@ -125,13 +125,14 @@ class SoalAdapter extends TypeAdapter<Soal> {
       idJawabanBenar: fields[4] as String,
       isSynced: fields[5] as bool,
       fotoSoal: fields[6] as String?,
+      localFotoPath: fields[7] as String?,
     );
   }
 
   @override
   void write(BinaryWriter writer, Soal obj) {
     writer
-      ..writeByte(7)
+      ..writeByte(8)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -145,7 +146,9 @@ class SoalAdapter extends TypeAdapter<Soal> {
       ..writeByte(5)
       ..write(obj.isSynced)
       ..writeByte(6)
-      ..write(obj.fotoSoal);
+      ..write(obj.fotoSoal)
+      ..writeByte(7)
+      ..write(obj.localFotoPath);
   }
 
   @override

@@ -1,7 +1,10 @@
 import 'dart:async';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/foundation.dart';
+import 'dart:io';
+
 import '../models/db_models.dart';
+import 'cloudinary_service.dart';
 import 'hive_service.dart';
 import 'mongodb_service.dart';
 
@@ -104,6 +107,22 @@ class QuizSyncService {
           .where((s) => !s.isSynced)
           .toList();
       for (var soal in unsyncedSoals) {
+        if ((soal.fotoSoal == null || soal.fotoSoal!.isEmpty) &&
+            soal.localFotoPath != null &&
+            soal.localFotoPath!.isNotEmpty) {
+          try {
+            final file = File(soal.localFotoPath!);
+            if (await file.exists()) {
+              final url = await CloudinaryService.uploadImage(file);
+              if (url != null) {
+                soal = soal.copyWith(fotoSoal: url);
+              }
+            }
+          } catch (e) {
+            debugPrint('Failed to sync image to Cloudinary: $e');
+          }
+        }
+
         final existing = await MongoDatabase.soalCollection.findOne({
           '_id': soal.id,
         });

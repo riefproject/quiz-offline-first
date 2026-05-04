@@ -7,6 +7,7 @@ class Question {
   final List<String> options;
   final int correctAnswerIndex;
   final String? photoUrl;
+  final String? localPhotoPath;
 
   const Question({
     required this.id,
@@ -14,6 +15,7 @@ class Question {
     required this.options,
     this.correctAnswerIndex = -1,
     this.photoUrl,
+    this.localPhotoPath,
   });
 
   static List<Question> fromQuizId(String quizId) {
@@ -35,6 +37,7 @@ class Question {
       options: options,
       correctAnswerIndex: correctIndex,
       photoUrl: soal.fotoSoal,
+      localPhotoPath: soal.localFotoPath,
     );
   }
 }

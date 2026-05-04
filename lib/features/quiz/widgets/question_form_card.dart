@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:path_provider/path_provider.dart';
 
 import '../../../models/db_models.dart';
 import '../../../services/cloudinary_service.dart';
@@ -30,6 +31,7 @@ class _QuestionFormCardState extends State<QuestionFormCard> {
   late String _correctAnswerId;
   bool _isUploading = false;
   String? _photoUrl;
+  String? _localPhotoPath;
 
   @override
   void initState() {
@@ -52,6 +54,7 @@ class _QuestionFormCardState extends State<QuestionFormCard> {
         ? widget.initialSoal.idJawabanBenar
         : '0';
     _photoUrl = widget.initialSoal.fotoSoal;
+    _localPhotoPath = widget.initialSoal.localFotoPath;
 
     _teksSoalController.addListener(_notifyChange);
     for (var c in _pilihanControllers) {
@@ -74,6 +77,7 @@ class _QuestionFormCardState extends State<QuestionFormCard> {
       idPilihan: _pilihanControllers.map((c) => c.text).toList(),
       idJawabanBenar: _correctAnswerId,
       fotoSoal: _photoUrl,
+      localFotoPath: _localPhotoPath,
     );
     widget.onChanged(updatedSoal);
   }
@@ -82,12 +86,19 @@ class _QuestionFormCardState extends State<QuestionFormCard> {
     final picker = ImagePicker();
     final pickedFile = await picker.pickImage(source: ImageSource.gallery);
     if (pickedFile != null) {
-      setState(() {
-        _isUploading = true;
-      });
       try {
-        final url = await CloudinaryService.uploadImage(File(pickedFile.path));
-        if (url != null) {
+        final appDir = await getApplicationDocumentsDirectory();
+        final fileName = 'quiz_img_${DateTime.now().millisecondsSinceEpoch}.jpg';
+        final savedImage = await File(pickedFile.path).copy('${appDir.path}/$fileName');
+        
+        setState(() {
+          _localPhotoPath = savedImage.path;
+          _isUploading = true;
+        });
+        _notifyChange();
+
+        final url = await CloudinaryService.uploadImage(savedImage);
+        if (url != null && mounted) {
           setState(() {
             _photoUrl = url;
             _isUploading = false;
@@ -95,10 +106,10 @@ class _QuestionFormCardState extends State<QuestionFormCard> {
           _notifyChange();
         }
       } catch (e) {
-        setState(() {
-          _isUploading = false;
-        });
         if (mounted) {
+          setState(() {
+            _isUploading = false;
+          });
           ScaffoldMessenger.of(
             context,
           ).showSnackBar(SnackBar(content: Text(e.toString())));
@@ -197,17 +208,31 @@ class _QuestionFormCardState extends State<QuestionFormCard> {
                 child: CircularProgressIndicator(color: colors.primary),
               ),
             )
-          else if (_photoUrl != null && _photoUrl!.isNotEmpty)
+          else if ((_localPhotoPath != null && _localPhotoPath!.isNotEmpty) || (_photoUrl != null && _photoUrl!.isNotEmpty))
             Stack(
               children: [
                 ClipRRect(
                   borderRadius: BorderRadius.circular(16),
-                  child: Image.network(
-                    _photoUrl!,
-                    height: 150,
-                    width: double.infinity,
-                    fit: BoxFit.cover,
-                  ),
+                  child: _localPhotoPath != null && _localPhotoPath!.isNotEmpty
+                      ? Image.file(
+                          File(_localPhotoPath!),
+                          height: 150,
+                          width: double.infinity,
+                          fit: BoxFit.cover,
+                          errorBuilder: (ctx, err, stack) => Image.network(
+                            _photoUrl ?? '',
+                            height: 150,
+                            width: double.infinity,
+                            fit: BoxFit.cover,
+                            errorBuilder: (c, e, s) => const SizedBox(height: 150, child: Center(child: Icon(Icons.broken_image))),
+                          ),
+                        )
+                      : Image.network(
+                          _photoUrl!,
+                          height: 150,
+                          width: double.infinity,
+                          fit: BoxFit.cover,
+                        ),
                 ),
                 Positioned(
                   top: 8,
@@ -217,6 +242,7 @@ class _QuestionFormCardState extends State<QuestionFormCard> {
                     onPressed: () {
                       setState(() {
                         _photoUrl = null;
+                        _localPhotoPath = null;
                       });
                       _notifyChange();
                     },
