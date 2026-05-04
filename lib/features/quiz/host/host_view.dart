@@ -91,7 +91,11 @@ class _HostViewState extends State<HostView> {
       case HostPhase.lobby:
         title = 'Host Lobby';
       case HostPhase.countdown:
+<<<<<<< HEAD
         title = 'Starting Quiz';
+=======
+        title = 'Get Ready';
+>>>>>>> 60115b4 (feat: host view enchantment)
       case HostPhase.question:
         title = 'Question ${_controller.currentQuestionIndex + 1}';
       case HostPhase.results:
@@ -431,7 +435,11 @@ class _HostViewState extends State<HostView> {
       case HostPhase.lobby:
         return _buildLobby(context);
       case HostPhase.countdown:
+<<<<<<< HEAD
         return const SizedBox.shrink();
+=======
+        return _buildCountdown(context);
+>>>>>>> 60115b4 (feat: host view enchantment)
       case HostPhase.question:
         return _buildQuestion(context);
       case HostPhase.results:
@@ -578,6 +586,7 @@ class _HostViewState extends State<HostView> {
     );
   }
 
+<<<<<<< HEAD
   Widget _buildPortraitOptionButton(
     int index,
     String text,
@@ -585,6 +594,157 @@ class _HostViewState extends State<HostView> {
     IconData icon,
     TextTheme textTheme,
   ) {
+=======
+  Widget _buildCountdown(BuildContext context) {
+    final colors = Theme.of(context).extension<ColorsConfig>()!;
+    final textTheme = Theme.of(context).textTheme;
+    final q = _controller.currentQuestion;
+    final seconds = (_controller.countdownRemainingMs / 1000).ceil();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: colors.primary,
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Column(
+            children: [
+              Text(
+                'Question ${_controller.currentQuestionIndex + 1} of ${_controller.questions.length}',
+                style: textTheme.labelLarge?.copyWith(
+                  color: Colors.white70,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                q.text,
+                style: textTheme.headlineSmall?.copyWith(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w800,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              if ((q.localPhotoPath != null && q.localPhotoPath!.isNotEmpty) || (q.photoUrl != null && q.photoUrl!.isNotEmpty))
+                Container(
+                  margin: const EdgeInsets.only(top: 16),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.1),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
+                    child: q.localPhotoPath != null && q.localPhotoPath!.isNotEmpty
+                        ? Image.file(
+                            File(q.localPhotoPath!),
+                            height: 180,
+                            width: double.infinity,
+                            fit: BoxFit.cover,
+                            errorBuilder: (ctx, err, stack) => Image.network(
+                              q.photoUrl ?? '',
+                              height: 180,
+                              width: double.infinity,
+                              fit: BoxFit.cover,
+                              errorBuilder: (c, e, s) => const SizedBox(height: 180, child: Center(child: Icon(Icons.broken_image, color: Colors.white))),
+                            ),
+                          )
+                        : Image.network(
+                            q.photoUrl!,
+                            height: 180,
+                            width: double.infinity,
+                            fit: BoxFit.cover,
+                          ),
+                  ),
+                ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 16),
+        ...List.generate(q.options.length, (i) {
+          final optionColors = [
+            Colors.red.shade400,
+            Colors.blue.shade400,
+            Colors.yellow.shade700,
+            Colors.green.shade400,
+          ];
+          final optionIcons = [
+            Icons.change_history_rounded,
+            Icons.diamond_rounded,
+            Icons.circle,
+            Icons.square_rounded,
+          ];
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 10),
+            child: _buildPortraitOptionButton(i, q.options[i], optionColors[i], optionIcons[i], textTheme),
+          );
+        }),
+        const Spacer(),
+        Center(
+          child: SizedBox(
+            width: 120,
+            height: 120,
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                SizedBox(
+                  width: 120,
+                  height: 120,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 6,
+                    value: _controller.countdownRemainingMs / 5000,
+                    backgroundColor: colors.outline,
+                    color: colors.primary,
+                  ),
+                ),
+                Text(
+                  '$seconds',
+                  style: textTheme.displayLarge?.copyWith(
+                    fontWeight: FontWeight.w900,
+                    color: colors.primary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(height: 12),
+        Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: colors.surfaceLow,
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Row(
+            children: [
+              Icon(Icons.people_rounded, size: 18, color: colors.mutedText),
+              const SizedBox(width: 8),
+              Text(
+                '${_controller.participants.length} participant(s) ready',
+                style: textTheme.bodyMedium?.copyWith(color: colors.mutedText),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 12),
+        AppButton.primary(
+          label: 'Skip Countdown',
+          onPressed: () => _controller.skipCountdown(),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildPortraitOptionButton(int index, String text, Color color, IconData icon, TextTheme textTheme) {
+>>>>>>> 60115b4 (feat: host view enchantment)
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
@@ -862,7 +1022,12 @@ class _HostViewState extends State<HostView> {
     final colors = Theme.of(context).extension<ColorsConfig>()!;
     final textTheme = Theme.of(context).textTheme;
     final q = _controller.currentQuestion;
+<<<<<<< HEAD
 
+=======
+    final seconds = (_controller.questionRemainingMs / 1000).ceil();
+    
+>>>>>>> 60115b4 (feat: host view enchantment)
     final optionColors = [
       Colors.red.shade400,
       Colors.blue.shade400,
@@ -880,6 +1045,7 @@ class _HostViewState extends State<HostView> {
       return _buildLandscapeQuestion(context, q, optionColors, optionIcons);
     }
 
+<<<<<<< HEAD
     return LayoutBuilder(
       builder: (context, constraints) {
         return SingleChildScrollView(
@@ -889,6 +1055,51 @@ class _HostViewState extends State<HostView> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
+=======
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: colors.primary,
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Column(
+            children: [
+              Text(
+                'Question ${_controller.currentQuestionIndex + 1} of ${_controller.questions.length}',
+                style: textTheme.labelLarge?.copyWith(
+                  color: Colors.white70,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                q.text,
+                style: textTheme.headlineSmall?.copyWith(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w800,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 8),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(999),
+                ),
+                child: Text(
+                  '${seconds}s',
+                  style: textTheme.titleMedium?.copyWith(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ),
+              if ((q.localPhotoPath != null && q.localPhotoPath!.isNotEmpty) || (q.photoUrl != null && q.photoUrl!.isNotEmpty))
+>>>>>>> 60115b4 (feat: host view enchantment)
                 Container(
                   padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
