@@ -8,24 +8,26 @@ class AppButton extends StatelessWidget {
   final String label;
   final VoidCallback? onPressed;
   final ButtonVariant variant;
+  final Color? colorOverride;
 
   const AppButton._({
     required this.label,
     required this.onPressed,
     required this.variant,
+    this.colorOverride,
   });
 
-  factory AppButton.primary({required String label, VoidCallback? onPressed}) =>
-      AppButton._(label: label, onPressed: onPressed, variant: ButtonVariant.primary);
+  factory AppButton.primary({required String label, VoidCallback? onPressed, Color? color}) =>
+      AppButton._(label: label, onPressed: onPressed, variant: ButtonVariant.primary, colorOverride: color);
 
-  factory AppButton.container({required String label, VoidCallback? onPressed}) =>
-      AppButton._(label: label, onPressed: onPressed, variant: ButtonVariant.container);
+  factory AppButton.container({required String label, VoidCallback? onPressed, Color? color}) =>
+      AppButton._(label: label, onPressed: onPressed, variant: ButtonVariant.container, colorOverride: color);
 
-  factory AppButton.outlined({required String label, VoidCallback? onPressed}) =>
-      AppButton._(label: label, onPressed: onPressed, variant: ButtonVariant.outlined);
+  factory AppButton.outlined({required String label, VoidCallback? onPressed, Color? color}) =>
+      AppButton._(label: label, onPressed: onPressed, variant: ButtonVariant.outlined, colorOverride: color);
 
-  factory AppButton.text({required String label, VoidCallback? onPressed}) =>
-      AppButton._(label: label, onPressed: onPressed, variant: ButtonVariant.text);
+  factory AppButton.text({required String label, VoidCallback? onPressed, Color? color}) =>
+      AppButton._(label: label, onPressed: onPressed, variant: ButtonVariant.text, colorOverride: color);
 
   @override
   Widget build(BuildContext context) {
@@ -35,23 +37,25 @@ class AppButton extends StatelessWidget {
     Color foregroundColor;
     BorderSide borderSide = BorderSide.none;
 
+    final primaryColor = colorOverride ?? colors.primary;
+
     switch (variant) {
       case ButtonVariant.primary:
-        backgroundColor = colors.primary;
+        backgroundColor = primaryColor;
         foregroundColor = colors.textOnPrimary;
         break;
       case ButtonVariant.container:
-        backgroundColor = colors.primaryContainer;
-        foregroundColor = colors.primary;
+        backgroundColor = colorOverride != null ? colorOverride!.withValues(alpha: 0.1) : colors.primaryContainer;
+        foregroundColor = primaryColor;
         break;
       case ButtonVariant.outlined:
         backgroundColor = Colors.transparent;
-        foregroundColor = colors.primary;
-        borderSide = BorderSide(color: colors.primary, width: 1.5);
+        foregroundColor = primaryColor;
+        borderSide = BorderSide(color: primaryColor, width: 1.5);
         break;
       case ButtonVariant.text:
         backgroundColor = Colors.transparent;
-        foregroundColor = colors.primary;
+        foregroundColor = primaryColor;
         break;
     }
 

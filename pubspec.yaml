@@ -90,6 +90,7 @@ flutter:
   assets:
     - .env
     - .env.example
+    - assets/icon/
     - assets/images/onboarding/
 
   # An image asset can refer to one or more resolution-specific "variants", see

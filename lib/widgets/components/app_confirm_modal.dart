@@ -82,23 +82,10 @@ class AppConfirmModal extends StatelessWidget {
                 ),
                 const SizedBox(width: 12),
                 Expanded(
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: isDestructive ? Colors.redAccent : colors.primary,
-                      foregroundColor: Colors.white,
-                      elevation: 0,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(100),
-                      ),
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      textStyle: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        letterSpacing: 0.5,
-                      ),
-                    ),
+                  child: AppButton.primary(
+                    label: confirmText,
+                    color: isDestructive ? Colors.redAccent : null,
                     onPressed: () => Navigator.of(context).pop(true),
-                    child: Text(confirmText),
                   ),
                 ),
               ],
@@ -109,3 +96,4 @@ class AppConfirmModal extends StatelessWidget {
     );
   }
 }
+

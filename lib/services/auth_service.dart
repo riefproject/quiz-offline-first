@@ -266,6 +266,36 @@ class AuthService {
     return session;
   }
 
+  static Future<void> updateDisplayName(String newName) async {
+    final session = currentSession;
+    if (session == null) throw AuthException('Tidak ada sesi aktif');
+
+    final normalized = newName.trim();
+    if (normalized.isEmpty) throw AuthException('Nama tidak boleh kosong');
+
+    await _prefs.setString(_sessionDisplayNameKey, normalized);
+
+    if (!session.isGuest) {
+      final localUser = HiveService.usersBox.get(session.userId);
+      if (localUser != null) {
+        final updatedUser = localUser.copyWith(namaLengkap: normalized, isSynced: false);
+        await HiveService.usersBox.put(session.userId, updatedUser);
+        try {
+          if (await MongoDatabase.tryConnect()) {
+            final existingRecord = await MongoDatabase.usersCollection.findOne(where.eq('id', session.userId));
+            if (existingRecord != null) {
+              await MongoDatabase.usersCollection.updateOne(
+                where.eq('id', session.userId),
+                modify.set('namaLengkap', normalized),
+              );
+              await HiveService.usersBox.put(session.userId, updatedUser.copyWith(isSynced: true));
+            }
+          }
+        } catch (_) {}
+      }
+    }
+  }
+
   static Future<void> logout() async {
     await _prefs.remove(_sessionUserIdKey);
     await _prefs.remove(_sessionDisplayNameKey);

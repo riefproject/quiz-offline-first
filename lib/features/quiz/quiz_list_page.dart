@@ -17,6 +17,7 @@ import '../../widgets/components/under_construction_widget.dart';
 import 'widgets/create_quiz_card.dart';
 import 'widgets/quiz_card.dart';
 import 'create_quiz_page.dart';
+import '../profile/screens/profile_screen.dart';
 
 class QuizListPage extends StatefulWidget {
   const QuizListPage({super.key});
@@ -85,23 +86,6 @@ class _QuizListPageState extends State<QuizListPage> {
         trailing: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Container(
-              decoration: BoxDecoration(
-                color: colors.surfaceLowest.withValues(alpha: 0.9),
-                borderRadius: BorderRadius.circular(999),
-                border: Border.all(color: colors.outline),
-              ),
-              child: IconButton(
-                onPressed: _logout,
-                tooltip: 'Log Out',
-                icon: Icon(
-                  Icons.logout_rounded,
-                  color: colors.primary,
-                  size: 20,
-                ),
-              ),
-            ),
-            const SizedBox(width: 10),
             CircleAvatar(
               radius: 20,
               backgroundColor: colors.primary.withValues(alpha: 0.14),
@@ -150,10 +134,7 @@ class _QuizListPageState extends State<QuizListPage> {
     }
 
     if (_currentNavIndex == 2) {
-      return const UnderConstructionWidget(
-        title: 'User Profile',
-        icon: Icons.account_circle_rounded,
-      );
+      return const ProfileScreen();
     }
 
     return ListView(

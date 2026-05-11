@@ -53,6 +53,16 @@ class HiveService {
   static Box<JawabanPeserta> get jawabanPesertaBox => Hive.box<JawabanPeserta>(_jawabanPesertaBox);
   static Box<HasilAkhir> get hasilAkhirBox => Hive.box<HasilAkhir>(_hasilAkhirBox);
 
+  static Future<void> clearQuizCache() async {
+    await quizBox.clear();
+    await soalBox.clear();
+    await pilihanJawabanBox.clear();
+    await sesiKuisBox.clear();
+    await pesertaSesiBox.clear();
+    await jawabanPesertaBox.clear();
+    await hasilAkhirBox.clear();
+  }
+
   /// Menutup seluruh koneksi Hive (biasanya dipakai sebelum aplikasi dimatikan / dispose)
   static Future<void> close() async {
     await Hive.close();

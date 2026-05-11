@@ -22,6 +22,7 @@ class AppTopHeader extends StatelessWidget {
     final textTheme = Theme.of(context).textTheme;
 
     return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         if (leading != null)
           leading!
@@ -33,16 +34,17 @@ class AppTopHeader extends StatelessWidget {
               color: colors.outline,
               borderRadius: BorderRadius.circular(8),
             ),
-            child: Icon(
-              Icons.auto_awesome_rounded,
-              color: colors.primary,
-              size: 18,
+            clipBehavior: Clip.hardEdge,
+            child: Image.asset(
+              'assets/icon/app_icon.png',
+              fit: BoxFit.cover,
             ),
           ),
         const SizedBox(width: 12),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Text(
                 title,
