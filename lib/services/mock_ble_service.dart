@@ -75,6 +75,13 @@ class MockBleService extends BleServiceBase {
       return;
     }
 
+    if (hostPayload.questionStartsAtMs != null) {
+      log.i(
+        'MockBLE: host sent countdown — waiting for the actual question broadcast',
+      );
+      return;
+    }
+
     if (hostPayload.nextQuestion.isEmpty) {
       for (final client in _mockClients) {
         await Future.delayed(Duration(seconds: 1 + Random().nextInt(2)));
@@ -171,6 +178,22 @@ class MockBleService extends BleServiceBase {
     );
 
     await Future.delayed(const Duration(seconds: 3));
+    if (!_scanning) return;
+
+    final countdownEndsAtMs = DateTime.now().millisecondsSinceEpoch + 5000;
+    final countdownPayload = MasterPayload(
+      masterTimeMs: DateTime.now().millisecondsSinceEpoch,
+      questionStartsAtMs: countdownEndsAtMs,
+      nextQuestion: [],
+      gameID: _mockGameId,
+    );
+    rawScanData.value = List<Uint8List>.from(rawScanData.value)
+      ..add(countdownPayload.toBytes());
+    log.i(
+      'MockBLE: COUNTDOWN broadcast (gameID=$_mockGameId, startsAt=+5.0s)\n${formatBlePayload(countdownPayload.toBytes())}',
+    );
+
+    await Future.delayed(const Duration(seconds: 5));
     if (!_scanning) return;
 
     final q1Payload = MasterPayload(

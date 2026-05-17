@@ -13,7 +13,7 @@ import 'package:AlpenQuiz/services/mock_ble_service.dart';
 import 'package:AlpenQuiz/services/quiz/client_listener.dart';
 import 'package:AlpenQuiz/services/quiz/master_publisher.dart';
 
-enum HostPhase { lobby, question, results }
+enum HostPhase { lobby, countdown, question, results }
 
 class ParticipantAnswer {
   final String name;
@@ -30,6 +30,8 @@ class ParticipantAnswer {
 }
 
 class HostController extends ChangeNotifier {
+  static const int _firstQuestionCountdownMs = 5000;
+
   late BleServiceBase _bleService;
   MasterPublisher? _publisher;
   ClientListener? _clientListener;
@@ -43,6 +45,8 @@ class HostController extends ChangeNotifier {
   int _currentQuestionIndex = -1;
   final String quizId;
   List<Question> questions = [];
+  int? _countdownEndsAtMs;
+  int? get countdownEndsAtMs => _countdownEndsAtMs;
 
   int get currentQuestionIndex => _currentQuestionIndex;
   Question get currentQuestion => questions[_currentQuestionIndex];
@@ -56,6 +60,8 @@ class HostController extends ChangeNotifier {
   final Map<int, int> _processedAnswerCounts = {};
 
   StreamSubscription? _clientSub;
+  Timer? _countdownTimer;
+  bool _isDisposed = false;
   bool _isAdvertising = false;
   bool get isAdvertising => _isAdvertising;
   var _currentPayload = MasterPayload(
@@ -122,29 +128,79 @@ class HostController extends ChangeNotifier {
   }
 
   Future<void> nextQuestion() async {
+    if (_phase == HostPhase.countdown) return;
+
     _currentQuestionIndex++;
     if (_currentQuestionIndex >= questions.length) {
       await endGame();
       return;
     }
 
+    if (_currentQuestionIndex == 0) {
+      await _startFirstQuestionCountdown();
+      return;
+    }
+
+    await _publishQuestion();
+  }
+
+  Future<void> _startFirstQuestionCountdown() async {
+    _phase = HostPhase.countdown;
+    _answers = [];
+    _processedAnswerCounts.clear();
+    _countdownEndsAtMs =
+        DateTime.now().millisecondsSinceEpoch + _firstQuestionCountdownMs;
+
+    final countdownPayload = MasterPayload(
+      masterTimeMs: _currentPayload.masterTimeMs,
+      questionStartsAtMs: _countdownEndsAtMs,
+      nextQuestion: const [],
+      gameID: _gameId,
+    );
+    _currentPayload = countdownPayload;
+    _publisher!.publish(countdownPayload);
+    notifyListeners();
+
+    _countdownTimer?.cancel();
+    _countdownTimer = Timer(
+      const Duration(milliseconds: _firstQuestionCountdownMs),
+      () {
+        if (_isDisposed || _phase != HostPhase.countdown) return;
+        _publishQuestion();
+      },
+    );
+  }
+
+  Future<void> _publishQuestion() async {
     _phase = HostPhase.question;
+    _countdownEndsAtMs = null;
+    _countdownTimer?.cancel();
+    _countdownTimer = null;
     _answers = [];
     _processedAnswerCounts.clear();
 
-    _currentPayload.nextQuestion.add(
-      DateTime.now().millisecondsSinceEpoch -
-          _currentPayload.masterTimeMs +
-          Duration(seconds: 5).inMilliseconds,
+    final nextQuestion = <int>[
+      ..._currentPayload.nextQuestion,
+      DateTime.now().millisecondsSinceEpoch - _currentPayload.masterTimeMs,
+    ];
+
+    final questionPayload = MasterPayload(
+      masterTimeMs: _currentPayload.masterTimeMs,
+      nextQuestion: nextQuestion,
+      gameID: _gameId,
     );
 
-    _publisher!.publish(_currentPayload);
+    _currentPayload = questionPayload;
+    _publisher!.publish(questionPayload);
 
     notifyListeners();
   }
 
   Future<void> endGame() async {
     _phase = HostPhase.results;
+    _countdownEndsAtMs = null;
+    _countdownTimer?.cancel();
+    _countdownTimer = null;
 
     _currentPayload.gameFinished = true;
     _publisher!.publish(_currentPayload);
@@ -156,6 +212,8 @@ class HostController extends ChangeNotifier {
 
   @override
   void dispose() {
+    _isDisposed = true;
+    _countdownTimer?.cancel();
     _clientSub?.cancel();
     _clientListener?.dispose();
     _publisher?.dispose();

@@ -11,7 +11,7 @@ import 'package:AlpenQuiz/services/quiz/client_publisher.dart';
 import 'package:AlpenQuiz/services/quiz/master_list_listener.dart';
 import 'package:AlpenQuiz/services/quiz/master_listener.dart';
 
-enum ClientPhase { scanning, lobby, question, finished }
+enum ClientPhase { scanning, lobby, countdown, question, finished }
 
 class ClientController extends ChangeNotifier {
   final BleServiceBase _bleService;
@@ -37,6 +37,8 @@ class ClientController extends ChangeNotifier {
 
   MasterPayload? _currentPayload;
   MasterPayload? get currentPayload => _currentPayload;
+  int? _countdownEndsAtMs;
+  int? get countdownEndsAtMs => _countdownEndsAtMs;
 
   String _playerName = '';
   String get playerName => _playerName;
@@ -47,6 +49,8 @@ class ClientController extends ChangeNotifier {
 
   StreamSubscription? _masterListSub;
   StreamSubscription? _masterSub;
+  Timer? _countdownTimer;
+  bool _isDisposed = false;
 
   ClientController({BleServiceBase? bleService})
     : _bleService = Config.isSessionMocked
@@ -122,22 +126,47 @@ class ClientController extends ChangeNotifier {
     _currentPayload = payload;
 
     if (payload.gameFinished == true) {
+      _countdownTimer?.cancel();
+      _countdownEndsAtMs = null;
       _phase = ClientPhase.finished;
       notifyListeners();
       return;
     }
 
+    if (payload.questionStartsAtMs != null && payload.nextQuestion.isEmpty) {
+      _enterCountdown(payload.questionStartsAtMs!);
+      return;
+    }
+
     if (payload.nextQuestion.isNotEmpty) {
-      if (myAnswers.length < payload.nextQuestion.length) {
-        _phase = ClientPhase.question;
-        notifyListeners();
-      }
+      _countdownTimer?.cancel();
+      _countdownEndsAtMs = null;
+      _phase = ClientPhase.question;
+      notifyListeners();
     }
 
     // if (payload.nextQuestion.isNotEmpty) {
     //   _phase = ClientPhase.question;
     //   notifyListeners();
     // }
+  }
+
+  void _enterCountdown(int questionStartsAtMs) {
+    _phase = ClientPhase.countdown;
+    _countdownEndsAtMs = questionStartsAtMs;
+    _countdownTimer?.cancel();
+
+    final delayMs = questionStartsAtMs - DateTime.now().millisecondsSinceEpoch;
+    _countdownTimer = Timer(
+      Duration(milliseconds: delayMs > 0 ? delayMs : 0),
+      () {
+        if (_isDisposed || _phase != ClientPhase.countdown) return;
+        _phase = ClientPhase.question;
+        notifyListeners();
+      },
+    );
+
+    notifyListeners();
   }
 
   void submitAnswer(int answerIndex) {
@@ -163,6 +192,8 @@ class ClientController extends ChangeNotifier {
 
   @override
   void dispose() {
+    _isDisposed = true;
+    _countdownTimer?.cancel();
     _masterListSub?.cancel();
     _masterSub?.cancel();
     _masterListListener?.dispose();

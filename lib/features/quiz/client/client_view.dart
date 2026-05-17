@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../theme/colors_config.dart';
 import '../../../widgets/components/app_button.dart';
+import '../../../widgets/countdown_screen.dart';
 import '../../../models/master_payload.dart';
 import 'client_controller.dart';
 
@@ -35,19 +36,45 @@ class _ClientViewState extends State<ClientView> {
 
   @override
   Widget build(BuildContext context) {
+    final colors = Theme.of(context).extension<ColorsConfig>()!;
+    final isCountdown = _controller.phase == ClientPhase.countdown;
+
     return Scaffold(
-      backgroundColor: Theme.of(context).extension<ColorsConfig>()!.background,
+      backgroundColor: isCountdown ? colors.primary : colors.background,
       body: SafeArea(
-        child: Column(
-          children: [
-            _buildHeader(context),
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
-                child: _buildBody(context),
+        child: AnimatedSwitcher(
+          duration: const Duration(milliseconds: 450),
+          transitionBuilder: (child, animation) {
+            return FadeTransition(
+              opacity: animation,
+              child: ScaleTransition(
+                scale: Tween<double>(begin: 0.98, end: 1.0).animate(animation),
+                child: child,
               ),
-            ),
-          ],
+            );
+          },
+          child: isCountdown
+              ? KeyedSubtree(
+                  key: const ValueKey('client-countdown'),
+                  child: CountdownScreen(
+                    endsAtMs: _controller.countdownEndsAtMs ??
+                        (DateTime.now().millisecondsSinceEpoch + 5000),
+                  ),
+                )
+              : KeyedSubtree(
+                  key: ValueKey(_controller.phase),
+                  child: Column(
+                    children: [
+                      _buildHeader(context),
+                      Expanded(
+                        child: Padding(
+                          padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+                          child: _buildBody(context),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
         ),
       ),
     );
@@ -63,6 +90,8 @@ class _ClientViewState extends State<ClientView> {
         title = 'Find a Game';
       case ClientPhase.lobby:
         title = 'Lobby';
+      case ClientPhase.countdown:
+        title = 'Get Ready';
       case ClientPhase.question:
         title = 'Question!';
       case ClientPhase.finished:
@@ -98,6 +127,8 @@ class _ClientViewState extends State<ClientView> {
         return _buildScanning(context);
       case ClientPhase.lobby:
         return _buildLobby(context);
+      case ClientPhase.countdown:
+        return const SizedBox.shrink();
       case ClientPhase.question:
         return _buildQuestion(context);
       case ClientPhase.finished:
@@ -259,7 +290,7 @@ class _ClientViewState extends State<ClientView> {
     final payload = _controller.currentPayload;
     if (payload == null) return const SizedBox.shrink();
 
-    final questionIndex = payload.nextQuestion.isNotEmpty ? payload.nextQuestion.first : 0;
+    final questionIndex = payload.nextQuestion.isNotEmpty ? payload.nextQuestion.length : 1;
     final optionLabels = ['A', 'B', 'C', 'D'];
     final optionColors = [
       Colors.red.shade400,

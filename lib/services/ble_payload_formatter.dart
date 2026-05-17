@@ -32,6 +32,11 @@ String formatBlePayload(Uint8List data) {
               .map((ms) => '${(ms / 1000).toStringAsFixed(1)}s')
               .toList();
         }
+        if (payload.questionStartsAtMs != null) {
+          pretty['questionStartsAtMs'] = _formatTimestamp(
+            payload.questionStartsAtMs!,
+          );
+        }
         return '\n${const JsonEncoder.withIndent('  ').convert(pretty)}';
       } catch (_) {
         return '\n${const JsonEncoder.withIndent('  ').convert(map)}';

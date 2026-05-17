@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../../theme/colors_config.dart';
 import '../../../widgets/components/app_button.dart';
+import '../../../widgets/countdown_screen.dart';
 import 'host_controller.dart';
 
 class HostView extends StatefulWidget {
@@ -63,11 +64,14 @@ class _HostViewState extends State<HostView> {
   Widget build(BuildContext context) {
     final colors = Theme.of(context).extension<ColorsConfig>()!;
     final textTheme = Theme.of(context).textTheme;
+    final isCountdown = _controller.phase == HostPhase.countdown;
 
     String title;
     switch (_controller.phase) {
       case HostPhase.lobby:
         title = 'Host Lobby';
+      case HostPhase.countdown:
+        title = 'Starting Quiz';
       case HostPhase.question:
         title = 'Question ${_controller.currentQuestionIndex + 1}';
       case HostPhase.results:
@@ -75,95 +79,376 @@ class _HostViewState extends State<HostView> {
     }
 
     return Scaffold(
-      backgroundColor: colors.background,
+      backgroundColor: isCountdown ? colors.primary : colors.background,
       body: SafeArea(
-        child: Column(
-          children: [
-            if (!_isLandscape)
-              Padding(
-                padding: const EdgeInsets.fromLTRB(20, 18, 20, 12),
-                child: Row(
-                  children: [
-                    IconButton(
-                      icon: Icon(
-                        Icons.arrow_back_rounded,
-                        color: colors.textOnSurface,
-                      ),
-                      onPressed: () => Navigator.of(context).pop(),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        title,
-                        style: textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.w800,
-                          color: colors.textOnSurface,
-                        ),
-                      ),
-                    ),
-                    IconButton(
-                      icon: Icon(
-                        Icons.stay_current_landscape,
-                        color: colors.textOnSurface,
-                      ),
-                      onPressed: _toggleOrientation,
-                    ),
-                    if (_controller.phase == HostPhase.lobby)
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: _controller.isAdvertising
-                              ? Colors.green.shade100
-                              : Colors.orange.shade100,
-                          borderRadius: BorderRadius.circular(100),
-                        ),
-                        child: Text(
-                          _controller.isAdvertising ? 'LIVE' : 'OFFLINE',
-                          style: textTheme.labelSmall?.copyWith(
-                            fontWeight: FontWeight.w800,
-                            color: _controller.isAdvertising
-                                ? Colors.green.shade800
-                                : Colors.orange.shade800,
-                          ),
-                        ),
-                      ),
-                  ],
-                ),
+        child: AnimatedSwitcher(
+          duration: const Duration(milliseconds: 450),
+          transitionBuilder: (child, animation) {
+            return FadeTransition(
+              opacity: animation,
+              child: ScaleTransition(
+                scale: Tween<double>(begin: 0.98, end: 1.0).animate(animation),
+                child: child,
               ),
-            Expanded(
-              child: Padding(
-                padding: MediaQuery.of(context).orientation == Orientation.landscape
-                    ? const EdgeInsets.fromLTRB(16, 16, 16, 8)
-                    : const EdgeInsets.fromLTRB(20, 0, 20, 20),
-                child: Stack(
-                  children: [
-                    _buildBody(context),
-                    if (_isLandscape)
-                      Positioned(
-                        top: 0,
-                        right: 0,
-                        child: Container(
-                          decoration: BoxDecoration(
-                            color: Colors.black.withValues(alpha: 0.1),
-                            shape: BoxShape.circle,
+            );
+          },
+          child: isCountdown
+              ? KeyedSubtree(
+                key: const ValueKey('host-countdown'),
+                  child: CountdownScreen(
+                    endsAtMs: _controller.countdownEndsAtMs ??
+                        (DateTime.now().millisecondsSinceEpoch + 5000),
+                  ),
+                )
+              : _buildHostBody(context, colors, textTheme, title),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHostBody(BuildContext context, ColorsConfig colors, TextTheme textTheme, String title) {
+    final body = _controller.phase == HostPhase.lobby && _isLandscape
+        ? _buildLandscapeLobby(context)
+        : KeyedSubtree(
+            key: ValueKey(_controller.phase),
+            child: Column(
+              children: [
+                if (!_isLandscape)
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 18, 20, 12),
+                    child: Row(
+                      children: [
+                        IconButton(
+                          icon: Icon(
+                            Icons.arrow_back_rounded,
+                            color: colors.textOnSurface,
                           ),
-                          child: IconButton(
-                            icon: Icon(Icons.stay_current_portrait, color: colors.textOnSurface, size: 20),
-                            onPressed: _toggleOrientation,
-                            constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
-                            padding: EdgeInsets.zero,
+                          onPressed: () => Navigator.of(context).pop(),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            title,
+                            style: textTheme.titleLarge?.copyWith(
+                              fontWeight: FontWeight.w800,
+                              color: colors.textOnSurface,
+                            ),
                           ),
                         ),
-                      ),
-                  ],
+                        IconButton(
+                          icon: Icon(
+                            Icons.stay_current_landscape,
+                            color: colors.textOnSurface,
+                          ),
+                          onPressed: _toggleOrientation,
+                        ),
+                        if (_controller.phase == HostPhase.lobby)
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 4,
+                            ),
+                            decoration: BoxDecoration(
+                              color: _controller.isAdvertising
+                                  ? Colors.green.shade100
+                                  : Colors.orange.shade100,
+                              borderRadius: BorderRadius.circular(100),
+                            ),
+                            child: Text(
+                              _controller.isAdvertising ? 'LIVE' : 'OFFLINE',
+                              style: textTheme.labelSmall?.copyWith(
+                                fontWeight: FontWeight.w800,
+                                color: _controller.isAdvertising
+                                    ? Colors.green.shade800
+                                    : Colors.orange.shade800,
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                Expanded(
+                  child: Padding(
+                    padding: MediaQuery.of(context).orientation == Orientation.landscape
+                        ? const EdgeInsets.fromLTRB(16, 16, 16, 8)
+                        : const EdgeInsets.fromLTRB(20, 0, 20, 20),
+                    child: Stack(
+                      children: [
+                        _buildBody(context),
+                        if (_isLandscape)
+                          Positioned(
+                            top: 0,
+                            right: 0,
+                            child: Container(
+                              decoration: BoxDecoration(
+                                color: Colors.black.withValues(alpha: 0.1),
+                                shape: BoxShape.circle,
+                              ),
+                              child: IconButton(
+                                icon: Icon(Icons.stay_current_portrait, color: colors.textOnSurface, size: 20),
+                                onPressed: _toggleOrientation,
+                                constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+                                padding: EdgeInsets.zero,
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
                 ),
+              ],
+            ),
+          );
+
+    return body;
+  }
+
+  Widget _buildLandscapeLobby(BuildContext context) {
+    final colors = Theme.of(context).extension<ColorsConfig>()!;
+    final textTheme = Theme.of(context).textTheme;
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(8, 4, 8, 8),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          SizedBox(
+            width: 280,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                if (_controller.gameId != 0) ...[
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
+                    decoration: BoxDecoration(
+                      color: colors.primary,
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Column(
+                      children: [
+                        Text(
+                          'GAME CODE',
+                          style: textTheme.labelLarge?.copyWith(
+                            color: Colors.white70,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: 1.5,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Text(
+                            '${_controller.gameId}',
+                            style: textTheme.displayMedium?.copyWith(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w900,
+                              letterSpacing: 3,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          'Share this code with participants',
+                          textAlign: TextAlign.center,
+                          style: textTheme.bodySmall?.copyWith(color: Colors.white70),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                ],
+                Text(
+                  'PARTICIPANTS (${_controller.participants.length})',
+                  style: textTheme.labelLarge?.copyWith(
+                    fontWeight: FontWeight.w800,
+                    color: colors.mutedText,
+                    letterSpacing: 1.2,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Expanded(
+                  child: _controller.participants.isEmpty
+                      ? Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.people_outline_rounded,
+                                size: 42,
+                                color: colors.mutedText,
+                              ),
+                              const SizedBox(height: 10),
+                              Text(
+                                'Waiting for participants to join...',
+                                textAlign: TextAlign.center,
+                                style: textTheme.bodyMedium?.copyWith(
+                                  color: colors.mutedText,
+                                ),
+                              ),
+                            ],
+                          ),
+                        )
+                      : SingleChildScrollView(
+                          child: Wrap(
+                            runSpacing: 10,
+                            spacing: 10,
+                            children: _controller.participants.entries.map((entry) {
+                              return Container(
+                                width: 124,
+                                padding: const EdgeInsets.all(10),
+                                decoration: BoxDecoration(
+                                  color: colors.surfaceLowest,
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(color: colors.outline),
+                                ),
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    CircleAvatar(
+                                      radius: 16,
+                                      backgroundColor: colors.primary.withValues(alpha: 0.14),
+                                      child: Text(
+                                        entry.value.isNotEmpty ? entry.value[0].toUpperCase() : '?',
+                                        style: TextStyle(
+                                          color: colors.primary,
+                                          fontWeight: FontWeight.w700,
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(height: 8),
+                                    Text(
+                                      entry.value,
+                                      textAlign: TextAlign.center,
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: textTheme.bodySmall?.copyWith(
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            }).toList(),
+                          ),
+                        ),
+                ),
+                const SizedBox(height: 12),
+                AppButton.primary(
+                  label: _controller.gameId == 0 ? 'Start Game' : 'Send First Question',
+                  onPressed: _controller.gameId == 0
+                      ? () => _controller.startGame()
+                      : () => _controller.nextQuestion(),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: colors.surfaceLowest,
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: colors.outline),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'PARTICIPANT GRID',
+                        style: textTheme.labelLarge?.copyWith(
+                          fontWeight: FontWeight.w800,
+                          color: colors.mutedText,
+                          letterSpacing: 1.2,
+                        ),
+                      ),
+                      Text(
+                        '${_controller.participants.length} online',
+                        style: textTheme.bodySmall?.copyWith(color: colors.mutedText),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  Expanded(
+                    child: _controller.participants.isEmpty
+                        ? Center(
+                            child: Text(
+                              'Participant cards will appear here in a desktop-like grid.',
+                              textAlign: TextAlign.center,
+                              style: textTheme.bodyMedium?.copyWith(
+                                color: colors.mutedText,
+                              ),
+                            ),
+                          )
+                        : LayoutBuilder(
+                            builder: (context, constraints) {
+                              final crossAxisCount = constraints.maxWidth > 900
+                                  ? 4
+                                  : constraints.maxWidth > 700
+                                      ? 3
+                                      : 2;
+                              return GridView.builder(
+                                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                                  crossAxisCount: crossAxisCount,
+                                  crossAxisSpacing: 12,
+                                  mainAxisSpacing: 12,
+                                  childAspectRatio: 3.4,
+                                ),
+                                itemCount: _controller.participants.length,
+                                itemBuilder: (context, index) {
+                                  final entry = _controller.participants.entries.elementAt(index);
+                                  return Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                                    decoration: BoxDecoration(
+                                      color: colors.background,
+                                      borderRadius: BorderRadius.circular(14),
+                                      border: Border.all(color: colors.outline),
+                                    ),
+                                    child: Row(
+                                      children: [
+                                        CircleAvatar(
+                                          radius: 16,
+                                          backgroundColor: colors.primary.withValues(alpha: 0.14),
+                                          child: Text(
+                                            entry.value.isNotEmpty ? entry.value[0].toUpperCase() : '?',
+                                            style: TextStyle(
+                                              color: colors.primary,
+                                              fontWeight: FontWeight.w700,
+                                            ),
+                                          ),
+                                        ),
+                                        const SizedBox(width: 10),
+                                        Expanded(
+                                          child: Text(
+                                            entry.value,
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                            style: textTheme.bodyMedium?.copyWith(
+                                              fontWeight: FontWeight.w700,
+                                            ),
+                                          ),
+                                        ),
+                                        Icon(
+                                          Icons.check_circle_rounded,
+                                          color: Colors.green.shade400,
+                                          size: 18,
+                                        ),
+                                      ],
+                                    ),
+                                  );
+                                },
+                              );
+                            },
+                          ),
+                  ),
+                ],
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -172,6 +457,8 @@ class _HostViewState extends State<HostView> {
     switch (_controller.phase) {
       case HostPhase.lobby:
         return _buildLobby(context);
+      case HostPhase.countdown:
+        return const SizedBox.shrink();
       case HostPhase.question:
         return _buildQuestion(context);
       case HostPhase.results:

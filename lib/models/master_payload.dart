@@ -12,6 +12,8 @@ class MasterPayload implements ByteSerializable, GamePayload {
   final int masterTimeMs;
   // next question in ms after the master time
   final List<int> nextQuestion;
+  // absolute time when the first question should begin
+  final int? questionStartsAtMs;
   // flag for is game finished
   bool? gameFinished = false;
   // game ID. randomly generated
@@ -21,6 +23,7 @@ class MasterPayload implements ByteSerializable, GamePayload {
   MasterPayload({
     required this.masterTimeMs,
     this.nextQuestion = const [],
+    this.questionStartsAtMs,
     this.gameFinished,
     required this.gameID,
   });
@@ -34,6 +37,10 @@ class MasterPayload implements ByteSerializable, GamePayload {
 
     if (nextQuestion.isNotEmpty) {
       map['nq'] = nextQuestion;
+    }
+
+    if (questionStartsAtMs != null) {
+      map['qs'] = questionStartsAtMs;
     }
 
     if (gameFinished == true) {
@@ -50,6 +57,7 @@ class MasterPayload implements ByteSerializable, GamePayload {
       MasterPayload(
         masterTimeMs: map['mt'] as int,
         nextQuestion: (map['nq'] as List?)?.cast<int>() ?? const [],
+        questionStartsAtMs: map['qs'] as int?,
         gameFinished: map.containsKey('f') && map['f'] == 1,
         gameID: map['g'] as int,
       );
