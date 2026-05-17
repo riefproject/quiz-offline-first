@@ -14,6 +14,8 @@ import '../../widgets/layout/app_top_header.dart';
 import '../../theme/colors_config.dart';
 import '../../widgets/components/app_confirm_modal.dart';
 import '../../widgets/components/under_construction_widget.dart';
+import 'client/client_view.dart';
+import 'client/client_controller.dart';
 import 'widgets/create_quiz_card.dart';
 import 'widgets/quiz_card.dart';
 import 'create_quiz_page.dart';
@@ -30,6 +32,8 @@ class _QuizListPageState extends State<QuizListPage> {
   int _currentNavIndex = 1;
   final _quizController = QuizController();
 
+  bool _showBottomBar = true;
+
   String _searchQuery = '';
   int _currentPage = 1;
   static const int _itemsPerPage = 5;
@@ -43,6 +47,9 @@ class _QuizListPageState extends State<QuizListPage> {
   void _handleNavigationTap(int index) {
     setState(() {
       _currentNavIndex = index;
+      if (index != 0) {
+        _showBottomBar = true;
+      }
     });
   }
 
@@ -100,36 +107,41 @@ class _QuizListPageState extends State<QuizListPage> {
           ],
         ),
       ),
-      bottomNavigationBar: AppBottomNavigationBar(
-        currentIndex: _currentNavIndex,
-        onTap: _handleNavigationTap,
-        destinations: const [
-          AppNavDestination(
-            label: 'Home',
-            icon: Icons.home_outlined,
-            activeIcon: Icons.home_rounded,
-          ),
-          AppNavDestination(
-            label: 'Quizzes',
-            icon: Icons.view_list_outlined,
-            activeIcon: Icons.view_list_rounded,
-          ),
-          AppNavDestination(
-            label: 'Profile',
-            icon: Icons.person_outline_rounded,
-            activeIcon: Icons.person_rounded,
-          ),
-        ],
-      ),
+      bottomNavigationBar: _showBottomBar
+          ? AppBottomNavigationBar(
+              currentIndex: _currentNavIndex,
+              onTap: _handleNavigationTap,
+              destinations: const [
+                AppNavDestination(
+                  label: 'Home',
+                  icon: Icons.home_outlined,
+                  activeIcon: Icons.home_rounded,
+                ),
+                AppNavDestination(
+                  label: 'Quizzes',
+                  icon: Icons.view_list_outlined,
+                  activeIcon: Icons.view_list_rounded,
+                ),
+                AppNavDestination(
+                  label: 'Profile',
+                  icon: Icons.person_outline_rounded,
+                  activeIcon: Icons.person_rounded,
+                ),
+              ],
+            )
+          : null,
       body: _buildBody(context, colors),
     );
   }
 
   Widget _buildBody(BuildContext context, ColorsConfig colors) {
     if (_currentNavIndex == 0) {
-      return const UnderConstructionWidget(
-        title: 'Home Dashboard',
-        icon: Icons.dashboard_rounded,
+      return ClientView(
+        onPhaseChanged: (phase) {
+          setState(() {
+            _showBottomBar = phase == ClientPhase.scanning;
+          });
+        },
       );
     }
 

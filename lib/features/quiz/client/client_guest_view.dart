@@ -1,21 +1,18 @@
 import 'package:flutter/material.dart';
 
-import '../../../services/auth_service.dart';
 import '../../../theme/colors_config.dart';
 import '../../../widgets/components/app_button.dart';
 import '../../../models/master_payload.dart';
 import 'client_controller.dart';
 
-class ClientView extends StatefulWidget {
-  final ValueChanged<ClientPhase>? onPhaseChanged;
-
-  const ClientView({super.key, this.onPhaseChanged});
+class ClientGuestView extends StatefulWidget {
+  const ClientGuestView({super.key});
 
   @override
-  State<ClientView> createState() => _ClientViewState();
+  State<ClientGuestView> createState() => _ClientGuestViewState();
 }
 
-class _ClientViewState extends State<ClientView> {
+class _ClientGuestViewState extends State<ClientGuestView> {
   late ClientController _controller;
 
   @override
@@ -23,17 +20,10 @@ class _ClientViewState extends State<ClientView> {
     super.initState();
     _controller = ClientController();
     _controller.addListener(_onControllerChange);
-    final session = AuthService.currentSession;
-    if (session != null) {
-      _controller.playerName = session.displayName;
-    }
   }
 
   void _onControllerChange() {
-    if (mounted) {
-      setState(() {});
-      widget.onPhaseChanged?.call(_controller.phase);
-    }
+    if (mounted) setState(() {});
   }
 
   @override
@@ -45,6 +35,64 @@ class _ClientViewState extends State<ClientView> {
 
   @override
   Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Theme.of(context).extension<ColorsConfig>()!.background,
+      body: SafeArea(
+        child: Column(
+          children: [
+            _buildHeader(context),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+                child: _buildBody(context),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHeader(BuildContext context) {
+    final colors = Theme.of(context).extension<ColorsConfig>()!;
+    final textTheme = Theme.of(context).textTheme;
+
+    String title;
+    switch (_controller.phase) {
+      case ClientPhase.scanning:
+        title = 'Find a Game';
+      case ClientPhase.lobby:
+        title = 'Lobby';
+      case ClientPhase.question:
+        title = 'Question!';
+      case ClientPhase.finished:
+        title = 'Results';
+    }
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 18, 20, 12),
+      child: Row(
+        children: [
+          IconButton(
+            icon: Icon(Icons.arrow_back_rounded, color: colors.textOnSurface),
+            onPressed: () => Navigator.of(context).pop(),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              title,
+              style: textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.w800,
+                color: colors.textOnSurface,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBody(BuildContext context) {
     switch (_controller.phase) {
       case ClientPhase.scanning:
         return _buildScanning(context);
@@ -61,54 +109,14 @@ class _ClientViewState extends State<ClientView> {
     final colors = Theme.of(context).extension<ColorsConfig>()!;
     final textTheme = Theme.of(context).textTheme;
     final isScanning = _controller.isScanning;
-    final session = AuthService.currentSession;
 
-    return ListView(
-      physics: const BouncingScrollPhysics(),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: colors.primary.withValues(alpha: 0.08),
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: colors.primary.withValues(alpha: 0.2)),
-          ),
-          child: Row(
-            children: [
-              CircleAvatar(
-                radius: 20,
-                backgroundColor: colors.primary.withValues(alpha: 0.14),
-                child: Text(
-                  _buildInitials(session?.displayName ?? 'U'),
-                  style: TextStyle(
-                    color: colors.primary,
-                    fontWeight: FontWeight.w800,
-                    fontSize: 14,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      session?.displayName ?? 'User',
-                      style: textTheme.titleSmall?.copyWith(
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    Text(
-                      'Ready to join a live quiz',
-                      style: textTheme.bodySmall?.copyWith(
-                        color: colors.mutedText,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
+        _AppTextField(
+          label: 'Your name',
+          hintText: 'Enter a display name',
+          onChanged: (v) => _controller.playerName = v,
         ),
         const SizedBox(height: 24),
         Text(
@@ -159,36 +167,27 @@ class _ClientViewState extends State<ClientView> {
           ),
         ],
         const SizedBox(height: 16),
-        if (_controller.discoveredGames.isEmpty && !isScanning)
-          Center(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 32),
-              child: Column(
-                children: [
-                  Icon(
-                    Icons.bluetooth_searching_rounded,
-                    size: 48,
-                    color: colors.mutedText.withValues(alpha: 0.4),
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    'No games found yet.\nTap "Start Scanning" to discover nearby hosts.',
-                    textAlign: TextAlign.center,
-                    style: textTheme.bodyMedium?.copyWith(
-                      color: colors.mutedText,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ..._controller.discoveredGames.map(
-          (game) => Padding(
-            padding: const EdgeInsets.only(bottom: 12),
-            child: _buildGameCard(context, game),
-          ),
+        Expanded(
+          child: _controller.discoveredGames.isEmpty
+              ? !isScanning
+                    ? Center(
+                        child: Text(
+                          'No games found yet.\nTap "Start Scanning" to discover nearby hosts.',
+                          textAlign: TextAlign.center,
+                          style: textTheme.bodyMedium?.copyWith(
+                            color: colors.mutedText,
+                          ),
+                        ),
+                      )
+                    : const SizedBox.shrink()
+              : ListView.builder(
+                  itemCount: _controller.discoveredGames.length,
+                  itemBuilder: (context, index) {
+                    final game = _controller.discoveredGames[index];
+                    return _buildGameCard(context, game);
+                  },
+                ),
         ),
-        const SizedBox(height: 12),
       ],
     );
   }
@@ -198,6 +197,7 @@ class _ClientViewState extends State<ClientView> {
     final textTheme = Theme.of(context).textTheme;
 
     return Container(
+      margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: colors.surfaceLowest,
@@ -206,14 +206,7 @@ class _ClientViewState extends State<ClientView> {
       ),
       child: Row(
         children: [
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: colors.primary.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Icon(Icons.wifi_tethering_rounded, color: colors.primary),
-          ),
+          Icon(Icons.wifi_tethering_rounded, color: colors.primary),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
@@ -250,14 +243,7 @@ class _ClientViewState extends State<ClientView> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          SizedBox(
-            width: 64,
-            height: 64,
-            child: CircularProgressIndicator(
-              strokeWidth: 3,
-              color: colors.primary,
-            ),
-          ),
+          Icon(Icons.hourglass_top_rounded, size: 56, color: colors.primary),
           const SizedBox(height: 24),
           Text(
             'Waiting for host...',
@@ -404,34 +390,59 @@ class _ClientViewState extends State<ClientView> {
           const SizedBox(height: 32),
           AppButton.primary(
             label: 'Done',
-            onPressed: () {
-              _controller = ClientController();
-              final session = AuthService.currentSession;
-              if (session != null) {
-                _controller.playerName = session.displayName;
-              }
-              _controller.addListener(_onControllerChange);
-              widget.onPhaseChanged?.call(_controller.phase);
-              setState(() {});
-            },
+            onPressed: () => Navigator.of(context).pop(),
           ),
         ],
       ),
     );
   }
+}
 
-  String _buildInitials(String name) {
-    final parts = name
-        .trim()
-        .split(RegExp(r'\s+'))
-        .where((part) => part.isNotEmpty)
-        .toList();
-    if (parts.isEmpty) return 'U';
-    if (parts.length == 1) {
-      return parts.first
-          .substring(0, parts.first.length >= 2 ? 2 : 1)
-          .toUpperCase();
-    }
-    return '${parts.first[0]}${parts.last[0]}'.toUpperCase();
+class _AppTextField extends StatelessWidget {
+  final String label;
+  final String hintText;
+  final ValueChanged<String>? onChanged;
+
+  const _AppTextField({
+    super.key,
+    required this.label,
+    required this.hintText,
+    this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).extension<ColorsConfig>()!;
+    final textTheme = Theme.of(context).textTheme;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: textTheme.labelMedium?.copyWith(fontWeight: FontWeight.w600),
+        ),
+        const SizedBox(height: 6),
+        TextField(
+          onChanged: onChanged,
+          decoration: InputDecoration(
+            hintText: hintText,
+            hintStyle: TextStyle(
+              color: colors.mutedText.withValues(alpha: 0.5),
+            ),
+            filled: true,
+            fillColor: colors.surfaceLow,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: BorderSide.none,
+            ),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 20,
+              vertical: 18,
+            ),
+          ),
+        ),
+      ],
+    );
   }
 }

@@ -53,7 +53,7 @@ class HostController extends ChangeNotifier {
   final Map<int, String> _participants = {};
   Map<int, String> get participants => _participants;
 
-  final Map<int, int> _processedAnswerCounts = {};
+  final Map<int, ClientPayload> _latestPayloads = {};
 
   StreamSubscription? _clientSub;
   bool _isAdvertising = false;
@@ -61,6 +61,9 @@ class HostController extends ChangeNotifier {
   var _currentPayload = MasterPayload(
     masterTimeMs: DateTime.now().millisecondsSinceEpoch,
     nextQuestion: [],
+    choices: [],
+    duration: [],
+    skippedAt: [],
     gameID: 0,
   );
 
@@ -102,22 +105,25 @@ class HostController extends ChangeNotifier {
 
     _participants[payload.clientId] = payload.name;
 
-    final alreadyProcessed = _processedAnswerCounts[payload.clientId] ?? 0;
-    final newAnswers = payload.answers.skip(alreadyProcessed);
-
-    for (final answer in newAnswers) {
-      _answers = List.from(_answers)
-        ..add(
-          ParticipantAnswer(
-            name: payload.name,
-            clientId: payload.clientId,
-            answer: answer.answer,
-            offsetMs: answer.answerMsOffset,
-          ),
-        );
+    final existing = _latestPayloads[payload.clientId];
+    if (existing != null &&
+        existing.toBytes().length >= payload.toBytes().length) {
+      return;
     }
 
-    _processedAnswerCounts[payload.clientId] = payload.answers.length;
+    _latestPayloads[payload.clientId] = payload;
+
+    _answers = _latestPayloads.values.expand((p) {
+      return p.answers.map(
+        (a) => ParticipantAnswer(
+          name: p.name,
+          clientId: p.clientId,
+          answer: a.answer,
+          offsetMs: a.answerMsOffset,
+        ),
+      );
+    }).toList();
+
     notifyListeners();
   }
 
@@ -130,7 +136,7 @@ class HostController extends ChangeNotifier {
 
     _phase = HostPhase.question;
     _answers = [];
-    _processedAnswerCounts.clear();
+    _latestPayloads.clear();
 
     _currentPayload.nextQuestion.add(
       DateTime.now().millisecondsSinceEpoch -
@@ -138,8 +144,26 @@ class HostController extends ChangeNotifier {
           Duration(seconds: 5).inMilliseconds,
     );
 
+    _currentPayload.duration.add(Duration(seconds: 10).inMilliseconds);
+
+    _currentPayload.choices.add(currentQuestion.options.length);
+
+    _currentPayload.skippedAt.add(-1);
+
     _publisher!.publish(_currentPayload);
 
+    notifyListeners();
+  }
+
+  void endQuestion() {
+    if (_currentQuestionIndex < 0 || _currentQuestionIndex >= questions.length)
+      return;
+    final now =
+        DateTime.now().millisecondsSinceEpoch - _currentPayload.masterTimeMs;
+    if (_currentQuestionIndex < _currentPayload.skippedAt.length) {
+      _currentPayload.skippedAt[_currentQuestionIndex] = now;
+    }
+    _publisher!.publish(_currentPayload);
     notifyListeners();
   }
 

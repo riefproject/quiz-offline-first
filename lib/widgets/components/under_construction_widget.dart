@@ -30,11 +30,7 @@ class UnderConstructionWidget extends StatelessWidget {
                 color: colors.primary.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
-              child: Icon(
-                icon,
-                size: 80,
-                color: colors.primary,
-              ),
+              child: Icon(icon, size: 80, color: colors.primary),
             ),
             const SizedBox(height: 32),
             Text(
