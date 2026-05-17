@@ -4,9 +4,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../../theme/colors_config.dart';
 import '../../../widgets/components/app_button.dart';
+<<<<<<< HEAD
 import '../../../widgets/countdown_screen.dart';
 import '../../../services/hive_service.dart';
 import '../../../services/auth_service.dart';
+=======
+import '../widgets/first_question_countdown.dart';
+>>>>>>> 3be853f (feat: enhance quiz management with ownership checks, Quiz  UI improvements, and image store offline-first)
 import 'host_controller.dart';
 
 class HostView extends StatefulWidget {
@@ -84,7 +88,13 @@ class _HostViewState extends State<HostView> {
   Widget build(BuildContext context) {
     final colors = Theme.of(context).extension<ColorsConfig>()!;
     final textTheme = Theme.of(context).textTheme;
+<<<<<<< HEAD
     final isCountdown = _controller.phase == HostPhase.countdown;
+=======
+    final isFirstQuestionCountdown =
+        _controller.phase == HostPhase.countdown &&
+        _controller.currentQuestionIndex == 0;
+>>>>>>> 3be853f (feat: enhance quiz management with ownership checks, Quiz  UI improvements, and image store offline-first)
 
     String title;
     switch (_controller.phase) {
@@ -107,6 +117,7 @@ class _HostViewState extends State<HostView> {
     }
 
     return Scaffold(
+<<<<<<< HEAD
       backgroundColor: isCountdown ? colors.primary : colors.background,
       body: SafeArea(
         child: AnimatedSwitcher(
@@ -427,9 +438,135 @@ class _HostViewState extends State<HostView> {
               onPressed: _controller.gameId == 0
                   ? () => _controller.startGame()
                   : () => _controller.nextQuestion(),
+=======
+      backgroundColor: isFirstQuestionCountdown
+          ? colors.primary
+          : colors.background,
+      body: AnimatedSwitcher(
+        duration: const Duration(milliseconds: 420),
+        switchInCurve: Curves.easeOutCubic,
+        switchOutCurve: Curves.easeInCubic,
+        transitionBuilder: (child, animation) {
+          return FadeTransition(
+            opacity: animation,
+            child: SlideTransition(
+              position: Tween<Offset>(
+                begin: const Offset(0.04, 0),
+                end: Offset.zero,
+              ).animate(animation),
+              child: child,
+>>>>>>> 3be853f (feat: enhance quiz management with ownership checks, Quiz  UI improvements, and image store offline-first)
             ),
-          ],
-        ),
+          );
+        },
+        child: isFirstQuestionCountdown
+            ? FirstQuestionCountdown(
+                key: const ValueKey('host-first-countdown'),
+                remainingMs: _controller.countdownRemainingMs,
+                questionLabel: 'Question 1',
+                participantCount: _controller.participants.length,
+              )
+            : SafeArea(
+                key: ValueKey('host-${_controller.phase.name}'),
+                child: Column(
+                  children: [
+                    if (!_isLandscape)
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(20, 18, 20, 12),
+                        child: Row(
+                          children: [
+                            IconButton(
+                              icon: Icon(
+                                Icons.arrow_back_rounded,
+                                color: colors.textOnSurface,
+                              ),
+                              onPressed: () => Navigator.of(context).pop(),
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                title,
+                                style: textTheme.titleLarge?.copyWith(
+                                  fontWeight: FontWeight.w800,
+                                  color: colors.textOnSurface,
+                                ),
+                              ),
+                            ),
+                            IconButton(
+                              icon: Icon(
+                                Icons.stay_current_landscape,
+                                color: colors.textOnSurface,
+                              ),
+                              onPressed: _toggleOrientation,
+                            ),
+                            if (_controller.phase == HostPhase.lobby)
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 10,
+                                  vertical: 4,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: _controller.isAdvertising
+                                      ? Colors.green.shade100
+                                      : Colors.orange.shade100,
+                                  borderRadius: BorderRadius.circular(100),
+                                ),
+                                child: Text(
+                                  _controller.isAdvertising
+                                      ? 'LIVE'
+                                      : 'OFFLINE',
+                                  style: textTheme.labelSmall?.copyWith(
+                                    fontWeight: FontWeight.w800,
+                                    color: _controller.isAdvertising
+                                        ? Colors.green.shade800
+                                        : Colors.orange.shade800,
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+                    Expanded(
+                      child: Padding(
+                        padding:
+                            MediaQuery.of(context).orientation ==
+                                Orientation.landscape
+                            ? const EdgeInsets.fromLTRB(16, 16, 16, 8)
+                            : const EdgeInsets.fromLTRB(20, 0, 20, 20),
+                        child: Stack(
+                          children: [
+                            _buildBody(context),
+                            if (_isLandscape)
+                              Positioned(
+                                top: 0,
+                                right: 0,
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    color: Colors.black.withValues(alpha: 0.1),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: IconButton(
+                                    icon: Icon(
+                                      Icons.stay_current_portrait,
+                                      color: colors.textOnSurface,
+                                      size: 20,
+                                    ),
+                                    onPressed: _toggleOrientation,
+                                    constraints: const BoxConstraints(
+                                      minWidth: 36,
+                                      minHeight: 36,
+                                    ),
+                                    padding: EdgeInsets.zero,
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
       ),
     );
   }
@@ -741,11 +878,6 @@ class _HostViewState extends State<HostView> {
               ),
             ],
           ),
-        ),
-        const SizedBox(height: 12),
-        AppButton.primary(
-          label: 'Skip Countdown',
-          onPressed: () => _controller.skipCountdown(),
         ),
       ],
     );

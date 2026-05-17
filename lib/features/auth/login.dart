@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+<<<<<<< HEAD
+=======
+import 'package:AlpenQuiz/features/quiz/client/client_guest_view.dart';
+>>>>>>> 3be853f (feat: enhance quiz management with ownership checks, Quiz  UI improvements, and image store offline-first)
 
 import '../../theme/colors_config.dart';
 import '../../widgets/components/app_button.dart';

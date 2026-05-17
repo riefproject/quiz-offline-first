@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../theme/colors_config.dart';
 import '../../../widgets/components/app_button.dart';
 import '../../../models/master_payload.dart';
+import '../widgets/first_question_countdown.dart';
 import 'client_controller.dart';
 
 class ClientGuestView extends StatefulWidget {
@@ -35,20 +36,51 @@ class _ClientGuestViewState extends State<ClientGuestView> {
 
   @override
   Widget build(BuildContext context) {
+    final colors = Theme.of(context).extension<ColorsConfig>()!;
+    final isFirstQuestionCountdown =
+        _controller.phase == ClientPhase.countdown &&
+        _controller.myAnswers.isEmpty;
+
     return Scaffold(
-      backgroundColor: Theme.of(context).extension<ColorsConfig>()!.background,
-      body: SafeArea(
-        child: Column(
-          children: [
-            _buildHeader(context),
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
-                child: _buildBody(context),
-              ),
+      backgroundColor: isFirstQuestionCountdown
+          ? colors.primary
+          : colors.background,
+      body: AnimatedSwitcher(
+        duration: const Duration(milliseconds: 420),
+        switchInCurve: Curves.easeOutCubic,
+        switchOutCurve: Curves.easeInCubic,
+        transitionBuilder: (child, animation) {
+          return FadeTransition(
+            opacity: animation,
+            child: SlideTransition(
+              position: Tween<Offset>(
+                begin: const Offset(0.04, 0),
+                end: Offset.zero,
+              ).animate(animation),
+              child: child,
             ),
-          ],
-        ),
+          );
+        },
+        child: isFirstQuestionCountdown
+            ? FirstQuestionCountdown(
+                key: const ValueKey('guest-first-countdown'),
+                remainingMs: _controller.countdownRemainingMs,
+                questionLabel: 'Question 1',
+              )
+            : SafeArea(
+                key: ValueKey('guest-${_controller.phase.name}'),
+                child: Column(
+                  children: [
+                    _buildHeader(context),
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+                        child: _buildBody(context),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
       ),
     );
   }

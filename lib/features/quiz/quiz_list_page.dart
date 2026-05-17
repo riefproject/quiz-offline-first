@@ -60,11 +60,19 @@ class _QuizListPageState extends State<QuizListPage> {
     );
 
     if (confirm == true) {
-      await _quizController.deleteQuiz(quizId);
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('Kuis berhasil dihapus')));
+      try {
+        await _quizController.deleteQuiz(quizId);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Kuis berhasil dihapus')),
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text('Gagal menghapus kuis: $e')));
+        }
       }
     }
   }
@@ -221,6 +229,7 @@ class _QuizListPageState extends State<QuizListPage> {
         const SizedBox(height: 18),
         ValueListenableBuilder<Box<Quiz>>(
           valueListenable: HiveService.quizBox.listenable(),
+<<<<<<< HEAD
           builder: (context, box, _) {
             final session = AuthService.currentSession;
             var allQuizzes = box.values.toList();
@@ -231,6 +240,10 @@ class _QuizListPageState extends State<QuizListPage> {
             } else {
               allQuizzes = [];
             }
+=======
+          builder: (context, _, __) {
+            final allQuizzes = _quizController.quizzes;
+>>>>>>> 3be853f (feat: enhance quiz management with ownership checks, Quiz  UI improvements, and image store offline-first)
 
             // 1. Filter by Search Query
             final filteredQuizzes = allQuizzes.where((quiz) {
@@ -265,6 +278,7 @@ class _QuizListPageState extends State<QuizListPage> {
             return Column(
               children: [
                 ...displayedQuizzes.map(
+<<<<<<< HEAD
                   (quiz) {
                     final isOwner = session != null && quiz.pembuat == session.userId;
                     return Padding(
@@ -291,6 +305,37 @@ class _QuizListPageState extends State<QuizListPage> {
                       ),
                     );
                   },
+=======
+                  (quiz) => Padding(
+                    padding: const EdgeInsets.only(bottom: 16),
+                    child: QuizCard(
+                      quiz: quiz,
+                      onEdit: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) => CreateQuizPage(editQuiz: quiz),
+                          ),
+                        );
+                      },
+                      onDelete: () => _deleteQuiz(quiz.id),
+                      onStart: () {
+                        if (_quizController.getOwnedQuiz(quiz.id) == null) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text(
+                                'Anda hanya bisa memulai kuis milik Anda sendiri.',
+                              ),
+                            ),
+                          );
+                          return;
+                        }
+                        Navigator.of(
+                          context,
+                        ).pushNamed("/host", arguments: quiz.id);
+                      },
+                    ),
+                  ),
+>>>>>>> 3be853f (feat: enhance quiz management with ownership checks, Quiz  UI improvements, and image store offline-first)
                 ),
                 if (hasMore || _currentPage > 1)
                   Padding(
