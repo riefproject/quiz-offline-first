@@ -1,13 +1,43 @@
 import 'package:flutter/foundation.dart';
 
 import '../../../models/db_models.dart';
+import '../../../services/auth_service.dart';
 import '../../../services/hive_service.dart';
 import '../../../services/quiz_sync_service.dart';
 
 class QuizController extends ChangeNotifier {
-  List<Quiz> get quizzes => HiveService.quizBox.values.toList();
+  AuthSession get _currentAccount {
+    final session = AuthService.currentSession;
+    if (session == null || session.isGuest) {
+      throw StateError('Anda harus login untuk mengelola kuis.');
+    }
+    return session;
+  }
+
+  bool isOwnedByCurrentUser(Quiz quiz) {
+    final session = AuthService.currentSession;
+    if (session == null || session.isGuest) return false;
+
+    return quiz.pembuat == session.userId ||
+        quiz.pembuat == session.displayName;
+  }
+
+  List<Quiz> get quizzes {
+    return HiveService.quizBox.values.where(isOwnedByCurrentUser).toList();
+  }
+
+  Quiz? getOwnedQuiz(String quizId) {
+    final quiz = HiveService.quizBox.get(quizId);
+    if (quiz == null || !isOwnedByCurrentUser(quiz)) return null;
+    return quiz;
+  }
 
   List<Soal> getQuestionsForQuiz(String quizId) {
+    final quiz = HiveService.quizBox.get(quizId);
+    if (quiz == null || !isOwnedByCurrentUser(quiz)) {
+      return [];
+    }
+
     return HiveService.soalBox.values
         .where((soal) => soal.idQuiz == quizId)
         .toList();
@@ -16,15 +46,15 @@ class QuizController extends ChangeNotifier {
   Future<void> createQuizWithQuestions(
     String judul,
     String deskripsi,
-    String pembuat,
     List<Soal> questions,
   ) async {
+    final owner = _currentAccount;
     final quizId = 'quiz_${DateTime.now().millisecondsSinceEpoch}';
     final newQuiz = Quiz(
       id: quizId,
       judul: judul,
       deskripsi: deskripsi,
-      pembuat: pembuat,
+      pembuat: owner.userId,
       isSynced: false,
     );
 
@@ -45,19 +75,21 @@ class QuizController extends ChangeNotifier {
     String quizId,
     String judul,
     String deskripsi,
-    String pembuat,
     List<Soal> questions,
   ) async {
+    final owner = _currentAccount;
     final existingQuiz = HiveService.quizBox.get(quizId);
-    if (existingQuiz != null) {
-      final updatedQuiz = existingQuiz.copyWith(
-        judul: judul,
-        deskripsi: deskripsi,
-        pembuat: pembuat,
-        isSynced: false,
-      );
-      await HiveService.quizBox.put(quizId, updatedQuiz);
+    if (existingQuiz == null || !isOwnedByCurrentUser(existingQuiz)) {
+      throw StateError('Anda tidak memiliki izin untuk mengubah kuis ini.');
     }
+
+    final updatedQuiz = existingQuiz.copyWith(
+      judul: judul,
+      deskripsi: deskripsi,
+      pembuat: owner.userId,
+      isSynced: false,
+    );
+    await HiveService.quizBox.put(quizId, updatedQuiz);
 
     final existingQuestions = getQuestionsForQuiz(quizId);
     for (var q in existingQuestions) {
@@ -77,12 +109,16 @@ class QuizController extends ChangeNotifier {
   }
 
   Future<void> deleteQuiz(String quizId) async {
-    // Delete all questions associated with the quiz
+    final quiz = HiveService.quizBox.get(quizId);
+    if (quiz == null || !isOwnedByCurrentUser(quiz)) {
+      throw StateError('Anda tidak memiliki izin untuk menghapus kuis ini.');
+    }
+
     final questions = getQuestionsForQuiz(quizId);
     for (var q in questions) {
       await HiveService.soalBox.delete(q.id);
     }
-    // Delete the quiz
+
     await HiveService.quizBox.delete(quizId);
     notifyListeners();
   }

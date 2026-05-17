@@ -7,8 +7,10 @@ import 'package:AlpenQuiz/models/client_payload.dart';
 import 'package:AlpenQuiz/models/master_payload.dart';
 import 'package:AlpenQuiz/models/question.dart';
 import 'package:AlpenQuiz/models/reverse_qr_submission.dart';
+import 'package:AlpenQuiz/services/auth_service.dart';
 import 'package:AlpenQuiz/services/ble_service_base.dart';
 import 'package:AlpenQuiz/services/ble_service.dart';
+import 'package:AlpenQuiz/services/hive_service.dart';
 import 'package:AlpenQuiz/services/logger.dart';
 import 'package:AlpenQuiz/services/mock_ble_service.dart';
 import 'package:AlpenQuiz/services/quiz/client_listener.dart';
@@ -113,6 +115,10 @@ class HostController extends ChangeNotifier {
   );
 
   HostController({BleServiceBase? bleService, required this.quizId}) {
+    if (!_canCurrentUserHostQuiz(quizId)) {
+      throw StateError('Anda tidak memiliki izin untuk memulai kuis ini.');
+    }
+
     _bleService = Config.isSessionMocked
         ? MockBleService()
         : bleService ?? BleService();
@@ -121,7 +127,21 @@ class HostController extends ChangeNotifier {
       'HostController: loaded ${questions.length} questions for quiz $quizId',
     );
   }
+
+  bool _canCurrentUserHostQuiz(String quizId) {
+    final session = AuthService.currentSession;
+    final quiz = HiveService.quizBox.get(quizId);
+    if (session == null || session.isGuest || quiz == null) return false;
+
+    return quiz.pembuat == session.userId ||
+        quiz.pembuat == session.displayName;
+  }
+
   Future<void> startGame() async {
+    if (!_canCurrentUserHostQuiz(quizId)) {
+      throw StateError('Anda tidak memiliki izin untuk memulai kuis ini.');
+    }
+
     _gameId = Random().nextInt(999999) + 100000;
     _sessionId = 'sesi_$_gameId';
     _sessionStartedAt = DateTime.now();
@@ -225,12 +245,6 @@ class HostController extends ChangeNotifier {
         notifyListeners();
       }
     });
-  }
-
-  void skipCountdown() {
-    _countdownTimer?.cancel();
-    _countdownTimer = null;
-    _startQuestion();
   }
 
   void _startQuestion() {

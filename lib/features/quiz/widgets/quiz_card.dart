@@ -26,6 +26,8 @@ class QuizCard extends StatelessWidget {
     final textTheme = Theme.of(context).textTheme;
 
     final questionCount = HiveService.soalBox.values.where((s) => s.idQuiz == quiz.id).length;
+    final ownerName =
+        HiveService.usersBox.get(quiz.pembuat)?.namaLengkap ?? quiz.pembuat;
 
     return AppCard(
       surface: CardSurface.lowest,
@@ -104,7 +106,7 @@ class QuizCard extends StatelessWidget {
                 ),
                 AppInfoChip(
                   icon: Icons.person_outline,
-                  label: quiz.pembuat,
+                  label: ownerName,
                 ),
                 AppInfoChip(
                   icon: quiz.isSynced ? Icons.cloud_done_outlined : Icons.cloud_upload_outlined,

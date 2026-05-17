@@ -5,6 +5,7 @@ import '../qr/reverse_qr_submission_page.dart';
 import '../../../theme/colors_config.dart';
 import '../../../widgets/components/app_button.dart';
 import '../../../models/master_payload.dart';
+import '../widgets/first_question_countdown.dart';
 import 'client_controller.dart';
 
 class ClientView extends StatefulWidget {
@@ -46,17 +47,65 @@ class _ClientViewState extends State<ClientView> {
 
   @override
   Widget build(BuildContext context) {
+    return AnimatedSwitcher(
+      duration: const Duration(milliseconds: 420),
+      switchInCurve: Curves.easeOutCubic,
+      switchOutCurve: Curves.easeInCubic,
+      transitionBuilder: (child, animation) {
+        return FadeTransition(
+          opacity: animation,
+          child: SlideTransition(
+            position: Tween<Offset>(
+              begin: const Offset(0.04, 0),
+              end: Offset.zero,
+            ).animate(animation),
+            child: child,
+          ),
+        );
+      },
+      child: _buildPhase(context),
+    );
+  }
+
+  Widget _buildPhase(BuildContext context) {
+    final isFirstQuestionCountdown =
+        _controller.phase == ClientPhase.countdown &&
+        _controller.myAnswers.isEmpty;
+
+    if (isFirstQuestionCountdown) {
+      return FirstQuestionCountdown(
+        key: const ValueKey('client-first-countdown'),
+        remainingMs: _controller.countdownRemainingMs,
+        questionLabel: 'Question 1',
+      );
+    }
+
     switch (_controller.phase) {
       case ClientPhase.scanning:
-        return _buildScanning(context);
+        return KeyedSubtree(
+          key: const ValueKey('client-scanning'),
+          child: _buildScanning(context),
+        );
       case ClientPhase.lobby:
-        return _buildLobby(context);
+        return KeyedSubtree(
+          key: const ValueKey('client-lobby'),
+          child: _buildLobby(context),
+        );
       case ClientPhase.countdown:
-        return _buildCountdown(context);
+        return KeyedSubtree(
+          key: const ValueKey('client-countdown'),
+          child: _buildCountdown(context),
+        );
       case ClientPhase.question:
-        return _buildQuestion(context);
+        return KeyedSubtree(
+          key: const ValueKey('client-question'),
+          child: _buildQuestion(context),
+        );
       case ClientPhase.finished:
-        return _buildFinished(context);
+        return KeyedSubtree(
+          key: const ValueKey('client-finished'),
+          child: _buildFinished(context),
+        );
     }
   }
 

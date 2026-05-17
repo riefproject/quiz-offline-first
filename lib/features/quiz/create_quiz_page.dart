@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 
 import 'controllers/quiz_controller.dart';
 import '../../models/db_models.dart';
-import '../../services/auth_service.dart';
 import '../../theme/colors_config.dart';
 import 'widgets/question_form_card.dart';
 
@@ -75,14 +74,10 @@ class _CreateQuizPageState extends State<CreateQuizPage> {
     });
 
     try {
-      final session = AuthService.currentSession;
-      final pembuat = session?.displayName ?? 'Guest User';
-
       if (widget.editQuiz == null) {
         await _quizController.createQuizWithQuestions(
           _judulController.text,
           _deskripsiController.text,
-          pembuat,
           _questions,
         );
         if (mounted) {
@@ -95,7 +90,6 @@ class _CreateQuizPageState extends State<CreateQuizPage> {
           widget.editQuiz!.id,
           _judulController.text,
           _deskripsiController.text,
-          pembuat,
           _questions,
         );
         if (mounted) {

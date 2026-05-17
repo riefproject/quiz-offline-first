@@ -60,8 +60,25 @@ class QuizApp extends StatelessWidget {
       onGenerateRoute: (settings) {
         if (settings.name == '/host') {
           final quizId = settings.arguments as String;
+          final session = AuthService.currentSession;
+          final quiz = HiveService.quizBox.get(quizId);
+          final canHost =
+              session != null &&
+              !session.isGuest &&
+              quiz != null &&
+              (quiz.pembuat == session.userId ||
+                  quiz.pembuat == session.displayName);
+
           return MaterialPageRoute(
-            builder: (context) => HostView(quizId: quizId),
+            builder: (context) => canHost
+                ? HostView(quizId: quizId)
+                : const Scaffold(
+                    body: Center(
+                      child: Text(
+                        'Anda hanya bisa memulai kuis milik Anda sendiri.',
+                      ),
+                    ),
+                  ),
           );
         }
         if (settings.name == QuizResultQrPage.routeName) {
