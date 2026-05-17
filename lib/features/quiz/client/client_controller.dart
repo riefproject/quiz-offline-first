@@ -11,7 +11,7 @@ import 'package:AlpenQuiz/services/quiz/client_publisher.dart';
 import 'package:AlpenQuiz/services/quiz/master_list_listener.dart';
 import 'package:AlpenQuiz/services/quiz/master_listener.dart';
 
-enum ClientPhase { scanning, lobby, question, finished }
+enum ClientPhase { scanning, lobby, countdown, question, finished }
 
 class ClientController extends ChangeNotifier {
   final BleServiceBase _bleService;
@@ -47,7 +47,11 @@ class ClientController extends ChangeNotifier {
 
   StreamSubscription? _masterListSub;
   StreamSubscription? _masterSub;
+  Timer? _countdownTimer;
   Timer? _questionTimer;
+
+  int _countdownRemainingMs = 0;
+  int get countdownRemainingMs => _countdownRemainingMs;
 
   int _remainingTimeMs = 0;
   int get remainingTimeMs => _remainingTimeMs;
@@ -133,6 +137,8 @@ class ClientController extends ChangeNotifier {
     _currentPayload = payload;
     _questionTimer?.cancel();
     _questionTimer = null;
+    _countdownTimer?.cancel();
+    _countdownTimer = null;
 
     if (payload.gameFinished == true) {
       _phase = ClientPhase.finished;
@@ -153,6 +159,7 @@ class ClientController extends ChangeNotifier {
       final now = DateTime.now().millisecondsSinceEpoch;
       final questionStart = payload.masterTimeMs + info.nextQuestionMs;
       final questionEnd = questionStart + info.durationMs;
+      final timeToStart = questionStart - now;
       final remaining = questionEnd - now;
 
       if (remaining <= 0) {
@@ -160,23 +167,54 @@ class ClientController extends ChangeNotifier {
         return;
       }
 
-      _remainingTimeMs = remaining;
-      _phase = ClientPhase.question;
+      if (timeToStart > 0) {
+        _countdownRemainingMs = timeToStart;
+        _phase = ClientPhase.countdown;
 
-      _questionTimer = Timer.periodic(const Duration(milliseconds: 100), (_) {
-        final elapsed = DateTime.now().millisecondsSinceEpoch - now;
-        _remainingTimeMs = remaining - elapsed;
-        if (_remainingTimeMs <= 0) {
-          _questionTimer?.cancel();
-          _questionTimer = null;
-          _submitNoAnswer();
-        } else {
-          notifyListeners();
-        }
-      });
+        _countdownTimer = Timer.periodic(const Duration(milliseconds: 100), (
+          _,
+        ) {
+          final elapsed = DateTime.now().millisecondsSinceEpoch - now;
+          _countdownRemainingMs = timeToStart - elapsed;
+          if (_countdownRemainingMs <= 0) {
+            _countdownTimer?.cancel();
+            _countdownTimer = null;
+            _startQuestion(questionEnd);
+          } else {
+            notifyListeners();
+          }
+        });
+      } else {
+        _startQuestion(questionEnd);
+      }
 
       notifyListeners();
     }
+  }
+
+  void _startQuestion(int questionEnd) {
+    final now = DateTime.now().millisecondsSinceEpoch;
+    final remaining = questionEnd - now;
+
+    if (remaining <= 0) {
+      _submitNoAnswer();
+      return;
+    }
+
+    _remainingTimeMs = remaining;
+    _phase = ClientPhase.question;
+
+    _questionTimer = Timer.periodic(const Duration(milliseconds: 100), (_) {
+      final elapsed = DateTime.now().millisecondsSinceEpoch - now;
+      _remainingTimeMs = remaining - elapsed;
+      if (_remainingTimeMs <= 0) {
+        _questionTimer?.cancel();
+        _questionTimer = null;
+        _submitNoAnswer();
+      } else {
+        notifyListeners();
+      }
+    });
   }
 
   void submitAnswer(int answerIndex) {
@@ -211,6 +249,7 @@ class ClientController extends ChangeNotifier {
 
   @override
   void dispose() {
+    _countdownTimer?.cancel();
     _questionTimer?.cancel();
     _masterListSub?.cancel();
     _masterSub?.cancel();

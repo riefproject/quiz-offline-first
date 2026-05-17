@@ -13,7 +13,14 @@ import 'package:AlpenQuiz/services/mock_ble_service.dart';
 import 'package:AlpenQuiz/services/quiz/client_listener.dart';
 import 'package:AlpenQuiz/services/quiz/master_publisher.dart';
 
-enum HostPhase { lobby, countdown, question, results }
+enum HostPhase {
+  lobby,
+  countdown,
+  question,
+  answerReveal,
+  leaderboard,
+  results,
+}
 
 class ParticipantAnswer {
   final String name;
@@ -54,6 +61,26 @@ class HostController extends ChangeNotifier {
   Map<int, String> get participants => _participants;
 
   final Map<int, ClientPayload> _latestPayloads = {};
+
+  final Map<int, int> _scores = {};
+  Map<int, int> get scores => _scores;
+
+  List<({String name, int clientId, int score, int rank})> get leaderboard {
+    final entries = _scores.entries.where((e) => e.value > 0).map((e) {
+      final name = _participants[e.key] ?? 'Unknown';
+      return (name: name, clientId: e.key, score: e.value, rank: 0);
+    }).toList();
+    entries.sort((a, b) => b.score.compareTo(a.score));
+    for (var i = 0; i < entries.length; i++) {
+      entries[i] = (
+        name: entries[i].name,
+        clientId: entries[i].clientId,
+        score: entries[i].score,
+        rank: i + 1,
+      );
+    }
+    return entries.take(5).toList();
+  }
 
   StreamSubscription? _clientSub;
   bool _isAdvertising = false;
@@ -157,6 +184,16 @@ class HostController extends ChangeNotifier {
     _countdownRemainingMs = 5000;
     notifyListeners();
 
+    _currentPayload.nextQuestion.add(
+      DateTime.now().millisecondsSinceEpoch -
+          _currentPayload.masterTimeMs +
+          5000,
+    );
+    _currentPayload.duration.add(questionDuration);
+    _currentPayload.choices.add(currentQuestion.options.length);
+    _currentPayload.skippedAt.add(-1);
+    _publisher!.publish(_currentPayload);
+
     _countdownTimer = Timer.periodic(const Duration(milliseconds: 100), (_) {
       _countdownRemainingMs -= 100;
       if (_countdownRemainingMs <= 0) {
@@ -176,19 +213,6 @@ class HostController extends ChangeNotifier {
   }
 
   void _startQuestion() {
-    _currentPayload.nextQuestion.add(
-      DateTime.now().millisecondsSinceEpoch -
-          _currentPayload.masterTimeMs,
-    );
-
-    _currentPayload.duration.add(questionDuration);
-
-    _currentPayload.choices.add(currentQuestion.options.length);
-
-    _currentPayload.skippedAt.add(-1);
-
-    _publisher!.publish(_currentPayload);
-
     _phase = HostPhase.question;
     _questionRemainingMs = questionDuration;
     notifyListeners();
@@ -215,8 +239,73 @@ class HostController extends ChangeNotifier {
     if (_currentQuestionIndex < _currentPayload.skippedAt.length) {
       _currentPayload.skippedAt[_currentQuestionIndex] = now;
     }
+    _calculateScores();
+    _phase = HostPhase.answerReveal;
     _publisher!.publish(_currentPayload);
     notifyListeners();
+  }
+
+  void _calculateScores() {
+    final correctIndex = currentQuestion.correctAnswerIndex;
+    final duration = questionDuration;
+    for (final answer in _answers) {
+      if (answer.answer == correctIndex) {
+        final speedBonus =
+            (1 -
+                (answer.offsetMs -
+                        _currentPayload.nextQuestion[_currentQuestionIndex]) /
+                    duration) *
+            500;
+        final points = (1000 + speedBonus.clamp(0, 500)).toInt();
+        _scores[answer.clientId] = (_scores[answer.clientId] ?? 0) + points;
+      }
+    }
+  }
+
+  void showLeaderboard() {
+    _phase = HostPhase.leaderboard;
+    notifyListeners();
+  }
+
+  Future<void> nextFromLeaderboard() async {
+    _countdownTimer?.cancel();
+    _countdownTimer = null;
+    _questionTimer?.cancel();
+    _questionTimer = null;
+
+    _currentQuestionIndex++;
+    if (_currentQuestionIndex >= questions.length) {
+      await endGame();
+      return;
+    }
+
+    _answers = [];
+    _latestPayloads.clear();
+
+    _phase = HostPhase.countdown;
+    _countdownRemainingMs = 5000;
+    notifyListeners();
+
+    _currentPayload.nextQuestion.add(
+      DateTime.now().millisecondsSinceEpoch -
+          _currentPayload.masterTimeMs +
+          5000,
+    );
+    _currentPayload.duration.add(questionDuration);
+    _currentPayload.choices.add(currentQuestion.options.length);
+    _currentPayload.skippedAt.add(-1);
+    _publisher!.publish(_currentPayload);
+
+    _countdownTimer = Timer.periodic(const Duration(milliseconds: 100), (_) {
+      _countdownRemainingMs -= 100;
+      if (_countdownRemainingMs <= 0) {
+        _countdownTimer?.cancel();
+        _countdownTimer = null;
+        _startQuestion();
+      } else {
+        notifyListeners();
+      }
+    });
   }
 
   Future<void> endGame() async {
@@ -228,7 +317,6 @@ class HostController extends ChangeNotifier {
 
     _currentPayload.gameFinished = true;
     _publisher!.publish(_currentPayload);
-    await _bleService.stopAdvertising();
     _isAdvertising = false;
 
     notifyListeners();

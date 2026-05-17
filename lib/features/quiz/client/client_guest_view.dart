@@ -63,6 +63,8 @@ class _ClientGuestViewState extends State<ClientGuestView> {
         title = 'Find a Game';
       case ClientPhase.lobby:
         title = 'Lobby';
+      case ClientPhase.countdown:
+        title = 'Get Ready';
       case ClientPhase.question:
         title = 'Question!';
       case ClientPhase.finished:
@@ -98,6 +100,8 @@ class _ClientGuestViewState extends State<ClientGuestView> {
         return _buildScanning(context);
       case ClientPhase.lobby:
         return _buildLobby(context);
+      case ClientPhase.countdown:
+        return _buildCountdown(context);
       case ClientPhase.question:
         return _buildQuestion(context);
       case ClientPhase.finished:
@@ -255,6 +259,62 @@ class _ClientGuestViewState extends State<ClientGuestView> {
           Text(
             'Game #${_controller.joinedGameId}',
             style: textTheme.bodyLarge?.copyWith(color: colors.mutedText),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCountdown(BuildContext context) {
+    final colors = Theme.of(context).extension<ColorsConfig>()!;
+    final textTheme = Theme.of(context).textTheme;
+    final seconds = (_controller.countdownRemainingMs / 1000).ceil();
+    final questionIndex = _controller.myAnswers.length;
+
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(
+            'Question ${questionIndex + 1}',
+            style: textTheme.titleLarge?.copyWith(
+              fontWeight: FontWeight.w800,
+              color: colors.mutedText,
+            ),
+          ),
+          const SizedBox(height: 32),
+          SizedBox(
+            width: 120,
+            height: 120,
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                SizedBox(
+                  width: 120,
+                  height: 120,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 6,
+                    value: _controller.countdownRemainingMs / 5000,
+                    backgroundColor: colors.outline,
+                    color: colors.primary,
+                  ),
+                ),
+                Text(
+                  '$seconds',
+                  style: textTheme.displayLarge?.copyWith(
+                    fontWeight: FontWeight.w900,
+                    color: colors.primary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 24),
+          Text(
+            'Get Ready!',
+            style: textTheme.headlineSmall?.copyWith(
+              fontWeight: FontWeight.w800,
+            ),
           ),
         ],
       ),
