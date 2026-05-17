@@ -2,18 +2,17 @@ import 'package:flutter/material.dart';
 
 import '../../../theme/colors_config.dart';
 import '../../../widgets/components/app_button.dart';
-import '../../../widgets/countdown_screen.dart';
 import '../../../models/master_payload.dart';
 import 'client_controller.dart';
 
-class ClientView extends StatefulWidget {
-  const ClientView({super.key});
+class ClientGuestView extends StatefulWidget {
+  const ClientGuestView({super.key});
 
   @override
-  State<ClientView> createState() => _ClientViewState();
+  State<ClientGuestView> createState() => _ClientGuestViewState();
 }
 
-class _ClientViewState extends State<ClientView> {
+class _ClientGuestViewState extends State<ClientGuestView> {
   late ClientController _controller;
 
   @override
@@ -36,45 +35,19 @@ class _ClientViewState extends State<ClientView> {
 
   @override
   Widget build(BuildContext context) {
-    final colors = Theme.of(context).extension<ColorsConfig>()!;
-    final isCountdown = _controller.phase == ClientPhase.countdown;
-
     return Scaffold(
-      backgroundColor: isCountdown ? colors.primary : colors.background,
+      backgroundColor: Theme.of(context).extension<ColorsConfig>()!.background,
       body: SafeArea(
-        child: AnimatedSwitcher(
-          duration: const Duration(milliseconds: 450),
-          transitionBuilder: (child, animation) {
-            return FadeTransition(
-              opacity: animation,
-              child: ScaleTransition(
-                scale: Tween<double>(begin: 0.98, end: 1.0).animate(animation),
-                child: child,
+        child: Column(
+          children: [
+            _buildHeader(context),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+                child: _buildBody(context),
               ),
-            );
-          },
-          child: isCountdown
-              ? KeyedSubtree(
-                  key: const ValueKey('client-countdown'),
-                  child: CountdownScreen(
-                    endsAtMs: _controller.countdownEndsAtMs ??
-                        (DateTime.now().millisecondsSinceEpoch + 5000),
-                  ),
-                )
-              : KeyedSubtree(
-                  key: ValueKey(_controller.phase),
-                  child: Column(
-                    children: [
-                      _buildHeader(context),
-                      Expanded(
-                        child: Padding(
-                          padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
-                          child: _buildBody(context),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+            ),
+          ],
         ),
       ),
     );
@@ -128,11 +101,7 @@ class _ClientViewState extends State<ClientView> {
       case ClientPhase.lobby:
         return _buildLobby(context);
       case ClientPhase.countdown:
-<<<<<<< HEAD
-        return const SizedBox.shrink();
-=======
         return _buildCountdown(context);
->>>>>>> 2edd15f (leaderboard)
       case ClientPhase.question:
         return _buildQuestion(context);
       case ClientPhase.finished:
@@ -148,7 +117,7 @@ class _ClientViewState extends State<ClientView> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        AppTextField(
+        _AppTextField(
           label: 'Your name',
           hintText: 'Enter a display name',
           onChanged: (v) => _controller.playerName = v,
@@ -193,7 +162,9 @@ class _ClientViewState extends State<ClientView> {
                 const SizedBox(height: 8),
                 Text(
                   'Looking for nearby games...',
-                  style: textTheme.bodyMedium?.copyWith(color: colors.mutedText),
+                  style: textTheme.bodyMedium?.copyWith(
+                    color: colors.mutedText,
+                  ),
                 ),
               ],
             ),
@@ -203,14 +174,16 @@ class _ClientViewState extends State<ClientView> {
         Expanded(
           child: _controller.discoveredGames.isEmpty
               ? !isScanning
-                  ? Center(
-                      child: Text(
-                        'No games found yet.\nTap "Start Scanning" to discover nearby hosts.',
-                        textAlign: TextAlign.center,
-                        style: textTheme.bodyMedium?.copyWith(color: colors.mutedText),
-                      ),
-                    )
-                  : const SizedBox.shrink()
+                    ? Center(
+                        child: Text(
+                          'No games found yet.\nTap "Start Scanning" to discover nearby hosts.',
+                          textAlign: TextAlign.center,
+                          style: textTheme.bodyMedium?.copyWith(
+                            color: colors.mutedText,
+                          ),
+                        ),
+                      )
+                    : const SizedBox.shrink()
               : ListView.builder(
                   itemCount: _controller.discoveredGames.length,
                   itemBuilder: (context, index) {
@@ -245,7 +218,9 @@ class _ClientViewState extends State<ClientView> {
               children: [
                 Text(
                   'Game #${game.gameID}',
-                  style: textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+                  style: textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
                 const SizedBox(height: 2),
                 Text(
@@ -276,7 +251,9 @@ class _ClientViewState extends State<ClientView> {
           const SizedBox(height: 24),
           Text(
             'Waiting for host...',
-            style: textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w800),
+            style: textTheme.headlineSmall?.copyWith(
+              fontWeight: FontWeight.w800,
+            ),
           ),
           const SizedBox(height: 8),
           Text(
@@ -350,8 +327,11 @@ class _ClientViewState extends State<ClientView> {
     final payload = _controller.currentPayload;
     if (payload == null) return const SizedBox.shrink();
 
-    final questionIndex = payload.nextQuestion.isNotEmpty ? payload.nextQuestion.length : 1;
-    final optionLabels = ['A', 'B', 'C', 'D'];
+    final info = _controller.currentQuestionInfo;
+    if (info == null) return const SizedBox.shrink();
+
+    final questionIndex = _controller.myAnswers.length;
+    final choiceCount = info.choicesCount;
     final optionColors = [
       Colors.red.shade400,
       Colors.blue.shade400,
@@ -359,83 +339,91 @@ class _ClientViewState extends State<ClientView> {
       Colors.green.shade400,
     ];
 
-    return LayoutBuilder(builder: (context, constraints) {
-      return SingleChildScrollView(
-        physics: const BouncingScrollPhysics(),
-        child: ConstrainedBox(
-          constraints: BoxConstraints(minHeight: constraints.maxHeight),
+    final seconds = (_controller.remainingTimeMs / 1000).ceil();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: colors.primary,
+            borderRadius: BorderRadius.circular(16),
+          ),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              Text(
+                'Question ${questionIndex + 1}',
+                style: textTheme.labelLarge?.copyWith(
+                  color: Colors.white70,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 1.0,
+                ),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                'Choose your answer',
+                style: textTheme.headlineSmall?.copyWith(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w800,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 8),
               Container(
-                padding: const EdgeInsets.all(20),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 6,
+                ),
                 decoration: BoxDecoration(
-                  color: colors.primary,
-                  borderRadius: BorderRadius.circular(16),
+                  color: Colors.white.withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(999),
                 ),
-                child: Column(
-                  children: [
-                    Text(
-                      'Question ${questionIndex + 1}',
-                      style: textTheme.labelLarge?.copyWith(
-                        color: Colors.white70,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: 1.0,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    Text(
-                      'Choose your answer',
-                      style: textTheme.headlineSmall?.copyWith(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w800,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ],
+                child: Text(
+                  '${seconds}s',
+                  style: textTheme.titleMedium?.copyWith(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w800,
+                  ),
                 ),
               ),
-              const SizedBox(height: 24),
-
-              // Options grid — shrinkWrapped so the whole question column can scroll on small screens.
-              GridView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                padding: EdgeInsets.zero,
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2,
-                  mainAxisSpacing: 12,
-                  crossAxisSpacing: 12,
-                  childAspectRatio: 1.4,
-                ),
-                itemCount: 4,
-                itemBuilder: (context, index) {
-                  return Material(
-                    color: optionColors[index],
-                    borderRadius: BorderRadius.circular(16),
-                    child: InkWell(
-                      onTap: () => _controller.submitAnswer(index),
-                      borderRadius: BorderRadius.circular(16),
-                      child: Center(
-                        child: Text(
-                          optionLabels[index],
-                          style: textTheme.headlineLarge?.copyWith(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w900,
-                          ),
-                        ),
-                      ),
-                    ),
-                  );
-                },
-              ),
-
-              const SizedBox(height: 24),
             ],
           ),
         ),
-      );
-    });
+        const SizedBox(height: 24),
+        Expanded(
+          child: GridView.builder(
+            physics: const NeverScrollableScrollPhysics(),
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
+              mainAxisSpacing: 12,
+              crossAxisSpacing: 12,
+              childAspectRatio: 1.4,
+            ),
+            itemCount: choiceCount,
+            itemBuilder: (context, index) {
+              return Material(
+                color: optionColors[index],
+                borderRadius: BorderRadius.circular(16),
+                child: InkWell(
+                  onTap: () => _controller.submitAnswer(index),
+                  borderRadius: BorderRadius.circular(16),
+                  child: Center(
+                    child: Text(
+                      String.fromCharCode(65 + index),
+                      style: textTheme.headlineLarge?.copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+      ],
+    );
   }
 
   Widget _buildFinished(BuildContext context) {
@@ -450,7 +438,9 @@ class _ClientViewState extends State<ClientView> {
           const SizedBox(height: 24),
           Text(
             'Game Over!',
-            style: textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.w800),
+            style: textTheme.headlineMedium?.copyWith(
+              fontWeight: FontWeight.w800,
+            ),
           ),
           const SizedBox(height: 8),
           Text(
@@ -468,12 +458,12 @@ class _ClientViewState extends State<ClientView> {
   }
 }
 
-class AppTextField extends StatelessWidget {
+class _AppTextField extends StatelessWidget {
   final String label;
   final String hintText;
   final ValueChanged<String>? onChanged;
 
-  const AppTextField({
+  const _AppTextField({
     super.key,
     required this.label,
     required this.hintText,
@@ -488,20 +478,28 @@ class AppTextField extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: textTheme.labelMedium?.copyWith(fontWeight: FontWeight.w600)),
+        Text(
+          label,
+          style: textTheme.labelMedium?.copyWith(fontWeight: FontWeight.w600),
+        ),
         const SizedBox(height: 6),
         TextField(
           onChanged: onChanged,
           decoration: InputDecoration(
             hintText: hintText,
-            hintStyle: TextStyle(color: colors.mutedText.withValues(alpha: 0.5)),
+            hintStyle: TextStyle(
+              color: colors.mutedText.withValues(alpha: 0.5),
+            ),
             filled: true,
             fillColor: colors.surfaceLow,
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(16),
               borderSide: BorderSide.none,
             ),
-            contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 20,
+              vertical: 18,
+            ),
           ),
         ),
       ],

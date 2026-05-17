@@ -1,6 +1,8 @@
 import 'package:AlpenQuiz/models/db_models.dart';
 import 'package:AlpenQuiz/services/hive_service.dart';
 
+import 'package:py_4/services/logger.dart';
+
 class Question {
   final String id;
   final String text;
@@ -30,7 +32,8 @@ class Question {
       final pilihan = HiveService.pilihanJawabanBox.get(id);
       return pilihan?.teksPilihan ?? id;
     }).toList();
-    final correctIndex = soal.idPilihan.indexOf(soal.idJawabanBenar);
+    final correctIndex = int.parse(soal.idJawabanBenar);
+
     return Question(
       id: soal.id,
       text: soal.teksSoal,

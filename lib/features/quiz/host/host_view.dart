@@ -98,6 +98,10 @@ class _HostViewState extends State<HostView> {
 >>>>>>> 60115b4 (feat: host view enchantment)
       case HostPhase.question:
         title = 'Question ${_controller.currentQuestionIndex + 1}';
+      case HostPhase.answerReveal:
+        title = 'Answer Reveal';
+      case HostPhase.leaderboard:
+        title = 'Leaderboard';
       case HostPhase.results:
         title = 'Results';
     }
@@ -442,6 +446,10 @@ class _HostViewState extends State<HostView> {
 >>>>>>> 60115b4 (feat: host view enchantment)
       case HostPhase.question:
         return _buildQuestion(context);
+      case HostPhase.answerReveal:
+        return _buildAnswerReveal(context);
+      case HostPhase.leaderboard:
+        return _buildLeaderboard(context);
       case HostPhase.results:
         return _buildResults(context);
     }
@@ -1005,12 +1013,17 @@ class _HostViewState extends State<HostView> {
               ],
             ),
             AppButton.primary(
+<<<<<<< HEAD
               label:
                   _controller.currentQuestionIndex <
                       _controller.questions.length - 1
                   ? 'Next →'
                   : 'Finish →',
               onPressed: () => _controller.nextQuestion(),
+=======
+              label: 'End Question',
+              onPressed: () => _controller.endQuestion(),
+>>>>>>> 2edd15f (leaderboard)
             ),
           ],
         ),
@@ -1231,8 +1244,272 @@ class _HostViewState extends State<HostView> {
               ],
             ),
           ),
+<<<<<<< HEAD
         );
       },
+=======
+        ),
+        const SizedBox(height: 16),
+        ...List.generate(q.options.length, (i) {
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 10),
+            child: _buildPortraitOptionButton(i, q.options[i], optionColors[i], optionIcons[i], textTheme),
+          );
+        }),
+        const Spacer(),
+        Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: colors.surfaceLow,
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Row(
+            children: [
+              Icon(Icons.people_rounded, size: 18, color: colors.mutedText),
+              const SizedBox(width: 8),
+              Text(
+                '${_controller.answers.length} answer(s) received',
+                style: textTheme.bodyMedium?.copyWith(color: colors.mutedText),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 12),
+        AppButton.primary(
+          label: 'End Question',
+          onPressed: () => _controller.endQuestion(),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildAnswerReveal(BuildContext context) {
+    final colors = Theme.of(context).extension<ColorsConfig>()!;
+    final textTheme = Theme.of(context).textTheme;
+    final q = _controller.currentQuestion;
+    final correctIndex = q.correctAnswerIndex;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: colors.primary,
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Column(
+            children: [
+              Text(
+                'Question ${_controller.currentQuestionIndex + 1} of ${_controller.questions.length}',
+                style: textTheme.labelLarge?.copyWith(
+                  color: Colors.white70,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                q.text,
+                style: textTheme.headlineSmall?.copyWith(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w800,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 16),
+        ...List.generate(q.options.length, (i) {
+          final isCorrect = i == correctIndex;
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 10),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              decoration: BoxDecoration(
+                color: isCorrect ? Colors.green.shade400 : colors.surfaceLow,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: isCorrect ? Colors.green.shade600 : colors.outline,
+                  width: isCorrect ? 2 : 1,
+                ),
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    isCorrect ? Icons.check_circle_rounded : Icons.circle_outlined,
+                    color: isCorrect ? Colors.white : colors.mutedText,
+                    size: 24,
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      q.options[i],
+                      style: textTheme.bodyLarge?.copyWith(
+                        fontWeight: FontWeight.w700,
+                        color: isCorrect ? Colors.white : colors.textOnSurface,
+                      ),
+                      maxLines: 4,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  if (isCorrect)
+                    Text(
+                      'CORRECT',
+                      style: textTheme.labelSmall?.copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          );
+        }),
+        const Spacer(),
+        Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: colors.surfaceLow,
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Row(
+            children: [
+              Icon(Icons.people_rounded, size: 18, color: colors.mutedText),
+              const SizedBox(width: 8),
+              Text(
+                '${_controller.answers.length} / ${_controller.participants.length} answered',
+                style: textTheme.bodyMedium?.copyWith(color: colors.mutedText),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 12),
+        AppButton.primary(
+          label: 'Show Leaderboard',
+          onPressed: () => _controller.showLeaderboard(),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildLeaderboard(BuildContext context) {
+    final colors = Theme.of(context).extension<ColorsConfig>()!;
+    final textTheme = Theme.of(context).textTheme;
+    final lb = _controller.leaderboard;
+
+    final medals = ['🥇', '🥈', '🥉'];
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: colors.primary,
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Column(
+            children: [
+              Icon(Icons.emoji_events_rounded, size: 48, color: Colors.yellow.shade600),
+              const SizedBox(height: 8),
+              Text(
+                'LEADERBOARD',
+                style: textTheme.labelLarge?.copyWith(
+                  color: Colors.white70,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 1.5,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'After Question ${_controller.currentQuestionIndex + 1}',
+                style: textTheme.bodySmall?.copyWith(color: Colors.white70),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 16),
+        Expanded(
+          child: lb.isEmpty
+              ? Center(
+                  child: Text(
+                    'No scores yet',
+                    style: textTheme.bodyMedium?.copyWith(color: colors.mutedText),
+                  ),
+                )
+              : ListView.builder(
+                  itemCount: lb.length,
+                  itemBuilder: (context, index) {
+                    final entry = lb[index];
+                    final isTop3 = entry.rank <= 3;
+                    return Container(
+                      margin: const EdgeInsets.only(bottom: 8),
+                      padding: const EdgeInsets.all(14),
+                      decoration: BoxDecoration(
+                        color: isTop3
+                            ? colors.primary.withValues(alpha: 0.08)
+                            : colors.surfaceLowest,
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(
+                          color: isTop3
+                              ? colors.primary.withValues(alpha: 0.3)
+                              : colors.outline,
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          Text(
+                            isTop3 && entry.rank - 1 < medals.length
+                                ? medals[entry.rank - 1]
+                                : '#${entry.rank}',
+                            style: const TextStyle(fontSize: 24),
+                          ),
+                          const SizedBox(width: 14),
+                          CircleAvatar(
+                            radius: 18,
+                            backgroundColor: colors.primary.withValues(alpha: 0.14),
+                            child: Text(
+                              entry.name.isNotEmpty
+                                  ? entry.name[0].toUpperCase()
+                                  : '?',
+                              style: TextStyle(
+                                color: colors.primary,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Text(
+                              entry.name,
+                              style: textTheme.titleMedium?.copyWith(
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ),
+                          Text(
+                            '${entry.score} pts',
+                            style: textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.w800,
+                              color: colors.primary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                ),
+        ),
+        const SizedBox(height: 16),
+        AppButton.primary(
+          label: _controller.currentQuestionIndex < _controller.questions.length - 1
+              ? 'Next Question'
+              : 'Finish Game',
+          onPressed: () => _controller.nextFromLeaderboard(),
+        ),
+      ],
+>>>>>>> 2edd15f (leaderboard)
     );
   }
 

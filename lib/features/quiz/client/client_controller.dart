@@ -50,7 +50,24 @@ class ClientController extends ChangeNotifier {
   StreamSubscription? _masterListSub;
   StreamSubscription? _masterSub;
   Timer? _countdownTimer;
+<<<<<<< HEAD
   bool _isDisposed = false;
+=======
+  Timer? _questionTimer;
+
+  int _countdownRemainingMs = 0;
+  int get countdownRemainingMs => _countdownRemainingMs;
+
+  int _remainingTimeMs = 0;
+  int get remainingTimeMs => _remainingTimeMs;
+
+  MasterQuestionInfo? get currentQuestionInfo {
+    if (_currentPayload == null) return null;
+    final index = _myAnswers.length;
+    if (index >= _currentPayload!.nextQuestion.length) return null;
+    return _currentPayload!.questionInfoAt(index);
+  }
+>>>>>>> 2edd15f (leaderboard)
 
   ClientController({BleServiceBase? bleService})
     : _bleService = Config.isSessionMocked
@@ -124,6 +141,13 @@ class ClientController extends ChangeNotifier {
 
   void _onQuestion(MasterPayload payload) {
     _currentPayload = payload;
+<<<<<<< HEAD
+=======
+    _questionTimer?.cancel();
+    _questionTimer = null;
+    _countdownTimer?.cancel();
+    _countdownTimer = null;
+>>>>>>> 2edd15f (leaderboard)
 
     if (payload.gameFinished == true) {
       _countdownTimer?.cancel();
@@ -138,10 +162,50 @@ class ClientController extends ChangeNotifier {
       return;
     }
 
+<<<<<<< HEAD
     if (payload.nextQuestion.isNotEmpty) {
       _countdownTimer?.cancel();
       _countdownEndsAtMs = null;
       _phase = ClientPhase.question;
+=======
+      if (info.skippedAtMs != -1) {
+        _submitNoAnswer();
+        return;
+      }
+
+      final now = DateTime.now().millisecondsSinceEpoch;
+      final questionStart = payload.masterTimeMs + info.nextQuestionMs;
+      final questionEnd = questionStart + info.durationMs;
+      final timeToStart = questionStart - now;
+      final remaining = questionEnd - now;
+
+      if (remaining <= 0) {
+        _submitNoAnswer();
+        return;
+      }
+
+      if (timeToStart > 0) {
+        _countdownRemainingMs = timeToStart;
+        _phase = ClientPhase.countdown;
+
+        _countdownTimer = Timer.periodic(const Duration(milliseconds: 100), (
+          _,
+        ) {
+          final elapsed = DateTime.now().millisecondsSinceEpoch - now;
+          _countdownRemainingMs = timeToStart - elapsed;
+          if (_countdownRemainingMs <= 0) {
+            _countdownTimer?.cancel();
+            _countdownTimer = null;
+            _startQuestion(questionEnd);
+          } else {
+            notifyListeners();
+          }
+        });
+      } else {
+        _startQuestion(questionEnd);
+      }
+
+>>>>>>> 2edd15f (leaderboard)
       notifyListeners();
     }
 
@@ -169,6 +233,31 @@ class ClientController extends ChangeNotifier {
     notifyListeners();
   }
 
+  void _startQuestion(int questionEnd) {
+    final now = DateTime.now().millisecondsSinceEpoch;
+    final remaining = questionEnd - now;
+
+    if (remaining <= 0) {
+      _submitNoAnswer();
+      return;
+    }
+
+    _remainingTimeMs = remaining;
+    _phase = ClientPhase.question;
+
+    _questionTimer = Timer.periodic(const Duration(milliseconds: 100), (_) {
+      final elapsed = DateTime.now().millisecondsSinceEpoch - now;
+      _remainingTimeMs = remaining - elapsed;
+      if (_remainingTimeMs <= 0) {
+        _questionTimer?.cancel();
+        _questionTimer = null;
+        _submitNoAnswer();
+      } else {
+        notifyListeners();
+      }
+    });
+  }
+
   void submitAnswer(int answerIndex) {
     if (_currentPayload == null) return;
 
@@ -192,8 +281,13 @@ class ClientController extends ChangeNotifier {
 
   @override
   void dispose() {
+<<<<<<< HEAD
     _isDisposed = true;
     _countdownTimer?.cancel();
+=======
+    _countdownTimer?.cancel();
+    _questionTimer?.cancel();
+>>>>>>> 2edd15f (leaderboard)
     _masterListSub?.cancel();
     _masterSub?.cancel();
     _masterListListener?.dispose();
