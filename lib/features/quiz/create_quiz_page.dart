@@ -32,7 +32,17 @@ class _CreateQuizPageState extends State<CreateQuizPage> {
     _deskripsiController = TextEditingController(text: widget.editQuiz?.deskripsi ?? '');
 
     if (widget.editQuiz != null) {
-      _questions = _quizController.getQuestionsForQuiz(widget.editQuiz!.id);
+      final session = AuthService.currentSession;
+      if (session == null || widget.editQuiz!.pembuat != session.userId) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Anda tidak memiliki izin untuk mengedit kuis ini')),
+          );
+          Navigator.of(context).pop();
+        });
+      } else {
+        _questions = _quizController.getQuestionsForQuiz(widget.editQuiz!.id);
+      }
     } else {
       _addEmptyQuestion();
     }
@@ -76,7 +86,7 @@ class _CreateQuizPageState extends State<CreateQuizPage> {
 
     try {
       final session = AuthService.currentSession;
-      final pembuat = session?.displayName ?? 'Guest User';
+      final pembuat = session?.userId ?? session?.displayName ?? 'guest_${DateTime.now().millisecondsSinceEpoch}';
 
       if (widget.editQuiz == null) {
         await _quizController.createQuizWithQuestions(

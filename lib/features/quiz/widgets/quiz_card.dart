@@ -8,7 +8,7 @@ import '../../../services/hive_service.dart';
 
 class QuizCard extends StatelessWidget {
   final Quiz quiz;
-  final VoidCallback onStart;
+  final VoidCallback? onStart;
   final VoidCallback? onEdit;
   final VoidCallback? onDelete;
 
@@ -104,7 +104,7 @@ class QuizCard extends StatelessWidget {
                 ),
                 AppInfoChip(
                   icon: Icons.person_outline,
-                  label: quiz.pembuat,
+                  label: HiveService.usersBox.get(quiz.pembuat)?.namaLengkap ?? quiz.pembuat,
                 ),
                 AppInfoChip(
                   icon: quiz.isSynced ? Icons.cloud_done_outlined : Icons.cloud_upload_outlined,

@@ -299,71 +299,83 @@ class _ClientViewState extends State<ClientView> {
       Colors.green.shade400,
     ];
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Container(
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            color: colors.primary,
-            borderRadius: BorderRadius.circular(16),
-          ),
+    return LayoutBuilder(builder: (context, constraints) {
+      return SingleChildScrollView(
+        physics: const BouncingScrollPhysics(),
+        child: ConstrainedBox(
+          constraints: BoxConstraints(minHeight: constraints.maxHeight),
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Text(
-                'Question ${questionIndex + 1}',
-                style: textTheme.labelLarge?.copyWith(
-                  color: Colors.white70,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 1.0,
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: colors.primary,
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Column(
+                  children: [
+                    Text(
+                      'Question ${questionIndex + 1}',
+                      style: textTheme.labelLarge?.copyWith(
+                        color: Colors.white70,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 1.0,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      'Choose your answer',
+                      style: textTheme.headlineSmall?.copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w800,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
                 ),
               ),
-              const SizedBox(height: 12),
-              Text(
-                'Choose your answer',
-                style: textTheme.headlineSmall?.copyWith(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w800,
+              const SizedBox(height: 24),
+
+              // Options grid — shrinkWrapped so the whole question column can scroll on small screens.
+              GridView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                padding: EdgeInsets.zero,
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 2,
+                  mainAxisSpacing: 12,
+                  crossAxisSpacing: 12,
+                  childAspectRatio: 1.4,
                 ),
-                textAlign: TextAlign.center,
+                itemCount: 4,
+                itemBuilder: (context, index) {
+                  return Material(
+                    color: optionColors[index],
+                    borderRadius: BorderRadius.circular(16),
+                    child: InkWell(
+                      onTap: () => _controller.submitAnswer(index),
+                      borderRadius: BorderRadius.circular(16),
+                      child: Center(
+                        child: Text(
+                          optionLabels[index],
+                          style: textTheme.headlineLarge?.copyWith(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w900,
+                          ),
+                        ),
+                      ),
+                    ),
+                  );
+                },
               ),
+
+              const SizedBox(height: 24),
             ],
           ),
         ),
-        const SizedBox(height: 24),
-        Expanded(
-          child: GridView.builder(
-            physics: const NeverScrollableScrollPhysics(),
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2,
-              mainAxisSpacing: 12,
-              crossAxisSpacing: 12,
-              childAspectRatio: 1.4,
-            ),
-            itemCount: 4,
-            itemBuilder: (context, index) {
-              return Material(
-                color: optionColors[index],
-                borderRadius: BorderRadius.circular(16),
-                child: InkWell(
-                  onTap: () => _controller.submitAnswer(index),
-                  borderRadius: BorderRadius.circular(16),
-                  child: Center(
-                    child: Text(
-                      optionLabels[index],
-                      style: textTheme.headlineLarge?.copyWith(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w900,
-                      ),
-                    ),
-                  ),
-                ),
-              );
-            },
-          ),
-        ),
-      ],
-    );
+      );
+    });
   }
 
   Widget _buildFinished(BuildContext context) {

@@ -46,11 +46,7 @@ class _QuizListPageState extends State<QuizListPage> {
     });
   }
 
-  Future<void> _logout() async {
-    await AuthService.logout();
-    if (!mounted) return;
-    Navigator.of(context).pushNamedAndRemoveUntil('/app', (route) => false);
-  }
+  // Logout handled from profile screen; removed unused local helper.
 
   Future<void> _deleteQuiz(String quizId) async {
     final confirm = await AppConfirmModal.show(
@@ -226,7 +222,15 @@ class _QuizListPageState extends State<QuizListPage> {
         ValueListenableBuilder<Box<Quiz>>(
           valueListenable: HiveService.quizBox.listenable(),
           builder: (context, box, _) {
-            final allQuizzes = box.values.toList();
+            final session = AuthService.currentSession;
+            var allQuizzes = box.values.toList();
+
+            // Only show quizzes owned by the current user
+            if (session != null) {
+              allQuizzes = allQuizzes.where((q) => q.pembuat == session.userId).toList();
+            } else {
+              allQuizzes = [];
+            }
 
             // 1. Filter by Search Query
             final filteredQuizzes = allQuizzes.where((quiz) {
@@ -261,25 +265,32 @@ class _QuizListPageState extends State<QuizListPage> {
             return Column(
               children: [
                 ...displayedQuizzes.map(
-                  (quiz) => Padding(
-                    padding: const EdgeInsets.only(bottom: 16),
-                    child: QuizCard(
-                      quiz: quiz,
-                      onEdit: () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (_) => CreateQuizPage(editQuiz: quiz),
-                          ),
-                        );
-                      },
-                      onDelete: () => _deleteQuiz(quiz.id),
-                      onStart: () {
-                        Navigator.of(
-                          context,
-                        ).pushNamed("/host", arguments: quiz.id);
-                      },
-                    ),
-                  ),
+                  (quiz) {
+                    final isOwner = session != null && quiz.pembuat == session.userId;
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 16),
+                      child: QuizCard(
+                        quiz: quiz,
+                        onEdit: isOwner
+                            ? () {
+                                Navigator.of(context).push(
+                                  MaterialPageRoute(
+                                    builder: (_) => CreateQuizPage(editQuiz: quiz),
+                                  ),
+                                );
+                              }
+                            : null,
+                        onDelete: isOwner ? () => _deleteQuiz(quiz.id) : null,
+                        onStart: isOwner
+                            ? () {
+                                Navigator.of(
+                                  context,
+                                ).pushNamed("/host", arguments: quiz.id);
+                              }
+                            : null,
+                      ),
+                    );
+                  },
                 ),
                 if (hasMore || _currentPage > 1)
                   Padding(

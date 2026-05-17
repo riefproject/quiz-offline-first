@@ -4,7 +4,6 @@ import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
 
 import '../../../models/db_models.dart';
-import '../../../services/cloudinary_service.dart';
 import '../../../theme/colors_config.dart';
 
 class QuestionFormCard extends StatefulWidget {
@@ -90,21 +89,14 @@ class _QuestionFormCardState extends State<QuestionFormCard> {
         final appDir = await getApplicationDocumentsDirectory();
         final fileName = 'quiz_img_${DateTime.now().millisecondsSinceEpoch}.jpg';
         final savedImage = await File(pickedFile.path).copy('${appDir.path}/$fileName');
-        
+        // Offline-first: save local copy immediately and mark for sync.
         setState(() {
           _localPhotoPath = savedImage.path;
-          _isUploading = true;
+          _isUploading = false; // no immediate upload
         });
+        // Notify parent with updated Soal (local path set). Cloudinary upload
+        // will be attempted later by QuizSyncService when connectivity is available.
         _notifyChange();
-
-        final url = await CloudinaryService.uploadImage(savedImage);
-        if (url != null && mounted) {
-          setState(() {
-            _photoUrl = url;
-            _isUploading = false;
-          });
-          _notifyChange();
-        }
       } catch (e) {
         if (mounted) {
           setState(() {

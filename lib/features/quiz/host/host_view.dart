@@ -5,6 +5,8 @@ import 'package:flutter/services.dart';
 import '../../../theme/colors_config.dart';
 import '../../../widgets/components/app_button.dart';
 import '../../../widgets/countdown_screen.dart';
+import '../../../services/hive_service.dart';
+import '../../../services/auth_service.dart';
 import 'host_controller.dart';
 
 class HostView extends StatefulWidget {
@@ -39,6 +41,20 @@ class _HostViewState extends State<HostView> {
   @override
   void initState() {
     super.initState();
+    // Check ownership: only the quiz owner may open HostView
+    final quiz = HiveService.quizBox.get(widget.quizId);
+    final currentSession = AuthService.currentSession;
+    if (quiz == null || currentSession == null || quiz.pembuat != currentSession.userId) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Anda tidak memiliki izin untuk memulai sesi kuis ini')),
+        );
+        Navigator.of(context).pop();
+      });
+      // Do not create controller if not authorized
+      return;
+    }
+
     _controller = HostController(quizId: widget.quizId);
     _controller.addListener(_onControllerChange);
   }
@@ -860,109 +876,119 @@ class _HostViewState extends State<HostView> {
       return _buildLandscapeQuestion(context, q, optionColors, optionIcons);
     }
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Container(
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            color: colors.primary,
-            borderRadius: BorderRadius.circular(16),
-          ),
+    return LayoutBuilder(builder: (context, constraints) {
+      return SingleChildScrollView(
+        physics: const BouncingScrollPhysics(),
+        child: ConstrainedBox(
+          constraints: BoxConstraints(minHeight: constraints.maxHeight),
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Text(
-                'Question ${_controller.currentQuestionIndex + 1} of ${_controller.questions.length}',
-                style: textTheme.labelLarge?.copyWith(
-                  color: Colors.white70,
-                  fontWeight: FontWeight.w700,
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: colors.primary,
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Column(
+                  children: [
+                    Text(
+                      'Question ${_controller.currentQuestionIndex + 1} of ${_controller.questions.length}',
+                      style: textTheme.labelLarge?.copyWith(
+                        color: Colors.white70,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      q.text,
+                      style: textTheme.headlineSmall?.copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w800,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    if ((q.localPhotoPath != null && q.localPhotoPath!.isNotEmpty) || (q.photoUrl != null && q.photoUrl!.isNotEmpty))
+                      Container(
+                        margin: const EdgeInsets.only(top: 16),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(12),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.1),
+                              blurRadius: 10,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(12),
+                          child: ConstrainedBox(
+                            constraints: BoxConstraints(
+                              maxHeight: (constraints.maxHeight) * 0.4,
+                              minWidth: double.infinity,
+                            ),
+                            child: q.localPhotoPath != null && q.localPhotoPath!.isNotEmpty
+                                ? Image.file(
+                                    File(q.localPhotoPath!),
+                                    width: double.infinity,
+                                    fit: BoxFit.contain,
+                                    errorBuilder: (ctx, err, stack) => Image.network(
+                                      q.photoUrl ?? '',
+                                      width: double.infinity,
+                                      fit: BoxFit.contain,
+                                      errorBuilder: (c, e, s) => const SizedBox(height: 180, child: Center(child: Icon(Icons.broken_image, color: Colors.white))),
+                                    ),
+                                  )
+                                : Image.network(
+                                    q.photoUrl!,
+                                    width: double.infinity,
+                                    fit: BoxFit.contain,
+                                  ),
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+              ...List.generate(q.options.length, (i) {
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 10),
+                  child: _buildPortraitOptionButton(i, q.options[i], optionColors[i], optionIcons[i], textTheme),
+                );
+              }),
+              const SizedBox(height: 8),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: colors.surfaceLow,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.people_rounded, size: 18, color: colors.mutedText),
+                    const SizedBox(width: 8),
+                    Text(
+                      '${_controller.answers.length} answer(s) received',
+                      style: textTheme.bodyMedium?.copyWith(color: colors.mutedText),
+                    ),
+                  ],
                 ),
               ),
               const SizedBox(height: 12),
-              Text(
-                q.text,
-                style: textTheme.headlineSmall?.copyWith(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w800,
-                ),
-                textAlign: TextAlign.center,
+              AppButton.primary(
+                label: _controller.currentQuestionIndex < _controller.questions.length - 1
+                    ? 'Next Question'
+                    : 'Finish Game',
+                onPressed: () => _controller.nextQuestion(),
               ),
-              if ((q.localPhotoPath != null && q.localPhotoPath!.isNotEmpty) || (q.photoUrl != null && q.photoUrl!.isNotEmpty))
-                Container(
-                  margin: const EdgeInsets.only(top: 16),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(12),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.1),
-                        blurRadius: 10,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(12),
-                    child: q.localPhotoPath != null && q.localPhotoPath!.isNotEmpty
-                        ? Image.file(
-                            File(q.localPhotoPath!),
-                            height: 180,
-                            width: double.infinity,
-                            fit: BoxFit.cover,
-                            errorBuilder: (ctx, err, stack) => Image.network(
-                              q.photoUrl ?? '',
-                              height: 180,
-                              width: double.infinity,
-                              fit: BoxFit.cover,
-                              errorBuilder: (c, e, s) => const SizedBox(height: 180, child: Center(child: Icon(Icons.broken_image, color: Colors.white))),
-                            ),
-                          )
-                        : Image.network(
-                            q.photoUrl!,
-                            height: 180,
-                            width: double.infinity,
-                            fit: BoxFit.cover,
-                          ),
-                  ),
-                ),
+              const SizedBox(height: 12),
             ],
           ),
         ),
-        const SizedBox(height: 16),
-        ...List.generate(q.options.length, (i) {
-          return Padding(
-            padding: const EdgeInsets.only(bottom: 10),
-            child: _buildPortraitOptionButton(i, q.options[i], optionColors[i], optionIcons[i], textTheme),
-          );
-        }),
-        const Spacer(),
-        Container(
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: colors.surfaceLow,
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Row(
-            children: [
-              Icon(Icons.people_rounded, size: 18, color: colors.mutedText),
-              const SizedBox(width: 8),
-              Text(
-                '${_controller.answers.length} answer(s) received',
-                style: textTheme.bodyMedium?.copyWith(color: colors.mutedText),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 12),
-        AppButton.primary(
-          label:
-              _controller.currentQuestionIndex <
-                  _controller.questions.length - 1
-              ? 'Next Question'
-              : 'Finish Game',
-          onPressed: () => _controller.nextQuestion(),
-        ),
-      ],
-    );
+      );
+    });
   }
 
   Widget _buildResults(BuildContext context) {

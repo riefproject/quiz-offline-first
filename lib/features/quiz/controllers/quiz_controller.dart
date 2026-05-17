@@ -3,9 +3,17 @@ import 'package:flutter/foundation.dart';
 import '../../../models/db_models.dart';
 import '../../../services/hive_service.dart';
 import '../../../services/quiz_sync_service.dart';
+import '../../../services/auth_service.dart';
 
 class QuizController extends ChangeNotifier {
   List<Quiz> get quizzes => HiveService.quizBox.values.toList();
+
+  /// Returns quizzes owned by the current session user.
+  List<Quiz> get myQuizzes {
+    final session = AuthService.currentSession;
+    if (session == null) return [];
+    return HiveService.quizBox.values.where((q) => q.pembuat == session.userId).toList();
+  }
 
   List<Soal> getQuestionsForQuiz(String quizId) {
     return HiveService.soalBox.values
@@ -20,11 +28,14 @@ class QuizController extends ChangeNotifier {
     List<Soal> questions,
   ) async {
     final quizId = 'quiz_${DateTime.now().millisecondsSinceEpoch}';
+    final session = AuthService.currentSession;
+    final ownerId = session?.userId ?? pembuat;
+
     final newQuiz = Quiz(
       id: quizId,
       judul: judul,
       deskripsi: deskripsi,
-      pembuat: pembuat,
+      pembuat: ownerId,
       isSynced: false,
     );
 
@@ -50,10 +61,14 @@ class QuizController extends ChangeNotifier {
   ) async {
     final existingQuiz = HiveService.quizBox.get(quizId);
     if (existingQuiz != null) {
+      final session = AuthService.currentSession;
+      if (session == null || existingQuiz.pembuat != session.userId) {
+        throw AuthException('Anda tidak memiliki otorisasi untuk mengubah kuis ini.');
+      }
       final updatedQuiz = existingQuiz.copyWith(
         judul: judul,
         deskripsi: deskripsi,
-        pembuat: pembuat,
+        pembuat: session.userId,
         isSynced: false,
       );
       await HiveService.quizBox.put(quizId, updatedQuiz);
@@ -77,6 +92,13 @@ class QuizController extends ChangeNotifier {
   }
 
   Future<void> deleteQuiz(String quizId) async {
+    final existingQuiz = HiveService.quizBox.get(quizId);
+    final session = AuthService.currentSession;
+    if (existingQuiz == null) return;
+    if (session == null || existingQuiz.pembuat != session.userId) {
+      throw AuthException('Anda tidak memiliki otorisasi untuk menghapus kuis ini.');
+    }
+
     // Delete all questions associated with the quiz
     final questions = getQuestionsForQuiz(quizId);
     for (var q in questions) {
