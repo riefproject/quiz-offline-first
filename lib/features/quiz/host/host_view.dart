@@ -31,9 +31,7 @@ class _HostViewState extends State<HostView> {
           DeviceOrientation.landscapeRight,
         ]);
       } else {
-        SystemChrome.setPreferredOrientations([
-          DeviceOrientation.portraitUp,
-        ]);
+        SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
       }
     });
   }
@@ -517,7 +515,13 @@ class _HostViewState extends State<HostView> {
     );
   }
 
-  Widget _buildPortraitOptionButton(int index, String text, Color color, IconData icon, TextTheme textTheme) {
+  Widget _buildPortraitOptionButton(
+    int index,
+    String text,
+    Color color,
+    IconData icon,
+    TextTheme textTheme,
+  ) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
@@ -542,13 +546,7 @@ class _HostViewState extends State<HostView> {
                 color: Colors.white.withValues(alpha: 0.25),
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: Center(
-                child: Icon(
-                  icon,
-                  color: Colors.white,
-                  size: 20,
-                ),
-              ),
+              child: Center(child: Icon(icon, color: Colors.white, size: 20)),
             ),
             const SizedBox(width: 12),
             Expanded(
@@ -568,7 +566,13 @@ class _HostViewState extends State<HostView> {
     );
   }
 
-  Widget _buildLandscapeOptionButton(int index, String text, Color color, IconData icon, TextTheme textTheme) {
+  Widget _buildLandscapeOptionButton(
+    int index,
+    String text,
+    Color color,
+    IconData icon,
+    TextTheme textTheme,
+  ) {
     return Container(
       decoration: BoxDecoration(
         color: color,
@@ -586,11 +590,7 @@ class _HostViewState extends State<HostView> {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            Icon(
-              icon,
-              color: Colors.white,
-              size: 24,
-            ),
+            Icon(icon, color: Colors.white, size: 24),
             const SizedBox(width: 12),
             Expanded(
               child: Text(
@@ -609,7 +609,12 @@ class _HostViewState extends State<HostView> {
     );
   }
 
-  Widget _buildLandscapeQuestion(BuildContext context, dynamic q, List<Color> optionColors, List<IconData> optionIcons) {
+  Widget _buildLandscapeQuestion(
+    BuildContext context,
+    dynamic q,
+    List<Color> optionColors,
+    List<IconData> optionIcons,
+  ) {
     final colors = Theme.of(context).extension<ColorsConfig>()!;
     final textTheme = Theme.of(context).textTheme;
 
@@ -648,7 +653,9 @@ class _HostViewState extends State<HostView> {
         // 2. Image (Middle)
         Expanded(
           flex: 6,
-          child: (q.localPhotoPath != null && q.localPhotoPath!.isNotEmpty) || (q.photoUrl != null && q.photoUrl!.isNotEmpty)
+          child:
+              (q.localPhotoPath != null && q.localPhotoPath!.isNotEmpty) ||
+                  (q.photoUrl != null && q.photoUrl!.isNotEmpty)
               ? Center(
                   child: Container(
                     decoration: BoxDecoration(
@@ -663,20 +670,24 @@ class _HostViewState extends State<HostView> {
                     ),
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(12),
-                      child: q.localPhotoPath != null && q.localPhotoPath!.isNotEmpty
+                      child:
+                          q.localPhotoPath != null &&
+                              q.localPhotoPath!.isNotEmpty
                           ? Image.file(
                               File(q.localPhotoPath!),
                               fit: BoxFit.contain,
                               errorBuilder: (ctx, err, stack) => Image.network(
                                 q.photoUrl ?? '',
                                 fit: BoxFit.contain,
-                                errorBuilder: (c, e, s) => const Center(child: Icon(Icons.broken_image, color: Colors.grey)),
+                                errorBuilder: (c, e, s) => const Center(
+                                  child: Icon(
+                                    Icons.broken_image,
+                                    color: Colors.grey,
+                                  ),
+                                ),
                               ),
                             )
-                          : Image.network(
-                              q.photoUrl!,
-                              fit: BoxFit.contain,
-                            ),
+                          : Image.network(q.photoUrl!, fit: BoxFit.contain),
                     ),
                   ),
                 )
@@ -694,9 +705,25 @@ class _HostViewState extends State<HostView> {
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Expanded(child: _buildLandscapeOptionButton(0, q.options.isNotEmpty ? q.options[0] : '', optionColors[0], optionIcons[0], textTheme)),
+                    Expanded(
+                      child: _buildLandscapeOptionButton(
+                        0,
+                        q.options.isNotEmpty ? q.options[0] : '',
+                        optionColors[0],
+                        optionIcons[0],
+                        textTheme,
+                      ),
+                    ),
                     const SizedBox(width: 8),
-                    Expanded(child: _buildLandscapeOptionButton(1, q.options.length > 1 ? q.options[1] : '', optionColors[1], optionIcons[1], textTheme)),
+                    Expanded(
+                      child: _buildLandscapeOptionButton(
+                        1,
+                        q.options.length > 1 ? q.options[1] : '',
+                        optionColors[1],
+                        optionIcons[1],
+                        textTheme,
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -706,10 +733,26 @@ class _HostViewState extends State<HostView> {
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      Expanded(child: _buildLandscapeOptionButton(2, q.options[2], optionColors[2], optionIcons[2], textTheme)),
+                      Expanded(
+                        child: _buildLandscapeOptionButton(
+                          2,
+                          q.options[2],
+                          optionColors[2],
+                          optionIcons[2],
+                          textTheme,
+                        ),
+                      ),
                       const SizedBox(width: 8),
                       if (q.options.length > 3)
-                        Expanded(child: _buildLandscapeOptionButton(3, q.options[3], optionColors[3], optionIcons[3], textTheme))
+                        Expanded(
+                          child: _buildLandscapeOptionButton(
+                            3,
+                            q.options[3],
+                            optionColors[3],
+                            optionIcons[3],
+                            textTheme,
+                          ),
+                        )
                       else
                         const Spacer(),
                     ],
@@ -753,7 +796,7 @@ class _HostViewState extends State<HostView> {
     final textTheme = Theme.of(context).textTheme;
     final q = _controller.currentQuestion;
     final seconds = (_controller.questionRemainingMs / 1000).ceil();
-    
+
     final optionColors = [
       Colors.red.shade400,
       Colors.blue.shade400,
@@ -771,119 +814,166 @@ class _HostViewState extends State<HostView> {
       return _buildLandscapeQuestion(context, q, optionColors, optionIcons);
     }
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Container(
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            color: colors.primary,
-            borderRadius: BorderRadius.circular(16),
-          ),
-          child: Column(
-            children: [
-              Text(
-                'Question ${_controller.currentQuestionIndex + 1} of ${_controller.questions.length}',
-                style: textTheme.labelLarge?.copyWith(
-                  color: Colors.white70,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-              const SizedBox(height: 12),
-              Text(
-                q.text,
-                style: textTheme.headlineSmall?.copyWith(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w800,
-                ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 8),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.2),
-                  borderRadius: BorderRadius.circular(999),
-                ),
-                child: Text(
-                  '${seconds}s',
-                  style: textTheme.titleMedium?.copyWith(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w800,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return SingleChildScrollView(
+          physics: const BouncingScrollPhysics(),
+          child: ConstrainedBox(
+            constraints: BoxConstraints(minHeight: constraints.maxHeight),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    color: colors.primary,
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Column(
+                    children: [
+                      Text(
+                        'Question ${_controller.currentQuestionIndex + 1} of ${_controller.questions.length}',
+                        style: textTheme.labelLarge?.copyWith(
+                          color: Colors.white70,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Text(
+                        q.text,
+                        style: textTheme.headlineSmall?.copyWith(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w800,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 6,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.2),
+                          borderRadius: BorderRadius.circular(999),
+                        ),
+                        child: Text(
+                          '${seconds}s',
+                          style: textTheme.titleMedium?.copyWith(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                      ),
+                      if ((q.localPhotoPath != null &&
+                              q.localPhotoPath!.isNotEmpty) ||
+                          (q.photoUrl != null && q.photoUrl!.isNotEmpty))
+                        Container(
+                          margin: const EdgeInsets.only(top: 16),
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(12),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.1),
+                                blurRadius: 10,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
+                          ),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(12),
+                            child: ConstrainedBox(
+                              constraints: BoxConstraints(
+                                maxHeight: (constraints.maxHeight) * 0.4,
+                                minWidth: double.infinity,
+                              ),
+                              child:
+                                  q.localPhotoPath != null &&
+                                      q.localPhotoPath!.isNotEmpty
+                                  ? Image.file(
+                                      File(q.localPhotoPath!),
+                                      width: double.infinity,
+                                      fit: BoxFit.contain,
+                                      errorBuilder: (ctx, err, stack) =>
+                                          Image.network(
+                                            q.photoUrl ?? '',
+                                            width: double.infinity,
+                                            fit: BoxFit.contain,
+                                            errorBuilder: (c, e, s) =>
+                                                const SizedBox(
+                                                  height: 180,
+                                                  child: Center(
+                                                    child: Icon(
+                                                      Icons.broken_image,
+                                                      color: Colors.white,
+                                                    ),
+                                                  ),
+                                                ),
+                                          ),
+                                    )
+                                  : Image.network(
+                                      q.photoUrl!,
+                                      width: double.infinity,
+                                      fit: BoxFit.contain,
+                                    ),
+                            ),
+                          ),
+                        ),
+                    ],
                   ),
                 ),
-              ),
-              if ((q.localPhotoPath != null && q.localPhotoPath!.isNotEmpty) || (q.photoUrl != null && q.photoUrl!.isNotEmpty))
+                const SizedBox(height: 16),
+                ...List.generate(q.options.length, (i) {
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 10),
+                    child: _buildPortraitOptionButton(
+                      i,
+                      q.options[i],
+                      optionColors[i],
+                      optionIcons[i],
+                      textTheme,
+                    ),
+                  );
+                }),
+                const SizedBox(height: 8),
                 Container(
-                  margin: const EdgeInsets.only(top: 16),
+                  padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(12),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.1),
-                        blurRadius: 10,
-                        offset: const Offset(0, 4),
+                    color: colors.surfaceLow,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.people_rounded,
+                        size: 18,
+                        color: colors.mutedText,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        '${_controller.answers.length} answer(s) received',
+                        style: textTheme.bodyMedium?.copyWith(
+                          color: colors.mutedText,
+                        ),
                       ),
                     ],
                   ),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(12),
-                    child: q.localPhotoPath != null && q.localPhotoPath!.isNotEmpty
-                        ? Image.file(
-                            File(q.localPhotoPath!),
-                            height: 180,
-                            width: double.infinity,
-                            fit: BoxFit.cover,
-                            errorBuilder: (ctx, err, stack) => Image.network(
-                              q.photoUrl ?? '',
-                              height: 180,
-                              width: double.infinity,
-                              fit: BoxFit.cover,
-                              errorBuilder: (c, e, s) => const SizedBox(height: 180, child: Center(child: Icon(Icons.broken_image, color: Colors.white))),
-                            ),
-                          )
-                        : Image.network(
-                            q.photoUrl!,
-                            height: 180,
-                            width: double.infinity,
-                            fit: BoxFit.cover,
-                          ),
-                  ),
                 ),
-            ],
+                const SizedBox(height: 12),
+                AppButton.primary(
+                  label:
+                      _controller.currentQuestionIndex <
+                          _controller.questions.length - 1
+                      ? 'Next Question'
+                      : 'Finish Game',
+                  onPressed: () => _controller.nextQuestion(),
+                ),
+                const SizedBox(height: 12),
+              ],
+            ),
           ),
-        ),
-        const SizedBox(height: 16),
-        ...List.generate(q.options.length, (i) {
-          return Padding(
-            padding: const EdgeInsets.only(bottom: 10),
-            child: _buildPortraitOptionButton(i, q.options[i], optionColors[i], optionIcons[i], textTheme),
-          );
-        }),
-        const Spacer(),
-        Container(
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: colors.surfaceLow,
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Row(
-            children: [
-              Icon(Icons.people_rounded, size: 18, color: colors.mutedText),
-              const SizedBox(width: 8),
-              Text(
-                '${_controller.answers.length} answer(s) received',
-                style: textTheme.bodyMedium?.copyWith(color: colors.mutedText),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 12),
-        AppButton.primary(
-          label: 'End Question',
-          onPressed: () => _controller.endQuestion(),
-        ),
-      ],
+        );
+      },
     );
   }
 
