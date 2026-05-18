@@ -136,10 +136,10 @@ class BleService extends BleServiceBase {
       advertiseData: advertiseData,
       advertiseSettings: AdvertiseSettings(
         advertiseMode: AdvertiseMode.advertiseModeLowLatency,
-        timeout: 180000,
-        advertiseSet: false,
+        timeout: 0,
+        // advertiseSet: false,
         txPowerLevel: AdvertiseTxPower.advertiseTxPowerHigh,
-        connectable: false,
+        // connectable: false,
       ),
     );
   }
