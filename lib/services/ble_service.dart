@@ -49,12 +49,17 @@ class BleService extends BleServiceBase {
         }
       }
       if (bytesList.isNotEmpty) {
-        log.d('BLE: scan results → ${bytesList.length} entries');
+        // log.d('BLE: scan results → ${bytesList.length} entries');
+        for (final data in bytesList) {
+          log.d('BLE: scan result → ${formatBlePayload(data)}');
+        }
+      } else {
+        log.d("BLE: scan result -> no devices scanned");
       }
       rawScanData.value = bytesList;
     });
 
-    FlutterBluePlus.setLogLevel(LogLevel.verbose, color: true);
+    FlutterBluePlus.setLogLevel(LogLevel.info, color: true);
   }
 
   @override
@@ -121,6 +126,7 @@ class BleService extends BleServiceBase {
       localName: localName,
       manufacturerId: kManufacturerId,
       manufacturerData: data,
+      includeDeviceName: true,
     );
 
     log.i(

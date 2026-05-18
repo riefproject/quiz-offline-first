@@ -6,14 +6,32 @@ import 'package:AlpenQuiz/models/game_payload.dart';
 
 const MASTER_PAYLOAD_TYPE = "m";
 
+class MasterQuestionInfo {
+  final int nextQuestionMs;
+  final int durationMs;
+  final int choicesCount;
+  final int skippedAtMs;
+
+  const MasterQuestionInfo({
+    required this.nextQuestionMs,
+    required this.durationMs,
+    required this.choicesCount,
+    this.skippedAtMs = -1,
+  });
+}
+
 class MasterPayload implements ByteSerializable, GamePayload {
   final payloadType = MASTER_PAYLOAD_TYPE;
   // anchored time
   final int masterTimeMs;
   // next question in ms after the master time
   final List<int> nextQuestion;
-  // absolute time when the first question should begin
-  final int? questionStartsAtMs;
+  // duration per question in ms
+  final List<int> duration;
+  // number of choices per question
+  final List<int> choices;
+  // ms offset when question was cut short (-1 if not skipped)
+  final List<int> skippedAt;
   // flag for is game finished
   bool? gameFinished = false;
   // game ID. randomly generated
@@ -22,11 +40,25 @@ class MasterPayload implements ByteSerializable, GamePayload {
 
   MasterPayload({
     required this.masterTimeMs,
-    this.nextQuestion = const [],
-    this.questionStartsAtMs,
+    List<int>? nextQuestion,
+    List<int>? duration,
+    List<int>? choices,
+    List<int>? skippedAt,
     this.gameFinished,
     required this.gameID,
-  });
+  }) : nextQuestion = nextQuestion ?? [],
+       duration = duration ?? [],
+       choices = choices ?? [],
+       skippedAt = skippedAt ?? [];
+
+  MasterQuestionInfo questionInfoAt(int index) {
+    return MasterQuestionInfo(
+      nextQuestionMs: index < nextQuestion.length ? nextQuestion[index] : 0,
+      durationMs: index < duration.length ? duration[index] : 0,
+      choicesCount: index < choices.length ? choices[index] : 0,
+      skippedAtMs: index < skippedAt.length ? skippedAt[index] : -1,
+    );
+  }
 
   Map<String, dynamic> toMsgpackMap() {
     final map = <String, dynamic>{
@@ -39,8 +71,16 @@ class MasterPayload implements ByteSerializable, GamePayload {
       map['nq'] = nextQuestion;
     }
 
-    if (questionStartsAtMs != null) {
-      map['qs'] = questionStartsAtMs;
+    if (duration.isNotEmpty) {
+      map['du'] = duration;
+    }
+
+    if (choices.isNotEmpty) {
+      map['ch'] = choices;
+    }
+
+    if (skippedAt.isNotEmpty) {
+      map['sa'] = skippedAt;
     }
 
     if (gameFinished == true) {
@@ -57,7 +97,9 @@ class MasterPayload implements ByteSerializable, GamePayload {
       MasterPayload(
         masterTimeMs: map['mt'] as int,
         nextQuestion: (map['nq'] as List?)?.cast<int>() ?? const [],
-        questionStartsAtMs: map['qs'] as int?,
+        duration: (map['du'] as List?)?.cast<int>() ?? const [],
+        choices: (map['ch'] as List?)?.cast<int>() ?? const [],
+        skippedAt: (map['sa'] as List?)?.cast<int>() ?? const [],
         gameFinished: map.containsKey('f') && map['f'] == 1,
         gameID: map['g'] as int,
       );
