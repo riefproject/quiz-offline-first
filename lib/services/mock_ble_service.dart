@@ -199,6 +199,9 @@ class MockBleService extends BleServiceBase {
     final q1Payload = MasterPayload(
       masterTimeMs: DateTime.now().millisecondsSinceEpoch,
       nextQuestion: [5000],
+      duration: [5000],
+      choices: [4],
+      skippedAt: [-1],
       gameID: _mockGameId,
     );
     rawScanData.value = List<Uint8List>.from(rawScanData.value)
@@ -213,6 +216,9 @@ class MockBleService extends BleServiceBase {
     final q2Payload = MasterPayload(
       masterTimeMs: DateTime.now().millisecondsSinceEpoch,
       nextQuestion: [5000, 10000],
+      duration: [5000, 5000],
+      choices: [4, 4],
+      skippedAt: [-1, -1],
       gameID: _mockGameId,
     );
     rawScanData.value = List<Uint8List>.from(rawScanData.value)

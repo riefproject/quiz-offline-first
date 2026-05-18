@@ -1,14 +1,27 @@
-import 'package:flutter/foundation.dart';
-import 'package:logger/logger.dart';
+import 'dart:io';
 
-final log = Logger(
-  printer: PrettyPrinter(
-    methodCount: 0,
-    errorMethodCount: 5,
-    lineLength: 80,
-    colors: true,
-    printEmojis: true,
-    dateTimeFormat: DateTimeFormat.onlyTimeAndSinceStart,
-  ),
-  level: kDebugMode ? Level.trace : Level.off,
-);
+import 'package:logger/logger.dart';
+import 'package:path_provider/path_provider.dart';
+
+late Logger log;
+
+Future<void> initLogger() async {
+  final dir = await getApplicationDocumentsDirectory();
+  final file = File('${dir.path}/kahoof_debug.log');
+
+  log = Logger(
+    printer: PrettyPrinter(
+      methodCount: 0,
+      errorMethodCount: 5,
+      lineLength: 80,
+      colors: false,
+      printEmojis: false,
+      dateTimeFormat: DateTimeFormat.dateAndTime,
+    ),
+    output: MultiOutput([
+      ConsoleOutput(),
+      FileOutput(file: file),
+    ]),
+    level: Level.trace,
+  );
+}

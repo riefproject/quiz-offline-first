@@ -7,11 +7,12 @@ import 'features/auth/auth_gate.dart';
 import 'features/auth/forgot_password_page.dart';
 import 'features/auth/login.dart';
 import 'features/auth/register_page.dart';
-import 'features/quiz/client/client_view.dart';
+import 'features/quiz/client/client_guest_view.dart';
 import 'features/quiz/host/host_view.dart';
 import 'features/quiz/role_choice_page.dart';
 import 'services/auth_service.dart';
 import 'services/hive_service.dart';
+import 'services/logger.dart';
 import 'services/mongodb_service.dart';
 import 'theme/theme_config.dart';
 
@@ -25,6 +26,7 @@ Future<void> main() async {
   ]);
 
   await dotenv.load(fileName: '.env');
+  await initLogger();
   await HiveService.init();
   
   // Inisialisasi SharedPreferences untuk session Auth
@@ -51,7 +53,7 @@ class QuizApp extends StatelessWidget {
         '/forgot-password': (_) => const ForgotPasswordPage(),
         '/app': (_) => const AuthGate(),
         '/play': (_) => const RoleChoicePage(),
-        '/client': (_) => const ClientView(),
+        '/client': (_) => const ClientGuestView(),
       },
       onGenerateRoute: (settings) {
         if (settings.name == '/host') {

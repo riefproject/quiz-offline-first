@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:py_4/features/quiz/client/client_guest_view.dart';
 
 import '../../theme/colors_config.dart';
 import '../../widgets/components/app_button.dart';
 import '../../widgets/components/app_input.dart';
 import '../../widgets/layout/app_shell.dart';
 import '../../services/auth_service.dart';
-import 'guest_join_page.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -202,7 +202,7 @@ class _LoginPageState extends State<LoginPage> {
                           context: context,
                           isScrollControlled: true,
                           backgroundColor: Colors.transparent,
-                          builder: (context) => GuestJoinPage(),
+                          builder: (context) => ClientGuestView(),
                         );
                       },
               ),
