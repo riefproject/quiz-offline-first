@@ -883,8 +883,18 @@ class _HostViewState extends State<HostView> {
     );
   }
 
+<<<<<<< HEAD
   Widget _buildPortraitOptionButton(int index, String text, Color color, IconData icon, TextTheme textTheme) {
 >>>>>>> 60115b4 (feat: host view enchantment)
+=======
+  Widget _buildPortraitOptionButton(
+    int index,
+    String text,
+    Color color,
+    IconData icon,
+    TextTheme textTheme,
+  ) {
+>>>>>>> 159cb67 (Fix landscape mode in lobby for host)
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
@@ -1171,8 +1181,12 @@ class _HostViewState extends State<HostView> {
 
 =======
     final seconds = (_controller.questionRemainingMs / 1000).ceil();
+<<<<<<< HEAD
     
 >>>>>>> 60115b4 (feat: host view enchantment)
+=======
+
+>>>>>>> 159cb67 (Fix landscape mode in lobby for host)
     final optionColors = [
       Colors.red.shade400,
       Colors.blue.shade400,
@@ -1191,6 +1205,9 @@ class _HostViewState extends State<HostView> {
     }
 
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> 159cb67 (Fix landscape mode in lobby for host)
     return LayoutBuilder(
       builder: (context, constraints) {
         return SingleChildScrollView(
@@ -1200,6 +1217,7 @@ class _HostViewState extends State<HostView> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
+<<<<<<< HEAD
 =======
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -1343,6 +1361,124 @@ class _HostViewState extends State<HostView> {
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
+=======
+                Container(
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    color: colors.primary,
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Column(
+                    children: [
+                      Text(
+                        'Question ${_controller.currentQuestionIndex + 1} of ${_controller.questions.length}',
+                        style: textTheme.labelLarge?.copyWith(
+                          color: Colors.white70,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Text(
+                        q.text,
+                        style: textTheme.headlineSmall?.copyWith(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w800,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 6,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.2),
+                          borderRadius: BorderRadius.circular(999),
+                        ),
+                        child: Text(
+                          '${seconds}s',
+                          style: textTheme.titleMedium?.copyWith(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                      ),
+                      if ((q.localPhotoPath != null &&
+                              q.localPhotoPath!.isNotEmpty) ||
+                          (q.photoUrl != null && q.photoUrl!.isNotEmpty))
+                        Container(
+                          margin: const EdgeInsets.only(top: 16),
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(12),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.1),
+                                blurRadius: 10,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
+                          ),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(12),
+                            child: ConstrainedBox(
+                              constraints: BoxConstraints(
+                                maxHeight: (constraints.maxHeight) * 0.4,
+                                minWidth: double.infinity,
+                              ),
+                              child:
+                                  q.localPhotoPath != null &&
+                                      q.localPhotoPath!.isNotEmpty
+                                  ? Image.file(
+                                      File(q.localPhotoPath!),
+                                      width: double.infinity,
+                                      fit: BoxFit.contain,
+                                      errorBuilder: (ctx, err, stack) =>
+                                          Image.network(
+                                            q.photoUrl ?? '',
+                                            width: double.infinity,
+                                            fit: BoxFit.contain,
+                                            errorBuilder: (c, e, s) =>
+                                                const SizedBox(
+                                                  height: 180,
+                                                  child: Center(
+                                                    child: Icon(
+                                                      Icons.broken_image,
+                                                      color: Colors.white,
+                                                    ),
+                                                  ),
+                                                ),
+                                          ),
+                                    )
+                                  : Image.network(
+                                      q.photoUrl!,
+                                      width: double.infinity,
+                                      fit: BoxFit.contain,
+                                    ),
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 16),
+                ...List.generate(q.options.length, (i) {
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 10),
+                    child: _buildPortraitOptionButton(
+                      i,
+                      q.options[i],
+                      optionColors[i],
+                      optionIcons[i],
+                      textTheme,
+                    ),
+                  );
+                }),
+                const SizedBox(height: 8),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+>>>>>>> 159cb67 (Fix landscape mode in lobby for host)
                     color: colors.surfaceLow,
                     borderRadius: BorderRadius.circular(8),
                   ),
@@ -1376,6 +1512,7 @@ class _HostViewState extends State<HostView> {
               ],
             ),
           ),
+<<<<<<< HEAD
 <<<<<<< HEAD
         );
       },
@@ -1412,6 +1549,10 @@ class _HostViewState extends State<HostView> {
           onPressed: () => _controller.endQuestion(),
         ),
       ],
+=======
+        );
+      },
+>>>>>>> 159cb67 (Fix landscape mode in lobby for host)
     );
   }
 
