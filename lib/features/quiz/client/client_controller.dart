@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:AlpenQuiz/config.dart';
 import 'package:AlpenQuiz/models/client_payload.dart';
 import 'package:AlpenQuiz/models/master_payload.dart';
+import 'package:AlpenQuiz/models/reverse_qr_submission.dart';
 import 'package:AlpenQuiz/services/ble_service.dart';
 import 'package:AlpenQuiz/services/ble_service_base.dart';
 import 'package:AlpenQuiz/services/mock_ble_service.dart';
@@ -41,6 +42,7 @@ class ClientController extends ChangeNotifier {
   String _playerName = '';
   String get playerName => _playerName;
   int _clientId = 0;
+  int get clientId => _clientId;
 
   List<ClientAnswer> _myAnswers = [];
   List<ClientAnswer> get myAnswers => _myAnswers;
@@ -245,6 +247,23 @@ class ClientController extends ChangeNotifier {
       clientId: _clientId,
     );
     _clientPublisher?.publish(payload);
+  }
+
+  ReverseQrSubmission buildReverseQrSubmission({
+    required String participantUserId,
+  }) {
+    final gameId = _joinedGameId;
+    if (gameId == null) {
+      throw StateError('Participant is not connected to a game.');
+    }
+
+    return ReverseQrSubmission.fromClientAnswers(
+      participantUserId: participantUserId,
+      participantName: _playerName,
+      gameId: gameId,
+      clientId: _clientId,
+      answers: _myAnswers,
+    );
   }
 
   @override

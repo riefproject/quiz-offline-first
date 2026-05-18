@@ -50,8 +50,9 @@ dependencies:
   cloudinary_api: ^1.1.1
   cloudinary_url_gen: ^1.8.0
   path_provider: ^2.1.5
+  qr_flutter: ^4.1.0
+  mobile_scanner: ^5.2.3
 
-  path_provider: any
 dev_dependencies:
   flutter_test:
     sdk: flutter

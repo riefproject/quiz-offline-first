@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:py_4/features/quiz/client/client_guest_view.dart';
+import 'package:AlpenQuiz/features/quiz/client/client_guest_view.dart';
 
 import '../../theme/colors_config.dart';
 import '../../widgets/components/app_button.dart';

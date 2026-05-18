@@ -6,12 +6,14 @@ import 'package:AlpenQuiz/config.dart';
 import 'package:AlpenQuiz/models/client_payload.dart';
 import 'package:AlpenQuiz/models/master_payload.dart';
 import 'package:AlpenQuiz/models/question.dart';
+import 'package:AlpenQuiz/models/reverse_qr_submission.dart';
 import 'package:AlpenQuiz/services/ble_service_base.dart';
 import 'package:AlpenQuiz/services/ble_service.dart';
 import 'package:AlpenQuiz/services/logger.dart';
 import 'package:AlpenQuiz/services/mock_ble_service.dart';
 import 'package:AlpenQuiz/services/quiz/client_listener.dart';
 import 'package:AlpenQuiz/services/quiz/master_publisher.dart';
+import 'package:AlpenQuiz/services/reverse_qr_sync_service.dart';
 
 enum HostPhase {
   lobby,
@@ -43,6 +45,10 @@ class HostController extends ChangeNotifier {
 
   int _gameId = 0;
   int get gameId => _gameId;
+  String _sessionId = '';
+  String get sessionId => _sessionId;
+  DateTime? _sessionStartedAt;
+  DateTime? _sessionFinishedAt;
 
   HostPhase _phase = HostPhase.lobby;
   HostPhase get phase => _phase;
@@ -116,6 +122,9 @@ class HostController extends ChangeNotifier {
   }
   Future<void> startGame() async {
     _gameId = Random().nextInt(999999) + 100000;
+    _sessionId = 'sesi_$_gameId';
+    _sessionStartedAt = DateTime.now();
+    _sessionFinishedAt = null;
 
     await _bleService.init();
     await _bleService.requestAllPermissions();
@@ -232,8 +241,9 @@ class HostController extends ChangeNotifier {
   void endQuestion() {
     _questionTimer?.cancel();
     _questionTimer = null;
-    if (_currentQuestionIndex < 0 || _currentQuestionIndex >= questions.length)
+    if (_currentQuestionIndex < 0 || _currentQuestionIndex >= questions.length) {
       return;
+    }
     final now =
         DateTime.now().millisecondsSinceEpoch - _currentPayload.masterTimeMs;
     if (_currentQuestionIndex < _currentPayload.skippedAt.length) {
@@ -314,12 +324,46 @@ class HostController extends ChangeNotifier {
     _questionTimer?.cancel();
     _questionTimer = null;
     _phase = HostPhase.results;
+    _sessionFinishedAt = DateTime.now();
 
     _currentPayload.gameFinished = true;
     _publisher!.publish(_currentPayload);
     _isAdvertising = false;
 
     notifyListeners();
+  }
+
+  Future<ReverseQrImportResult> importReverseQrSubmission(
+    ReverseQrSubmission submission,
+  ) async {
+    if (submission.gameId != _gameId) {
+      throw const ReverseQrSyncException(
+        'QR ini berasal dari game yang berbeda.',
+      );
+    }
+    final startedAt = _sessionStartedAt;
+    if (startedAt == null || _sessionId.isEmpty) {
+      throw const ReverseQrSyncException(
+        'Sesi host belum siap untuk menerima fallback QR.',
+      );
+    }
+
+    final result = await ReverseQrSyncService.importSubmission(
+      submission: submission,
+      quizId: quizId,
+      sessionId: _sessionId,
+      sessionStartedAt: startedAt,
+      sessionFinishedAt: _sessionFinishedAt,
+      questionStartOffsets: List<int>.from(_currentPayload.nextQuestion),
+      questionDurations: List<int>.from(_currentPayload.duration),
+      existingScores: _scores,
+    );
+
+    _participants[submission.clientId] = submission.participantName;
+    _scores[submission.clientId] = result.totalScore;
+    notifyListeners();
+
+    return result;
   }
 
   @override

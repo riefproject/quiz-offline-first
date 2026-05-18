@@ -2,6 +2,8 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import '../../../models/reverse_qr_submission.dart';
+import '../qr/reverse_qr_scanner_page.dart';
 import '../../../theme/colors_config.dart';
 import '../../../widgets/components/app_button.dart';
 import 'host_controller.dart';
@@ -1098,17 +1100,45 @@ class _HostViewState extends State<HostView> {
             '${_controller.participants.length} participant(s) joined',
             style: textTheme.bodyLarge?.copyWith(color: colors.mutedText),
           ),
-          // const SizedBox(height: 8),
-          // Text(
-          //   '${_controller.answers.length} total answer(s) received',
-          //   style: textTheme.bodyMedium?.copyWith(color: colors.mutedText),
-          // ),
+          const SizedBox(height: 8),
+          Text(
+            'Use reverse QR if a participant answer did not arrive over Bluetooth.',
+            style: textTheme.bodyMedium?.copyWith(color: colors.mutedText),
+            textAlign: TextAlign.center,
+          ),
           const SizedBox(height: 32),
+          AppButton.outlined(
+            label: 'Scan Reverse QR',
+            onPressed: () => _openReverseQrScanner(context),
+          ),
+          const SizedBox(height: 12),
           AppButton.primary(
             label: 'Done',
             onPressed: () => Navigator.of(context).pop(),
           ),
         ],
+      ),
+    );
+  }
+
+  Future<void> _openReverseQrScanner(BuildContext context) async {
+    final result = await Navigator.of(context).push<ReverseQrImportResult>(
+      MaterialPageRoute(
+        builder: (_) => ReverseQrScannerPage(
+          onImport: _controller.importReverseQrSubmission,
+        ),
+      ),
+    );
+
+    if (!context.mounted || result == null) {
+      return;
+    }
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          'Imported ${result.participantName}: ${result.importedAnswerCount} jawaban, ${result.totalScore} pts, rank #${result.rank}.',
+        ),
       ),
     );
   }

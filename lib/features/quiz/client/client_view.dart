@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../services/auth_service.dart';
+import '../qr/reverse_qr_submission_page.dart';
 import '../../../theme/colors_config.dart';
 import '../../../widgets/components/app_button.dart';
 import '../../../models/master_payload.dart';
@@ -460,6 +461,13 @@ class _ClientViewState extends State<ClientView> {
             style: textTheme.bodyLarge?.copyWith(color: colors.mutedText),
           ),
           const SizedBox(height: 32),
+          AppButton.outlined(
+            label: 'Show Sync QR',
+            onPressed: _controller.myAnswers.isEmpty
+                ? null
+                : () => _openReverseQrSubmission(context),
+          ),
+          const SizedBox(height: 12),
           AppButton.primary(
             label: 'Done',
             onPressed: () {
@@ -474,6 +482,22 @@ class _ClientViewState extends State<ClientView> {
             },
           ),
         ],
+      ),
+    );
+  }
+
+  Future<void> _openReverseQrSubmission(BuildContext context) async {
+    final session = AuthService.currentSession;
+    final participantUserId =
+        session?.userId ??
+        'guest_${_controller.joinedGameId ?? 0}_${_controller.clientId}';
+    final submission = _controller.buildReverseQrSubmission(
+      participantUserId: participantUserId,
+    );
+
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => ReverseQrSubmissionPage(submission: submission),
       ),
     );
   }
