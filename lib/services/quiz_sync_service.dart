@@ -106,7 +106,11 @@ class QuizSyncService {
       final unsyncedSoals = HiveService.soalBox.values
           .where((s) => !s.isSynced)
           .toList();
+      var hasPendingImageUploads = false;
+
       for (var soal in unsyncedSoals) {
+        var imageSyncFailed = false;
+
         if ((soal.fotoSoal == null || soal.fotoSoal!.isEmpty) &&
             soal.localFotoPath != null &&
             soal.localFotoPath!.isNotEmpty) {
@@ -116,11 +120,24 @@ class QuizSyncService {
               final url = await CloudinaryService.uploadImage(file);
               if (url != null) {
                 soal = soal.copyWith(fotoSoal: url);
+              } else {
+                imageSyncFailed = true;
               }
+            } else {
+              debugPrint(
+                'Local quiz image not found, syncing question without image: ${soal.localFotoPath}',
+              );
+              soal = soal.copyWith(fotoSoal: null, localFotoPath: null);
             }
           } catch (e) {
+            imageSyncFailed = true;
             debugPrint('Failed to sync image to Cloudinary: $e');
           }
+        }
+
+        if (imageSyncFailed) {
+          hasPendingImageUploads = true;
+          continue;
         }
 
         final existing = await MongoDatabase.soalCollection.findOne({
@@ -128,6 +145,7 @@ class QuizSyncService {
         });
         final soalJson = soal.toJson();
         soalJson.remove('isSynced');
+        soalJson.remove('local_foto_path');
 
         if (existing == null) {
           await MongoDatabase.soalCollection.insertOne(soalJson);
@@ -142,7 +160,9 @@ class QuizSyncService {
       }
 
       debugPrint("Sync complete!");
-      syncError.value = null;
+      syncError.value = hasPendingImageUploads
+          ? 'Sebagian gambar belum tersinkronisasi. Akan dicoba lagi nanti.'
+          : null;
     } catch (e) {
       debugPrint("Sync failed: $e");
       if (e.toString().contains('No master connection')) {

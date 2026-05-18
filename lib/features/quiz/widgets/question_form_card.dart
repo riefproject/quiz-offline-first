@@ -4,7 +4,6 @@ import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
 
 import '../../../models/db_models.dart';
-import '../../../services/cloudinary_service.dart';
 import '../../../theme/colors_config.dart';
 
 class QuestionFormCard extends StatefulWidget {
@@ -29,7 +28,7 @@ class _QuestionFormCardState extends State<QuestionFormCard> {
   late TextEditingController _teksSoalController;
   late List<TextEditingController> _pilihanControllers;
   late String _correctAnswerId;
-  bool _isUploading = false;
+  bool _isSavingImage = false;
   String? _photoUrl;
   String? _localPhotoPath;
 
@@ -82,37 +81,43 @@ class _QuestionFormCardState extends State<QuestionFormCard> {
     widget.onChanged(updatedSoal);
   }
 
-  Future<void> _pickAndUploadImage() async {
+  Future<void> _pickImageOfflineFirst() async {
     final picker = ImagePicker();
     final pickedFile = await picker.pickImage(source: ImageSource.gallery);
     if (pickedFile != null) {
       try {
+        setState(() {
+          _isSavingImage = true;
+        });
+
         final appDir = await getApplicationDocumentsDirectory();
-        final fileName = 'quiz_img_${DateTime.now().millisecondsSinceEpoch}.jpg';
-        final savedImage = await File(pickedFile.path).copy('${appDir.path}/$fileName');
-        
+        final dotIndex = pickedFile.name.lastIndexOf('.');
+        final extension = dotIndex == -1
+            ? ''
+            : pickedFile.name.substring(dotIndex + 1).toLowerCase();
+        final safeExtension = extension.isEmpty ? 'jpg' : extension;
+        final fileName =
+            'quiz_img_${DateTime.now().millisecondsSinceEpoch}.$safeExtension';
+        final savedImage = await File(
+          pickedFile.path,
+        ).copy('${appDir.path}/$fileName');
+
+        if (!mounted) return;
+
         setState(() {
           _localPhotoPath = savedImage.path;
-          _isUploading = true;
+          _photoUrl = null;
+          _isSavingImage = false;
         });
         _notifyChange();
-
-        final url = await CloudinaryService.uploadImage(savedImage);
-        if (url != null && mounted) {
-          setState(() {
-            _photoUrl = url;
-            _isUploading = false;
-          });
-          _notifyChange();
-        }
       } catch (e) {
         if (mounted) {
           setState(() {
-            _isUploading = false;
+            _isSavingImage = false;
           });
           ScaffoldMessenger.of(
             context,
-          ).showSnackBar(SnackBar(content: Text(e.toString())));
+          ).showSnackBar(SnackBar(content: Text('Gagal menyimpan gambar: $e')));
         }
       }
     }
@@ -201,7 +206,7 @@ class _QuestionFormCardState extends State<QuestionFormCard> {
             minLines: 2,
           ),
           const SizedBox(height: 12),
-          if (_isUploading)
+          if (_isSavingImage)
             Center(
               child: Padding(
                 padding: const EdgeInsets.all(16.0),
@@ -257,7 +262,7 @@ class _QuestionFormCardState extends State<QuestionFormCard> {
             Align(
               alignment: Alignment.centerLeft,
               child: TextButton.icon(
-                onPressed: _pickAndUploadImage,
+                onPressed: _pickImageOfflineFirst,
                 icon: Icon(
                   Icons.add_photo_alternate_outlined,
                   color: colors.primary,
