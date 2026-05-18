@@ -160,6 +160,7 @@ class MockBleService extends BleServiceBase {
     if (!_scanning) return;
 
     final lobbyPayload = MasterPayload(
+      questionCount: 2,
       masterTimeMs: DateTime.now().millisecondsSinceEpoch,
       nextQuestion: [],
       gameID: _mockGameId,
@@ -174,6 +175,7 @@ class MockBleService extends BleServiceBase {
     if (!_scanning) return;
 
     final q1Payload = MasterPayload(
+      questionCount: 2,
       masterTimeMs: DateTime.now().millisecondsSinceEpoch,
       nextQuestion: [5000],
       duration: [5000],
@@ -191,6 +193,7 @@ class MockBleService extends BleServiceBase {
     if (!_scanning) return;
 
     final q2Payload = MasterPayload(
+      questionCount: 2,
       masterTimeMs: DateTime.now().millisecondsSinceEpoch,
       nextQuestion: [5000, 10000],
       duration: [5000, 5000],
@@ -208,6 +211,7 @@ class MockBleService extends BleServiceBase {
     if (!_scanning) return;
 
     final endPayload = MasterPayload(
+      questionCount: 2,
       masterTimeMs: DateTime.now().millisecondsSinceEpoch,
       nextQuestion: [],
       gameFinished: true,

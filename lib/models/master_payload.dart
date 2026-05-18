@@ -22,6 +22,8 @@ class MasterQuestionInfo {
 
 class MasterPayload implements ByteSerializable, GamePayload {
   final payloadType = MASTER_PAYLOAD_TYPE;
+
+  final int questionCount;
   // anchored time
   final int masterTimeMs;
   // next question in ms after the master time
@@ -39,6 +41,7 @@ class MasterPayload implements ByteSerializable, GamePayload {
   final int gameID;
 
   MasterPayload({
+    required this.questionCount,
     required this.masterTimeMs,
     List<int>? nextQuestion,
     List<int>? duration,
@@ -65,6 +68,7 @@ class MasterPayload implements ByteSerializable, GamePayload {
       't': MASTER_PAYLOAD_TYPE,
       'mt': masterTimeMs,
       'g': gameID,
+      'qc': questionCount,
     };
 
     if (nextQuestion.isNotEmpty) {
@@ -95,6 +99,7 @@ class MasterPayload implements ByteSerializable, GamePayload {
 
   factory MasterPayload.fromMsgpackMap(Map<String, dynamic> map) =>
       MasterPayload(
+        questionCount: map['qc'] as int,
         masterTimeMs: map['mt'] as int,
         nextQuestion: (map['nq'] as List?)?.cast<int>() ?? const [],
         duration: (map['du'] as List?)?.cast<int>() ?? const [],

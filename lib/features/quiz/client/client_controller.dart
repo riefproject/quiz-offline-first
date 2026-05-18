@@ -149,6 +149,12 @@ class ClientController extends ChangeNotifier {
     }
 
     final questionIndex = _myAnswers.length;
+    if (questionIndex >= payload.questionCount) {
+      _phase = ClientPhase.finished;
+      notifyListeners();
+      return;
+    }
+
     if (payload.nextQuestion.isNotEmpty &&
         questionIndex < payload.nextQuestion.length) {
       final info = payload.questionInfoAt(questionIndex);

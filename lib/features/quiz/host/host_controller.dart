@@ -103,6 +103,7 @@ class HostController extends ChangeNotifier {
 
   int questionDuration = 10000;
   var _currentPayload = MasterPayload(
+    questionCount: 0,
     masterTimeMs: DateTime.now().millisecondsSinceEpoch,
     nextQuestion: [],
     choices: [],
@@ -136,12 +137,23 @@ class HostController extends ChangeNotifier {
     _clientSub = _clientListener!.stream.listen(_onClientPayload);
 
     final payload = MasterPayload(
+      questionCount: questions.length,
       masterTimeMs: DateTime.now().millisecondsSinceEpoch,
       nextQuestion: [],
       gameID: _gameId,
     );
     _currentPayload = payload;
-    _publisher!.publish(payload);
+    _currentPayload = MasterPayload(
+      questionCount: questions.length,
+      masterTimeMs: payload.masterTimeMs,
+      nextQuestion: payload.nextQuestion,
+      duration: payload.duration,
+      choices: payload.choices,
+      skippedAt: payload.skippedAt,
+      gameFinished: payload.gameFinished,
+      gameID: _gameId,
+    );
+    _publisher!.publish(_currentPayload);
 
     _isAdvertising = true;
     notifyListeners();

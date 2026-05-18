@@ -226,7 +226,7 @@ class _ClientGuestViewState extends State<ClientGuestView> {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  'Tap to join',
+                  '${game.questionCount} questions • Tap to join',
                   style: textTheme.bodySmall?.copyWith(color: colors.mutedText),
                 ),
               ],
@@ -278,7 +278,7 @@ class _ClientGuestViewState extends State<ClientGuestView> {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Text(
-            'Question ${questionIndex + 1}',
+            'Question ${questionIndex + 1} of ${_controller.currentPayload?.questionCount ?? 0}',
             style: textTheme.titleLarge?.copyWith(
               fontWeight: FontWeight.w800,
               color: colors.mutedText,
@@ -355,7 +355,7 @@ class _ClientGuestViewState extends State<ClientGuestView> {
           child: Column(
             children: [
               Text(
-                'Question ${questionIndex + 1}',
+                'Question ${questionIndex + 1} of ${payload.questionCount}',
                 style: textTheme.labelLarge?.copyWith(
                   color: Colors.white70,
                   fontWeight: FontWeight.w700,
