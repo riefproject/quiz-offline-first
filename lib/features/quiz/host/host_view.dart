@@ -31,9 +31,7 @@ class _HostViewState extends State<HostView> {
           DeviceOrientation.landscapeRight,
         ]);
       } else {
-        SystemChrome.setPreferredOrientations([
-          DeviceOrientation.portraitUp,
-        ]);
+        SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
       }
     });
   }
@@ -44,10 +42,16 @@ class _HostViewState extends State<HostView> {
     // Check ownership: only the quiz owner may open HostView
     final quiz = HiveService.quizBox.get(widget.quizId);
     final currentSession = AuthService.currentSession;
-    if (quiz == null || currentSession == null || quiz.pembuat != currentSession.userId) {
+    if (quiz == null ||
+        currentSession == null ||
+        quiz.pembuat != currentSession.userId) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Anda tidak memiliki izin untuk memulai sesi kuis ini')),
+          const SnackBar(
+            content: Text(
+              'Anda tidak memiliki izin untuk memulai sesi kuis ini',
+            ),
+          ),
         );
         Navigator.of(context).pop();
       });
@@ -110,9 +114,10 @@ class _HostViewState extends State<HostView> {
           },
           child: isCountdown
               ? KeyedSubtree(
-                key: const ValueKey('host-countdown'),
+                  key: const ValueKey('host-countdown'),
                   child: CountdownScreen(
-                    endsAtMs: _controller.countdownEndsAtMs ??
+                    endsAtMs:
+                        _controller.countdownEndsAtMs ??
                         (DateTime.now().millisecondsSinceEpoch + 5000),
                   ),
                 )
@@ -122,7 +127,12 @@ class _HostViewState extends State<HostView> {
     );
   }
 
-  Widget _buildHostBody(BuildContext context, ColorsConfig colors, TextTheme textTheme, String title) {
+  Widget _buildHostBody(
+    BuildContext context,
+    ColorsConfig colors,
+    TextTheme textTheme,
+    String title,
+  ) {
     final body = _controller.phase == HostPhase.lobby && _isLandscape
         ? _buildLandscapeLobby(context)
         : KeyedSubtree(
@@ -185,7 +195,9 @@ class _HostViewState extends State<HostView> {
                   ),
                 Expanded(
                   child: Padding(
-                    padding: MediaQuery.of(context).orientation == Orientation.landscape
+                    padding:
+                        MediaQuery.of(context).orientation ==
+                            Orientation.landscape
                         ? const EdgeInsets.fromLTRB(16, 16, 16, 8)
                         : const EdgeInsets.fromLTRB(20, 0, 20, 20),
                     child: Stack(
@@ -201,9 +213,16 @@ class _HostViewState extends State<HostView> {
                                 shape: BoxShape.circle,
                               ),
                               child: IconButton(
-                                icon: Icon(Icons.stay_current_portrait, color: colors.textOnSurface, size: 20),
+                                icon: Icon(
+                                  Icons.stay_current_portrait,
+                                  color: colors.textOnSurface,
+                                  size: 20,
+                                ),
                                 onPressed: _toggleOrientation,
-                                constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+                                constraints: const BoxConstraints(
+                                  minWidth: 36,
+                                  minHeight: 36,
+                                ),
                                 padding: EdgeInsets.zero,
                               ),
                             ),
@@ -224,247 +243,185 @@ class _HostViewState extends State<HostView> {
     final textTheme = Theme.of(context).textTheme;
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(8, 4, 8, 8),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          SizedBox(
-            width: 280,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
+      padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: colors.surfaceLowest,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: colors.outline),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                if (_controller.gameId != 0) ...[
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
-                    decoration: BoxDecoration(
-                      color: colors.primary,
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: Column(
-                      children: [
-                        Text(
-                          'GAME CODE',
-                          style: textTheme.labelLarge?.copyWith(
-                            color: Colors.white70,
-                            fontWeight: FontWeight.w700,
-                            letterSpacing: 1.5,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        FittedBox(
-                          fit: BoxFit.scaleDown,
-                          child: Text(
-                            '${_controller.gameId}',
-                            style: textTheme.displayMedium?.copyWith(
-                              color: Colors.white,
-                              fontWeight: FontWeight.w900,
-                              letterSpacing: 3,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          'Share this code with participants',
-                          textAlign: TextAlign.center,
-                          style: textTheme.bodySmall?.copyWith(color: Colors.white70),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                ],
                 Text(
-                  'PARTICIPANTS (${_controller.participants.length})',
-                  style: textTheme.labelLarge?.copyWith(
+                  'Participants',
+                  style: textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.w800,
-                    color: colors.mutedText,
-                    letterSpacing: 1.2,
+                    color: colors.textOnSurface,
+                    letterSpacing: 0.2,
                   ),
                 ),
-                const SizedBox(height: 12),
-                Expanded(
-                  child: _controller.participants.isEmpty
-                      ? Center(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(
-                                Icons.people_outline_rounded,
-                                size: 42,
-                                color: colors.mutedText,
-                              ),
-                              const SizedBox(height: 10),
-                              Text(
-                                'Waiting for participants to join...',
-                                textAlign: TextAlign.center,
-                                style: textTheme.bodyMedium?.copyWith(
-                                  color: colors.mutedText,
-                                ),
-                              ),
-                            ],
-                          ),
-                        )
-                      : SingleChildScrollView(
-                          child: Wrap(
-                            runSpacing: 10,
-                            spacing: 10,
-                            children: _controller.participants.entries.map((entry) {
-                              return Container(
-                                width: 124,
-                                padding: const EdgeInsets.all(10),
-                                decoration: BoxDecoration(
-                                  color: colors.surfaceLowest,
-                                  borderRadius: BorderRadius.circular(12),
-                                  border: Border.all(color: colors.outline),
-                                ),
-                                child: Column(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    CircleAvatar(
-                                      radius: 16,
-                                      backgroundColor: colors.primary.withValues(alpha: 0.14),
-                                      child: Text(
-                                        entry.value.isNotEmpty ? entry.value[0].toUpperCase() : '?',
-                                        style: TextStyle(
-                                          color: colors.primary,
-                                          fontWeight: FontWeight.w700,
-                                        ),
-                                      ),
-                                    ),
-                                    const SizedBox(height: 8),
-                                    Text(
-                                      entry.value,
-                                      textAlign: TextAlign.center,
-                                      maxLines: 2,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: textTheme.bodySmall?.copyWith(
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              );
-                            }).toList(),
-                          ),
-                        ),
-                ),
-                const SizedBox(height: 12),
-                AppButton.primary(
-                  label: _controller.gameId == 0 ? 'Start Game' : 'Send First Question',
-                  onPressed: _controller.gameId == 0
-                      ? () => _controller.startGame()
-                      : () => _controller.nextQuestion(),
+                Text(
+                  '${_controller.participants.length} joined',
+                  style: textTheme.bodySmall?.copyWith(color: colors.mutedText),
                 ),
               ],
             ),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: colors.surfaceLowest,
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: colors.outline),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        'PARTICIPANT GRID',
-                        style: textTheme.labelLarge?.copyWith(
-                          fontWeight: FontWeight.w800,
-                          color: colors.mutedText,
-                          letterSpacing: 1.2,
+            if (_controller.gameId != 0) ...[
+              const SizedBox(height: 12),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 10,
+                ),
+                decoration: BoxDecoration(
+                  color: colors.primary,
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.16),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Text(
+                        'GAME CODE',
+                        style: textTheme.labelSmall?.copyWith(
+                          color: Colors.white70,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 1,
                         ),
                       ),
-                      Text(
-                        '${_controller.participants.length} online',
-                        style: textTheme.bodySmall?.copyWith(color: colors.mutedText),
+                    ),
+                    const SizedBox(width: 12),
+                    FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text(
+                        '${_controller.gameId}',
+                        style: textTheme.titleLarge?.copyWith(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: 2,
+                        ),
                       ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  Expanded(
-                    child: _controller.participants.isEmpty
-                        ? Center(
-                            child: Text(
-                              'Participant cards will appear here in a desktop-like grid.',
-                              textAlign: TextAlign.center,
-                              style: textTheme.bodyMedium?.copyWith(
-                                color: colors.mutedText,
-                              ),
-                            ),
-                          )
-                        : LayoutBuilder(
-                            builder: (context, constraints) {
-                              final crossAxisCount = constraints.maxWidth > 900
-                                  ? 4
-                                  : constraints.maxWidth > 700
-                                      ? 3
-                                      : 2;
-                              return GridView.builder(
-                                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                                  crossAxisCount: crossAxisCount,
-                                  crossAxisSpacing: 12,
-                                  mainAxisSpacing: 12,
-                                  childAspectRatio: 3.4,
-                                ),
-                                itemCount: _controller.participants.length,
-                                itemBuilder: (context, index) {
-                                  final entry = _controller.participants.entries.elementAt(index);
-                                  return Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                                    decoration: BoxDecoration(
-                                      color: colors.background,
-                                      borderRadius: BorderRadius.circular(14),
-                                      border: Border.all(color: colors.outline),
-                                    ),
-                                    child: Row(
-                                      children: [
-                                        CircleAvatar(
-                                          radius: 16,
-                                          backgroundColor: colors.primary.withValues(alpha: 0.14),
-                                          child: Text(
-                                            entry.value.isNotEmpty ? entry.value[0].toUpperCase() : '?',
-                                            style: TextStyle(
-                                              color: colors.primary,
-                                              fontWeight: FontWeight.w700,
-                                            ),
-                                          ),
-                                        ),
-                                        const SizedBox(width: 10),
-                                        Expanded(
-                                          child: Text(
-                                            entry.value,
-                                            maxLines: 1,
-                                            overflow: TextOverflow.ellipsis,
-                                            style: textTheme.bodyMedium?.copyWith(
-                                              fontWeight: FontWeight.w700,
-                                            ),
-                                          ),
-                                        ),
-                                        Icon(
-                                          Icons.check_circle_rounded,
-                                          color: Colors.green.shade400,
-                                          size: 18,
-                                        ),
-                                      ],
-                                    ),
-                                  );
-                                },
-                              );
-                            },
-                          ),
-                  ),
-                ],
+                    ),
+                  ],
+                ),
               ),
+            ],
+            const SizedBox(height: 12),
+            Expanded(
+              child: _controller.participants.isEmpty
+                  ? Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.people_outline_rounded,
+                            size: 42,
+                            color: colors.mutedText,
+                          ),
+                          const SizedBox(height: 10),
+                          Text(
+                            'Waiting for participants to join...',
+                            textAlign: TextAlign.center,
+                            style: textTheme.bodyMedium?.copyWith(
+                              color: colors.mutedText,
+                            ),
+                          ),
+                        ],
+                      ),
+                    )
+                  : LayoutBuilder(
+                      builder: (context, constraints) {
+                        final crossAxisCount = constraints.maxWidth > 900
+                            ? 4
+                            : constraints.maxWidth > 700
+                            ? 3
+                            : 2;
+                        return GridView.builder(
+                          gridDelegate:
+                              SliverGridDelegateWithFixedCrossAxisCount(
+                                crossAxisCount: crossAxisCount,
+                                crossAxisSpacing: 12,
+                                mainAxisSpacing: 12,
+                                childAspectRatio: 3.4,
+                              ),
+                          itemCount: _controller.participants.length,
+                          itemBuilder: (context, index) {
+                            final entry = _controller.participants.entries
+                                .elementAt(index);
+                            return Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 10,
+                              ),
+                              decoration: BoxDecoration(
+                                color: colors.background,
+                                borderRadius: BorderRadius.circular(14),
+                                border: Border.all(color: colors.outline),
+                              ),
+                              child: Row(
+                                children: [
+                                  CircleAvatar(
+                                    radius: 16,
+                                    backgroundColor: colors.primary.withValues(
+                                      alpha: 0.14,
+                                    ),
+                                    child: Text(
+                                      entry.value.isNotEmpty
+                                          ? entry.value[0].toUpperCase()
+                                          : '?',
+                                      style: TextStyle(
+                                        color: colors.primary,
+                                        fontWeight: FontWeight.w700,
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 10),
+                                  Expanded(
+                                    child: Text(
+                                      entry.value,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: textTheme.bodyMedium?.copyWith(
+                                        fontWeight: FontWeight.w700,
+                                      ),
+                                    ),
+                                  ),
+                                  Icon(
+                                    Icons.check_circle_rounded,
+                                    color: Colors.green.shade400,
+                                    size: 18,
+                                  ),
+                                ],
+                              ),
+                            );
+                          },
+                        );
+                      },
+                    ),
             ),
-          ),
-        ],
+            const SizedBox(height: 12),
+            AppButton.primary(
+              label: _controller.gameId == 0
+                  ? 'Open Lobby'
+                  : 'Start Quiz',
+              onPressed: _controller.gameId == 0
+                  ? () => _controller.startGame()
+                  : () => _controller.nextQuestion(),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -621,7 +578,13 @@ class _HostViewState extends State<HostView> {
     );
   }
 
-  Widget _buildPortraitOptionButton(int index, String text, Color color, IconData icon, TextTheme textTheme) {
+  Widget _buildPortraitOptionButton(
+    int index,
+    String text,
+    Color color,
+    IconData icon,
+    TextTheme textTheme,
+  ) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
@@ -646,13 +609,7 @@ class _HostViewState extends State<HostView> {
                 color: Colors.white.withValues(alpha: 0.25),
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: Center(
-                child: Icon(
-                  icon,
-                  color: Colors.white,
-                  size: 20,
-                ),
-              ),
+              child: Center(child: Icon(icon, color: Colors.white, size: 20)),
             ),
             const SizedBox(width: 12),
             Expanded(
@@ -672,7 +629,13 @@ class _HostViewState extends State<HostView> {
     );
   }
 
-  Widget _buildLandscapeOptionButton(int index, String text, Color color, IconData icon, TextTheme textTheme) {
+  Widget _buildLandscapeOptionButton(
+    int index,
+    String text,
+    Color color,
+    IconData icon,
+    TextTheme textTheme,
+  ) {
     return Container(
       decoration: BoxDecoration(
         color: color,
@@ -690,11 +653,7 @@ class _HostViewState extends State<HostView> {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            Icon(
-              icon,
-              color: Colors.white,
-              size: 24,
-            ),
+            Icon(icon, color: Colors.white, size: 24),
             const SizedBox(width: 12),
             Expanded(
               child: Text(
@@ -713,7 +672,12 @@ class _HostViewState extends State<HostView> {
     );
   }
 
-  Widget _buildLandscapeQuestion(BuildContext context, dynamic q, List<Color> optionColors, List<IconData> optionIcons) {
+  Widget _buildLandscapeQuestion(
+    BuildContext context,
+    dynamic q,
+    List<Color> optionColors,
+    List<IconData> optionIcons,
+  ) {
     final colors = Theme.of(context).extension<ColorsConfig>()!;
     final textTheme = Theme.of(context).textTheme;
 
@@ -752,7 +716,9 @@ class _HostViewState extends State<HostView> {
         // 2. Image (Middle)
         Expanded(
           flex: 6,
-          child: (q.localPhotoPath != null && q.localPhotoPath!.isNotEmpty) || (q.photoUrl != null && q.photoUrl!.isNotEmpty)
+          child:
+              (q.localPhotoPath != null && q.localPhotoPath!.isNotEmpty) ||
+                  (q.photoUrl != null && q.photoUrl!.isNotEmpty)
               ? Center(
                   child: Container(
                     decoration: BoxDecoration(
@@ -767,20 +733,24 @@ class _HostViewState extends State<HostView> {
                     ),
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(12),
-                      child: q.localPhotoPath != null && q.localPhotoPath!.isNotEmpty
+                      child:
+                          q.localPhotoPath != null &&
+                              q.localPhotoPath!.isNotEmpty
                           ? Image.file(
                               File(q.localPhotoPath!),
                               fit: BoxFit.contain,
                               errorBuilder: (ctx, err, stack) => Image.network(
                                 q.photoUrl ?? '',
                                 fit: BoxFit.contain,
-                                errorBuilder: (c, e, s) => const Center(child: Icon(Icons.broken_image, color: Colors.grey)),
+                                errorBuilder: (c, e, s) => const Center(
+                                  child: Icon(
+                                    Icons.broken_image,
+                                    color: Colors.grey,
+                                  ),
+                                ),
                               ),
                             )
-                          : Image.network(
-                              q.photoUrl!,
-                              fit: BoxFit.contain,
-                            ),
+                          : Image.network(q.photoUrl!, fit: BoxFit.contain),
                     ),
                   ),
                 )
@@ -798,9 +768,25 @@ class _HostViewState extends State<HostView> {
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Expanded(child: _buildLandscapeOptionButton(0, q.options.isNotEmpty ? q.options[0] : '', optionColors[0], optionIcons[0], textTheme)),
+                    Expanded(
+                      child: _buildLandscapeOptionButton(
+                        0,
+                        q.options.isNotEmpty ? q.options[0] : '',
+                        optionColors[0],
+                        optionIcons[0],
+                        textTheme,
+                      ),
+                    ),
                     const SizedBox(width: 8),
-                    Expanded(child: _buildLandscapeOptionButton(1, q.options.length > 1 ? q.options[1] : '', optionColors[1], optionIcons[1], textTheme)),
+                    Expanded(
+                      child: _buildLandscapeOptionButton(
+                        1,
+                        q.options.length > 1 ? q.options[1] : '',
+                        optionColors[1],
+                        optionIcons[1],
+                        textTheme,
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -810,10 +796,26 @@ class _HostViewState extends State<HostView> {
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      Expanded(child: _buildLandscapeOptionButton(2, q.options[2], optionColors[2], optionIcons[2], textTheme)),
+                      Expanded(
+                        child: _buildLandscapeOptionButton(
+                          2,
+                          q.options[2],
+                          optionColors[2],
+                          optionIcons[2],
+                          textTheme,
+                        ),
+                      ),
                       const SizedBox(width: 8),
                       if (q.options.length > 3)
-                        Expanded(child: _buildLandscapeOptionButton(3, q.options[3], optionColors[3], optionIcons[3], textTheme))
+                        Expanded(
+                          child: _buildLandscapeOptionButton(
+                            3,
+                            q.options[3],
+                            optionColors[3],
+                            optionIcons[3],
+                            textTheme,
+                          ),
+                        )
                       else
                         const Spacer(),
                     ],
@@ -843,7 +845,9 @@ class _HostViewState extends State<HostView> {
               ],
             ),
             AppButton.primary(
-              label: _controller.currentQuestionIndex < _controller.questions.length - 1
+              label:
+                  _controller.currentQuestionIndex <
+                      _controller.questions.length - 1
                   ? 'Next →'
                   : 'Finish →',
               onPressed: () => _controller.nextQuestion(),
@@ -858,7 +862,7 @@ class _HostViewState extends State<HostView> {
     final colors = Theme.of(context).extension<ColorsConfig>()!;
     final textTheme = Theme.of(context).textTheme;
     final q = _controller.currentQuestion;
-    
+
     final optionColors = [
       Colors.red.shade400,
       Colors.blue.shade400,
@@ -876,119 +880,149 @@ class _HostViewState extends State<HostView> {
       return _buildLandscapeQuestion(context, q, optionColors, optionIcons);
     }
 
-    return LayoutBuilder(builder: (context, constraints) {
-      return SingleChildScrollView(
-        physics: const BouncingScrollPhysics(),
-        child: ConstrainedBox(
-          constraints: BoxConstraints(minHeight: constraints.maxHeight),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: colors.primary,
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Column(
-                  children: [
-                    Text(
-                      'Question ${_controller.currentQuestionIndex + 1} of ${_controller.questions.length}',
-                      style: textTheme.labelLarge?.copyWith(
-                        color: Colors.white70,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    Text(
-                      q.text,
-                      style: textTheme.headlineSmall?.copyWith(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w800,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                    if ((q.localPhotoPath != null && q.localPhotoPath!.isNotEmpty) || (q.photoUrl != null && q.photoUrl!.isNotEmpty))
-                      Container(
-                        margin: const EdgeInsets.only(top: 16),
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(12),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.1),
-                              blurRadius: 10,
-                              offset: const Offset(0, 4),
-                            ),
-                          ],
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return SingleChildScrollView(
+          physics: const BouncingScrollPhysics(),
+          child: ConstrainedBox(
+            constraints: BoxConstraints(minHeight: constraints.maxHeight),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    color: colors.primary,
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Column(
+                    children: [
+                      Text(
+                        'Question ${_controller.currentQuestionIndex + 1} of ${_controller.questions.length}',
+                        style: textTheme.labelLarge?.copyWith(
+                          color: Colors.white70,
+                          fontWeight: FontWeight.w700,
                         ),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(12),
-                          child: ConstrainedBox(
-                            constraints: BoxConstraints(
-                              maxHeight: (constraints.maxHeight) * 0.4,
-                              minWidth: double.infinity,
-                            ),
-                            child: q.localPhotoPath != null && q.localPhotoPath!.isNotEmpty
-                                ? Image.file(
-                                    File(q.localPhotoPath!),
-                                    width: double.infinity,
-                                    fit: BoxFit.contain,
-                                    errorBuilder: (ctx, err, stack) => Image.network(
-                                      q.photoUrl ?? '',
+                      ),
+                      const SizedBox(height: 12),
+                      Text(
+                        q.text,
+                        style: textTheme.headlineSmall?.copyWith(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w800,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                      if ((q.localPhotoPath != null &&
+                              q.localPhotoPath!.isNotEmpty) ||
+                          (q.photoUrl != null && q.photoUrl!.isNotEmpty))
+                        Container(
+                          margin: const EdgeInsets.only(top: 16),
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(12),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.1),
+                                blurRadius: 10,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
+                          ),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(12),
+                            child: ConstrainedBox(
+                              constraints: BoxConstraints(
+                                maxHeight: (constraints.maxHeight) * 0.4,
+                                minWidth: double.infinity,
+                              ),
+                              child:
+                                  q.localPhotoPath != null &&
+                                      q.localPhotoPath!.isNotEmpty
+                                  ? Image.file(
+                                      File(q.localPhotoPath!),
                                       width: double.infinity,
                                       fit: BoxFit.contain,
-                                      errorBuilder: (c, e, s) => const SizedBox(height: 180, child: Center(child: Icon(Icons.broken_image, color: Colors.white))),
+                                      errorBuilder: (ctx, err, stack) =>
+                                          Image.network(
+                                            q.photoUrl ?? '',
+                                            width: double.infinity,
+                                            fit: BoxFit.contain,
+                                            errorBuilder: (c, e, s) =>
+                                                const SizedBox(
+                                                  height: 180,
+                                                  child: Center(
+                                                    child: Icon(
+                                                      Icons.broken_image,
+                                                      color: Colors.white,
+                                                    ),
+                                                  ),
+                                                ),
+                                          ),
+                                    )
+                                  : Image.network(
+                                      q.photoUrl!,
+                                      width: double.infinity,
+                                      fit: BoxFit.contain,
                                     ),
-                                  )
-                                : Image.network(
-                                    q.photoUrl!,
-                                    width: double.infinity,
-                                    fit: BoxFit.contain,
-                                  ),
+                            ),
                           ),
                         ),
-                      ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
-              const SizedBox(height: 16),
-              ...List.generate(q.options.length, (i) {
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: 10),
-                  child: _buildPortraitOptionButton(i, q.options[i], optionColors[i], optionIcons[i], textTheme),
-                );
-              }),
-              const SizedBox(height: 8),
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: colors.surfaceLow,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Row(
-                  children: [
-                    Icon(Icons.people_rounded, size: 18, color: colors.mutedText),
-                    const SizedBox(width: 8),
-                    Text(
-                      '${_controller.answers.length} answer(s) received',
-                      style: textTheme.bodyMedium?.copyWith(color: colors.mutedText),
+                const SizedBox(height: 16),
+                ...List.generate(q.options.length, (i) {
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 10),
+                    child: _buildPortraitOptionButton(
+                      i,
+                      q.options[i],
+                      optionColors[i],
+                      optionIcons[i],
+                      textTheme,
                     ),
-                  ],
+                  );
+                }),
+                const SizedBox(height: 8),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: colors.surfaceLow,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.people_rounded,
+                        size: 18,
+                        color: colors.mutedText,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        '${_controller.answers.length} answer(s) received',
+                        style: textTheme.bodyMedium?.copyWith(
+                          color: colors.mutedText,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-              const SizedBox(height: 12),
-              AppButton.primary(
-                label: _controller.currentQuestionIndex < _controller.questions.length - 1
-                    ? 'Next Question'
-                    : 'Finish Game',
-                onPressed: () => _controller.nextQuestion(),
-              ),
-              const SizedBox(height: 12),
-            ],
+                const SizedBox(height: 12),
+                AppButton.primary(
+                  label:
+                      _controller.currentQuestionIndex <
+                          _controller.questions.length - 1
+                      ? 'Next Question'
+                      : 'Finish Game',
+                  onPressed: () => _controller.nextQuestion(),
+                ),
+                const SizedBox(height: 12),
+              ],
+            ),
           ),
-        ),
-      );
-    });
+        );
+      },
+    );
   }
 
   Widget _buildResults(BuildContext context) {
