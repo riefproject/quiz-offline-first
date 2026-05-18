@@ -132,7 +132,16 @@ class BleService extends BleServiceBase {
     log.i(
       'BLE: advertising started (localName=$localName, ${data.length} bytes)\n${formatBlePayload(data)}',
     );
-    await _peripheral.start(advertiseData: advertiseData);
+    await _peripheral.start(
+      advertiseData: advertiseData,
+      advertiseSettings: AdvertiseSettings(
+        advertiseMode: AdvertiseMode.advertiseModeLowLatency,
+        timeout: 180000,
+        advertiseSet: false,
+        txPowerLevel: AdvertiseTxPower.advertiseTxPowerHigh,
+        connectable: false,
+      ),
+    );
   }
 
   @override
