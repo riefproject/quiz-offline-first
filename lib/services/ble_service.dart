@@ -154,7 +154,13 @@ class BleService extends BleServiceBase {
     rawScanData.value = [];
     log.i('BLE: scan started (timeout=${timeout.inSeconds}s)');
 
-    await FlutterBluePlus.startScan(androidUsesFineLocation: true);
+    await FlutterBluePlus.startScan(
+      androidUsesFineLocation: true,
+      androidScanMode: AndroidScanMode.lowLatency,
+      continuousUpdates: true,
+      oneByOne: true,
+      continuousDivisor: 1,
+    );
   }
 
   @override
