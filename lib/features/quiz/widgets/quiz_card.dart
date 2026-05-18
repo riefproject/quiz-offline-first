@@ -1,16 +1,17 @@
 import 'package:flutter/material.dart';
 
-import '../../../widgets/components/app_card.dart';
 import '../../../models/db_models.dart';
+import '../../../services/hive_service.dart';
 import '../../../theme/colors_config.dart';
 import '../../../widgets/app_info_chip.dart';
-import '../../../services/hive_service.dart';
+import '../../../widgets/components/app_card.dart';
 
 class QuizCard extends StatelessWidget {
   final Quiz quiz;
   final VoidCallback onStart;
   final VoidCallback? onEdit;
   final VoidCallback? onDelete;
+  final VoidCallback? onHistory;
 
   const QuizCard({
     super.key,
@@ -18,6 +19,7 @@ class QuizCard extends StatelessWidget {
     required this.onStart,
     this.onEdit,
     this.onDelete,
+    this.onHistory,
   });
 
   @override
@@ -25,7 +27,9 @@ class QuizCard extends StatelessWidget {
     final colors = Theme.of(context).extension<ColorsConfig>()!;
     final textTheme = Theme.of(context).textTheme;
 
-    final questionCount = HiveService.soalBox.values.where((s) => s.idQuiz == quiz.id).length;
+    final questionCount = HiveService.soalBox.values
+        .where((soal) => soal.idQuiz == quiz.id)
+        .length;
     final ownerName =
         HiveService.usersBox.get(quiz.pembuat)?.namaLengkap ?? quiz.pembuat;
 
@@ -37,7 +41,6 @@ class QuizCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Title row
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -52,6 +55,20 @@ class QuizCard extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: 8),
+                if (onHistory != null)
+                  InkWell(
+                    onTap: onHistory,
+                    borderRadius: BorderRadius.circular(4),
+                    child: Padding(
+                      padding: const EdgeInsets.all(4),
+                      child: Icon(
+                        Icons.history_rounded,
+                        size: 18,
+                        color: colors.mutedText,
+                      ),
+                    ),
+                  ),
+                const SizedBox(width: 4),
                 if (onEdit != null)
                   InkWell(
                     onTap: onEdit,
@@ -94,7 +111,6 @@ class QuizCard extends StatelessWidget {
               ),
             ],
             const SizedBox(height: 12),
-            // Chips row
             Wrap(
               spacing: 6,
               runSpacing: 6,
@@ -109,7 +125,9 @@ class QuizCard extends StatelessWidget {
                   label: ownerName,
                 ),
                 AppInfoChip(
-                  icon: quiz.isSynced ? Icons.cloud_done_outlined : Icons.cloud_upload_outlined,
+                  icon: quiz.isSynced
+                      ? Icons.cloud_done_outlined
+                      : Icons.cloud_upload_outlined,
                   label: quiz.isSynced ? 'Synced' : 'Pending',
                   isSynced: quiz.isSynced,
                   tintColor: quiz.isSynced
@@ -119,7 +137,6 @@ class QuizCard extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 14),
-            // Start button - with play icon
             Row(
               children: [
                 ElevatedButton.icon(
@@ -133,7 +150,10 @@ class QuizCard extends StatelessWidget {
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(6),
                     ),
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 10,
+                    ),
                     textStyle: const TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w600,

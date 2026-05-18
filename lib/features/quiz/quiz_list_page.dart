@@ -13,10 +13,10 @@ import '../../widgets/layout/app_shell.dart';
 import '../../widgets/layout/app_top_header.dart';
 import '../../theme/colors_config.dart';
 import '../../widgets/components/app_confirm_modal.dart';
-import '../../widgets/components/under_construction_widget.dart';
 import 'client/client_view.dart';
 import 'client/client_controller.dart';
 import 'widgets/create_quiz_card.dart';
+import 'history/quiz_history_sessions_page.dart';
 import 'widgets/quiz_card.dart';
 import 'create_quiz_page.dart';
 import '../profile/screens/profile_screen.dart';
@@ -51,12 +51,6 @@ class _QuizListPageState extends State<QuizListPage> {
         _showBottomBar = true;
       }
     });
-  }
-
-  Future<void> _logout() async {
-    await AuthService.logout();
-    if (!mounted) return;
-    Navigator.of(context).pushNamedAndRemoveUntil('/app', (route) => false);
   }
 
   Future<void> _deleteQuiz(String quizId) async {
@@ -245,7 +239,7 @@ class _QuizListPageState extends State<QuizListPage> {
         const SizedBox(height: 18),
         ValueListenableBuilder<Box<Quiz>>(
           valueListenable: HiveService.quizBox.listenable(),
-          builder: (context, _, __) {
+          builder: (context, box, child) {
             final allQuizzes = _quizController.quizzes;
 
             // 1. Filter by Search Query
@@ -285,6 +279,13 @@ class _QuizListPageState extends State<QuizListPage> {
                     padding: const EdgeInsets.only(bottom: 16),
                     child: QuizCard(
                       quiz: quiz,
+                      onHistory: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) => QuizHistorySessionsPage(quiz: quiz),
+                          ),
+                        );
+                      },
                       onEdit: () {
                         Navigator.of(context).push(
                           MaterialPageRoute(

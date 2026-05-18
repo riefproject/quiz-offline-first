@@ -4,6 +4,7 @@ import 'dart:io';
 import '../models/db_models.dart';
 import '../models/reverse_qr_submission.dart';
 import 'hive_service.dart';
+import 'quiz_history_service.dart';
 
 class ReverseQrSyncService {
   const ReverseQrSyncService._();
@@ -57,7 +58,6 @@ class ReverseQrSyncService {
     required DateTime? sessionFinishedAt,
     required List<int> questionStartOffsets,
     required List<int> questionDurations,
-    required Map<int, int> existingScores,
   }) async {
     final soals = HiveService.soalBox.values
         .where((soal) => soal.idQuiz == quizId)
@@ -122,13 +122,10 @@ class ReverseQrSyncService {
       }
     }
 
-    final updatedScores = Map<int, int>.from(existingScores)
-      ..[submission.clientId] = totalScore;
-    final rankedScores = updatedScores.entries.toList()
-      ..sort((left, right) => right.value.compareTo(left.value));
-    final rank =
-        rankedScores.indexWhere((entry) => entry.key == submission.clientId) +
-        1;
+    final hostedUserId = QuizHistoryService.buildHostedParticipantUserId(
+      sessionId: sessionId,
+      clientId: submission.clientId,
+    );
 
     final session = SesiKuis(
       id: sessionId,
@@ -138,29 +135,28 @@ class ReverseQrSyncService {
       status: 'selesai',
     );
     final peserta = PesertaSesi(
-      id: _buildParticipantId(sessionId, submission.participantUserId),
+      id: _buildParticipantId(sessionId, submission.clientId),
       idSesi: sessionId,
-      idUser: submission.participantUserId,
+      idUser: hostedUserId,
     );
-    final hasilAkhir = HasilAkhir(
-      id: _buildResultId(sessionId, submission.participantUserId),
-      idSesi: sessionId,
-      idUser: submission.participantUserId,
-      totalSkor: totalScore,
-      peringkat: rank,
+    final user = AppUser(
+      id: hostedUserId,
+      namaLengkap: submission.participantName,
+      isGuest: true,
+      isSynced: true,
     );
 
     await HiveService.sesiKuisBox.put(session.id, session);
+    await HiveService.usersBox.put(user.id, user);
     await HiveService.pesertaSesiBox.put(peserta.id, peserta);
     await HiveService.jawabanPesertaBox.putAll({
       for (final answer in importedAnswers) answer.id: answer,
     });
-    await HiveService.hasilAkhirBox.put(hasilAkhir.id, hasilAkhir);
 
     return ReverseQrImportResult(
       importedAnswerCount: importedAnswers.length,
       totalScore: totalScore,
-      rank: rank,
+      rank: 0,
       participantName: submission.participantName,
     );
   }
@@ -186,12 +182,8 @@ class ReverseQrSyncService {
     return 'jawaban_${sessionId}_${clientId}_$questionIndex';
   }
 
-  static String _buildParticipantId(String sessionId, String participantUserId) {
-    return 'peserta_${sessionId}_$participantUserId';
-  }
-
-  static String _buildResultId(String sessionId, String participantUserId) {
-    return 'hasil_${sessionId}_$participantUserId';
+  static String _buildParticipantId(String sessionId, int clientId) {
+    return 'peserta_${sessionId}_$clientId';
   }
 }
 

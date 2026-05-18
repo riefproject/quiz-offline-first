@@ -13,6 +13,7 @@ import 'package:AlpenQuiz/services/ble_service.dart';
 import 'package:AlpenQuiz/services/hive_service.dart';
 import 'package:AlpenQuiz/services/logger.dart';
 import 'package:AlpenQuiz/services/mock_ble_service.dart';
+import 'package:AlpenQuiz/services/quiz_history_service.dart';
 import 'package:AlpenQuiz/services/quiz/client_listener.dart';
 import 'package:AlpenQuiz/services/quiz/master_publisher.dart';
 import 'package:AlpenQuiz/services/reverse_qr_sync_service.dart';
@@ -356,6 +357,18 @@ class HostController extends ChangeNotifier {
     _publisher!.publish(_currentPayload);
     _isAdvertising = false;
 
+    final startedAt = _sessionStartedAt;
+    if (startedAt != null && _sessionId.isNotEmpty) {
+      await QuizHistoryService.saveHostedSession(
+        quizId: quizId,
+        sessionId: _sessionId,
+        startedAt: startedAt,
+        finishedAt: _sessionFinishedAt!,
+        participants: _participants,
+        scores: _scores,
+      );
+    }
+
     notifyListeners();
   }
 
@@ -382,14 +395,26 @@ class HostController extends ChangeNotifier {
       sessionFinishedAt: _sessionFinishedAt,
       questionStartOffsets: List<int>.from(_currentPayload.nextQuestion),
       questionDurations: List<int>.from(_currentPayload.duration),
-      existingScores: _scores,
     );
 
     _participants[submission.clientId] = submission.participantName;
     _scores[submission.clientId] = result.totalScore;
+    final rankMap = await QuizHistoryService.saveHostedSession(
+      quizId: quizId,
+      sessionId: _sessionId,
+      startedAt: startedAt,
+      finishedAt: _sessionFinishedAt ?? DateTime.now(),
+      participants: _participants,
+      scores: _scores,
+    );
     notifyListeners();
 
-    return result;
+    return ReverseQrImportResult(
+      importedAnswerCount: result.importedAnswerCount,
+      totalScore: result.totalScore,
+      rank: rankMap[submission.clientId] ?? result.rank,
+      participantName: result.participantName,
+    );
   }
 
   @override

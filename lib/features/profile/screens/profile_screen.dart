@@ -128,15 +128,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
             // Statistik Singkat
             ProfileMenuItem(
-              icon: Icons.history,
-              title: 'Riwayat Kuis',
-              onTap: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Menampilkan riwayat kuis...')),
-                );
-              },
-            ),
-            ProfileMenuItem(
               icon: Icons.delete_outline,
               title: 'Hapus Data Offline',
               onTap: () async {
@@ -228,4 +219,3 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return '${parts[0][0]}${parts[1][0]}'.toUpperCase();
   }
 }
-

@@ -12,6 +12,9 @@ void main() {
 
   setUpAll(() async {
     Hive.init(testPath);
+    if (!Hive.isAdapterRegistered(0)) {
+      Hive.registerAdapter(AppUserAdapter());
+    }
     if (!Hive.isAdapterRegistered(2)) {
       Hive.registerAdapter(SoalAdapter());
     }
@@ -28,6 +31,7 @@ void main() {
       Hive.registerAdapter(HasilAkhirAdapter());
     }
 
+    await Hive.openBox<AppUser>('usersBox');
     await Hive.openBox<Soal>('soalBox');
     await Hive.openBox<SesiKuis>('sesiKuisBox');
     await Hive.openBox<PesertaSesi>('pesertaSesiBox');
@@ -36,6 +40,7 @@ void main() {
   });
 
   setUp(() async {
+    await Hive.box<AppUser>('usersBox').clear();
     await Hive.box<Soal>('soalBox').clear();
     await Hive.box<SesiKuis>('sesiKuisBox').clear();
     await Hive.box<PesertaSesi>('pesertaSesiBox').clear();
@@ -111,18 +116,17 @@ void main() {
       sessionFinishedAt: DateTime(2026, 5, 18, 0, 10),
       questionStartOffsets: const [5000, 15000],
       questionDurations: const [10000, 10000],
-      existingScores: const {99: 500},
     );
 
     final jawabanBox = Hive.box<JawabanPeserta>('jawabanPesertaBox');
-    final hasilBox = Hive.box<HasilAkhir>('hasilAkhirBox');
+    final usersBox = Hive.box<AppUser>('usersBox');
 
     expect(result.importedAnswerCount, equals(2));
     expect(result.totalScore, greaterThan(0));
-    expect(result.rank, equals(1));
+    expect(result.rank, equals(0));
     expect(jawabanBox.length, equals(2));
-    expect(hasilBox.length, equals(1));
-    expect(hasilBox.values.first.totalSkor, equals(result.totalScore));
+    expect(usersBox.length, equals(1));
+    expect(usersBox.values.first.namaLengkap, equals('Mahasiswa 2'));
   });
 
   tearDownAll(() async {
