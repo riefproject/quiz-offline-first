@@ -7,6 +7,7 @@ import '../../../widgets/components/app_button.dart';
 import '../../../models/master_payload.dart';
 import '../widgets/first_question_countdown.dart';
 import 'client_controller.dart';
+import 'package:lottie/lottie.dart';
 
 class ClientView extends StatefulWidget {
   final ValueChanged<ClientPhase>? onPhaseChanged;
@@ -305,10 +306,7 @@ class _ClientViewState extends State<ClientView> {
           SizedBox(
             width: 64,
             height: 64,
-            child: CircularProgressIndicator(
-              strokeWidth: 3,
-              color: colors.primary,
-            ),
+            child: Lottie.asset("assets/lottie/waiting.json"),
           ),
           const SizedBox(height: 24),
           Text(
