@@ -306,7 +306,7 @@ class _ClientViewState extends State<ClientView> {
           SizedBox(
             width: 64,
             height: 64,
-            child: Lottie.asset("assets/lottie/waiting.json"),
+            child: Center(child: Lottie.asset("assets/lottie/waiting.json", height: 256, width: 256)),
           ),
           const SizedBox(height: 24),
           Text(
