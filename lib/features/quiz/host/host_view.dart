@@ -22,6 +22,9 @@ class _HostViewState extends State<HostView> {
   late HostController _controller;
   bool _isLandscape = false;
 
+  List<({String name, int clientId, int score, int rank})>? _savedLeaderboard;
+  HostPhase? _lastPhase;
+
   void _toggleOrientation() {
     setState(() {
       _isLandscape = !_isLandscape;
@@ -44,7 +47,15 @@ class _HostViewState extends State<HostView> {
   }
 
   void _onControllerChange() {
-    if (mounted) setState(() {});
+    if (!mounted) return;
+
+    if (_lastPhase == HostPhase.leaderboard &&
+        _controller.phase != HostPhase.leaderboard) {
+      _savedLeaderboard = _controller.leaderboard.toList();
+    }
+    _lastPhase = _controller.phase;
+
+    setState(() {});
   }
 
   @override
@@ -1066,26 +1077,20 @@ class _HostViewState extends State<HostView> {
     BuildContext context,
     ({int clientId, String name, int rank, int score}) entry, {
     bool compact = false,
+    int? rankDelta,
+    int? previousScore,
+    int staggerIndex = 0,
   }) {
     final colors = Theme.of(context).extension<ColorsConfig>()!;
     final textTheme = Theme.of(context).textTheme;
     final medals = ['🥇', '🥈', '🥉'];
     final isTop3 = entry.rank <= 3;
 
-    return Container(
-      padding: EdgeInsets.all(compact ? 12 : 14),
-      decoration: BoxDecoration(
-        color: isTop3
-            ? colors.primary.withValues(alpha: 0.08)
-            : colors.surfaceLowest,
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(
-          color: isTop3
-              ? colors.primary.withValues(alpha: 0.3)
-              : colors.outline,
-        ),
-      ),
-      child: Row(
+    Widget rankWidget;
+    if (rankDelta != null && rankDelta != 0) {
+      final isUp = rankDelta > 0;
+      rankWidget = Row(
+        mainAxisSize: MainAxisSize.min,
         children: [
           SizedBox(
             width: compact ? 34 : 38,
@@ -1097,39 +1102,108 @@ class _HostViewState extends State<HostView> {
               textAlign: TextAlign.center,
             ),
           ),
-          const SizedBox(width: 12),
-          CircleAvatar(
-            radius: compact ? 16 : 18,
-            backgroundColor: colors.primary.withValues(alpha: 0.14),
-            child: Text(
-              entry.name.isNotEmpty ? entry.name[0].toUpperCase() : '?',
-              style: TextStyle(
-                color: colors.primary,
-                fontWeight: FontWeight.w700,
-                fontSize: compact ? 12 : null,
-              ),
-            ),
+          const SizedBox(width: 4),
+          Icon(
+            isUp ? Icons.arrow_upward_rounded : Icons.arrow_downward_rounded,
+            size: compact ? 14 : 16,
+            color: isUp ? Colors.green.shade500 : Colors.red.shade400,
           ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              entry.name,
-              style: (compact ? textTheme.bodyLarge : textTheme.titleMedium)
-                  ?.copyWith(fontWeight: FontWeight.w700),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-          const SizedBox(width: 12),
-          Text(
-            '${entry.score} pts',
+        ],
+      );
+    } else {
+      rankWidget = SizedBox(
+        width: compact ? 34 : 38,
+        child: Text(
+          isTop3 && entry.rank - 1 < medals.length
+              ? medals[entry.rank - 1]
+              : '#${entry.rank}',
+          style: TextStyle(fontSize: compact ? 22 : 24),
+          textAlign: TextAlign.center,
+        ),
+      );
+    }
+
+    Widget scoreWidget;
+    if (previousScore != null && previousScore != entry.score) {
+      scoreWidget = TweenAnimationBuilder<int>(
+        tween: IntTween(begin: previousScore, end: entry.score),
+        duration: Duration(milliseconds: 400 + (staggerIndex * 100)),
+        builder: (context, value, _) {
+          return Text(
+            '$value pts',
             style: (compact ? textTheme.bodyLarge : textTheme.titleMedium)
                 ?.copyWith(
                   fontWeight: FontWeight.w800,
                   color: colors.primary,
                 ),
+          );
+        },
+      );
+    } else {
+      scoreWidget = Text(
+        '${entry.score} pts',
+        style: (compact ? textTheme.bodyLarge : textTheme.titleMedium)
+            ?.copyWith(
+              fontWeight: FontWeight.w800,
+              color: colors.primary,
+            ),
+      );
+    }
+
+    return AnimatedSlide(
+      duration: Duration(milliseconds: 400 + (staggerIndex * 100)),
+      curve: Curves.easeOutCubic,
+      offset: Offset.zero,
+      child: AnimatedOpacity(
+        duration: Duration(milliseconds: 400 + (staggerIndex * 100)),
+        curve: Curves.easeOutCubic,
+        opacity: 1,
+        child: Container(
+          padding: EdgeInsets.all(compact ? 12 : 14),
+          decoration: BoxDecoration(
+            color: isTop3
+                ? colors.primary.withValues(alpha: 0.08)
+                : colors.surfaceLowest,
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(
+              color: isTop3
+                  ? colors.primary.withValues(alpha: 0.3)
+                  : colors.outline,
+            ),
           ),
-        ],
+          child: Row(
+            children: [
+              rankWidget,
+              const SizedBox(width: 12),
+              CircleAvatar(
+                radius: compact ? 16 : 18,
+                backgroundColor: colors.primary.withValues(alpha: 0.14),
+                child: Text(
+                  entry.name.isNotEmpty ? entry.name[0].toUpperCase() : '?',
+                  style: TextStyle(
+                    color: colors.primary,
+                    fontWeight: FontWeight.w700,
+                    fontSize: compact ? 12 : null,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  entry.name,
+                  style: (compact
+                      ? textTheme.bodyLarge
+                      : textTheme.titleMedium)
+                  ?.copyWith(fontWeight: FontWeight.w700),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              const SizedBox(width: 12),
+              scoreWidget,
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -1367,6 +1441,12 @@ class _HostViewState extends State<HostView> {
     final colors = Theme.of(context).extension<ColorsConfig>()!;
     final textTheme = Theme.of(context).textTheme;
     final lb = _controller.leaderboard;
+    final isLastQuestion =
+        _controller.currentQuestionIndex >= _controller.questions.length - 1;
+
+    if (isLastQuestion) {
+      return _buildLandscapePodium(context);
+    }
 
     return Row(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -1483,10 +1563,19 @@ class _HostViewState extends State<HostView> {
                           ),
                           itemCount: lb.length,
                           itemBuilder: (context, index) {
+                            final entry = lb[index];
+                            final prevEntry = _savedLeaderboard
+                                ?.where((e) => e.clientId == entry.clientId)
+                                .firstOrNull;
                             return _buildLeaderboardTile(
                               context,
-                              lb[index],
+                              entry,
                               compact: true,
+                              rankDelta: prevEntry != null
+                                  ? prevEntry.rank - entry.rank
+                                  : null,
+                              previousScore: prevEntry?.score,
+                              staggerIndex: index,
                             );
                           },
                         ),
@@ -1799,9 +1888,15 @@ class _HostViewState extends State<HostView> {
     final colors = Theme.of(context).extension<ColorsConfig>()!;
     final textTheme = Theme.of(context).textTheme;
     final lb = _controller.leaderboard;
+    final isLastQuestion =
+        _controller.currentQuestionIndex >= _controller.questions.length - 1;
 
     if (MediaQuery.of(context).orientation == Orientation.landscape) {
       return _buildLandscapeLeaderboard(context);
+    }
+
+    if (isLastQuestion) {
+      return _buildPodium(context);
     }
 
     return Column(
@@ -1846,11 +1941,19 @@ class _HostViewState extends State<HostView> {
                   itemCount: lb.length,
                   itemBuilder: (context, index) {
                     final entry = lb[index];
+                    final prevEntry = _savedLeaderboard
+                        ?.where((e) => e.clientId == entry.clientId)
+                        .firstOrNull;
                     return Padding(
                       padding: const EdgeInsets.only(bottom: 8),
                       child: _buildLeaderboardTile(
                         context,
                         entry,
+                        rankDelta: prevEntry != null
+                            ? prevEntry.rank - entry.rank
+                            : null,
+                        previousScore: prevEntry?.score,
+                        staggerIndex: index,
                       ),
                     );
                   },
@@ -1867,11 +1970,237 @@ class _HostViewState extends State<HostView> {
     );
   }
 
+  Widget _buildPodium(BuildContext context) {
+    final colors = Theme.of(context).extension<ColorsConfig>()!;
+    final textTheme = Theme.of(context).textTheme;
+    final lb = _controller.leaderboard;
+    final top3 = lb.take(3).toList();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: colors.primary,
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Column(
+            children: [
+              Icon(Icons.emoji_events_rounded, size: 48, color: Colors.yellow.shade600),
+              const SizedBox(height: 8),
+              Text(
+                'FINAL LEADERBOARD',
+                style: textTheme.labelLarge?.copyWith(
+                  color: Colors.white70,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 1.5,
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 32),
+        Expanded(
+          child: top3.isEmpty
+              ? Center(
+                  child: Text(
+                    'No scores yet',
+                    style: textTheme.bodyMedium?.copyWith(color: colors.mutedText),
+                  ),
+                )
+              : Column(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    _buildPodiumRow(top3, colors, textTheme),
+                  ],
+                ),
+        ),
+        const SizedBox(height: 16),
+        AppButton.primary(
+          label: 'Finish Game',
+          onPressed: () => _controller.endGame(),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildLandscapePodium(BuildContext context) {
+    final colors = Theme.of(context).extension<ColorsConfig>()!;
+    final textTheme = Theme.of(context).textTheme;
+    final lb = _controller.leaderboard;
+    final top3 = lb.take(3).toList();
+
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        SizedBox(
+          width: 250,
+          child: Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: colors.primary,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Icon(
+                  Icons.emoji_events_rounded,
+                  size: 48,
+                  color: Colors.yellow.shade600,
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  'FINAL LEADERBOARD',
+                  style: textTheme.labelLarge?.copyWith(
+                    color: Colors.white70,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 1.5,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const Spacer(),
+                AppButton.primary(
+                  label: 'Finish Game',
+                  onPressed: () => _controller.endGame(),
+                  color: colors.secondary,
+                ),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(width: 16),
+        Expanded(
+          child: Container(
+            padding: const EdgeInsets.all(18),
+            decoration: BoxDecoration(
+              color: colors.surfaceLow,
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: colors.outline),
+            ),
+            child: top3.isEmpty
+                ? Center(
+                    child: Text(
+                      'No scores yet',
+                      style: textTheme.bodyMedium?.copyWith(color: colors.mutedText),
+                    ),
+                  )
+                : _buildPodiumRow(top3, colors, textTheme),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildPodiumRow(
+    List<({int clientId, String name, int rank, int score})> top3,
+    ColorsConfig colors,
+    TextTheme textTheme,
+  ) {
+    if (top3.isEmpty) return const SizedBox.shrink();
+
+    final ordered = <({int clientId, String name, int rank, int score})>[
+      top3.firstWhere((e) => e.rank == 2, orElse: () => top3[0]),
+      top3.firstWhere((e) => e.rank == 1, orElse: () => top3[0]),
+      top3.firstWhere((e) => e.rank == 3, orElse: () => top3[0]),
+    ];
+
+    final heights = [120.0, 170.0, 100.0];
+    final podiumColors = [
+      Colors.grey.shade400,
+      Colors.yellow.shade600,
+      Colors.orange.shade700,
+    ];
+    final medals = ['🥈', '🥇', '🥉'];
+
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.end,
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: List.generate(3, (i) {
+        final entry = ordered[i];
+        return AnimatedContainer(
+          duration: const Duration(milliseconds: 500),
+          curve: Curves.easeOutCubic,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              SizedBox(
+                height: heights[i],
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    CircleAvatar(
+                      radius: 28,
+                      backgroundColor: colors.primary.withValues(alpha: 0.14),
+                      child: Text(
+                        entry.name.isNotEmpty
+                            ? entry.name[0].toUpperCase()
+                            : '?',
+                        style: TextStyle(
+                          color: colors.primary,
+                          fontWeight: FontWeight.w800,
+                          fontSize: 22,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      entry.name,
+                      style: textTheme.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 4),
+                    TweenAnimationBuilder<int>(
+                      tween: IntTween(begin: 0, end: entry.score),
+                      duration: Duration(milliseconds: 500 + (i * 200)),
+                      curve: Curves.easeOutCubic,
+                      builder: (context, value, _) {
+                        return Text(
+                          '$value pts',
+                          style: textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.w800,
+                            color: colors.primary,
+                          ),
+                        );
+                      },
+                    ),
+                    const SizedBox(height: 4),
+                    Text(medals[i], style: const TextStyle(fontSize: 32)),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 8),
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 500),
+                curve: Curves.easeOutCubic,
+                width: 104,
+                height: heights[i],
+                decoration: BoxDecoration(
+                  color: podiumColors[i],
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(8),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      }),
+    );
+  }
+
   Widget _buildResults(BuildContext context) {
     final colors = Theme.of(context).extension<ColorsConfig>()!;
     final textTheme = Theme.of(context).textTheme;
+    final lb = _controller.leaderboard;
+    final top3 = lb.take(3).toList();
 
-    return Center(
+    return SingleChildScrollView(
+      padding: const EdgeInsets.symmetric(vertical: 24),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
@@ -1888,13 +2217,16 @@ class _HostViewState extends State<HostView> {
             '${_controller.participants.length} participant(s) joined',
             style: textTheme.bodyLarge?.copyWith(color: colors.mutedText),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 24),
+          if (top3.isNotEmpty)
+            _buildPodiumRow(top3, colors, textTheme),
+          const SizedBox(height: 24),
           Text(
-            'Use reverse QR if a participant answer did not arrive over Bluetooth.',
+            'Use reverse QR if a participant answer did not arrive over LAN.',
             style: textTheme.bodyMedium?.copyWith(color: colors.mutedText),
             textAlign: TextAlign.center,
           ),
-          const SizedBox(height: 32),
+          const SizedBox(height: 24),
           AppButton.outlined(
             label: 'Scan Reverse QR',
             onPressed: () => _openReverseQrScanner(context),
