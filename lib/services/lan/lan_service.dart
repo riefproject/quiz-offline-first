@@ -5,7 +5,6 @@ import 'dart:typed_data';
 
 import 'package:AlpenQuiz/config.dart';
 import 'package:AlpenQuiz/services/logger.dart';
-import 'package:network_info_plus/network_info_plus.dart';
 
 const _discoveryPort = 49152;
 const _discoveryPrefix = 'KAHOOF_DISCOVER';
@@ -150,45 +149,67 @@ class LanService {
     );
   }
 
-  Future<InternetAddress?> getHotspotBroadcastAddress() async {
+  Future<List<InternetAddress>> _getBroadcastAddresses() async {
+    final addresses = <InternetAddress>[];
+
     try {
-      // 1. Get all active network interfaces on the device
       final interfaces = await NetworkInterface.list(
         type: InternetAddressType.IPv4,
         includeLoopback: false,
       );
 
-      for (var interface in interfaces) {
-        for (var address in interface.addresses) {
+      log.d('LanService: scanning ${interfaces.length} network interface(s)');
+
+      for (final interface in interfaces) {
+        log.d('LanService: iface name=${interface.name} index=${interface.index} addrs=${interface.addresses.length}');
+        for (final address in interface.addresses) {
           final ip = address.address;
+          log.d('LanService:   addr $ip');
 
-          // 2. Filter for standard private Mobile Hotspot ranges
-          // This prevents us from accidentally grabbing the cellular 4G/5G IP
-          bool isAndroidHotspot = ip.startsWith('192.168.');
-          bool isIosHotspot = ip.startsWith('172.20.');
-          bool isGeneralPrivate = ip.startsWith('10.');
-
-          if (isAndroidHotspot || isIosHotspot || isGeneralPrivate) {
-            // 3. Apply the /24 subnet hack
-            List<String> octets = ip.split('.');
-            if (octets.length == 4) {
-              octets[3] =
-                  '255'; // Force the last octet to 255 for the broadcast
-
-              String broadcastIp = octets.join('.');
-              log.d("Found Hotspot Interface: $ip");
-              log.d("Calculated Broadcast: $broadcastIp");
-
-              return InternetAddress(broadcastIp);
-            }
+          if (ip.startsWith('192.168.')) {
+            final broadcast = _toBroadcast(ip);
+            log.d('LanService:   → Android-hotspot broadcast $broadcast');
+            addresses.add(InternetAddress(broadcast));
+          } else if (ip.startsWith('172.20.')) {
+            final broadcast = _toBroadcastIos(ip);
+            log.d('LanService:   → iOS-hotspot broadcast $broadcast');
+            addresses.add(InternetAddress(broadcast));
+          } else if (ip.startsWith('10.')) {
+            final broadcast = _toBroadcast(ip);
+            log.d('LanService:   → private-net broadcast $broadcast');
+            addresses.add(InternetAddress(broadcast));
           }
         }
       }
     } catch (e) {
-      log.e("Error scanning interfaces: $e");
+      log.e('LanService: error scanning interfaces — $e');
     }
 
-    return null; // Return null if nothing is found
+    if (addresses.isEmpty) {
+      log.w('LanService: no interfaces found, falling back to 255.255.255.255');
+      addresses.add(InternetAddress('255.255.255.255'));
+    }
+
+    log.i('LanService: broadcast addresses: ${addresses.map((a) => a.address).toList()}');
+    return addresses;
+  }
+
+  /// Calculates broadcast for /24 subnet (covers most Android hotspots and routers).
+  String _toBroadcast(String ip) {
+    final octets = ip.split('.');
+    if (octets.length != 4) return '255.255.255.255';
+    octets[3] = '255';
+    return octets.join('.');
+  }
+
+  /// iOS hotspot uses 172.20.10.0/28 — broadcast is 172.20.10.15.
+  String _toBroadcastIos(String ip) {
+    final octets = ip.split('.');
+    if (octets.length != 4) return '255.255.255.255';
+    if (octets[2] == '10') {
+      return '${octets[0]}.${octets[1]}.10.15';
+    }
+    return _toBroadcast(ip);
   }
 
   static Future<void> _sendUdpBroadcast(
@@ -196,19 +217,18 @@ class LanService {
     LanService service,
   ) async {
     try {
-      final broadcastIp = await service.getHotspotBroadcastAddress();
-      log.d('LanService: Sending UDP broadcast to $broadcastIp');
-      if (broadcastIp == null) return;
+      final addresses = await service._getBroadcastAddresses();
 
       service._udpSender ??= await RawDatagramSocket.bind(
         InternetAddress.anyIPv4,
         0,
       );
       service._udpSender!.broadcastEnabled = true;
-      service._udpSender!.send(data, broadcastIp, _discoveryPort);
-      log.d(
-        'LanService: UDP discovery broadcast sent ${data.length}byte to $broadcastIp',
-      );
+
+      for (final addr in addresses) {
+        service._udpSender!.send(data, addr, _discoveryPort);
+        log.d('LanService: UDP discovery sent ${data.length}bytes to ${addr.address}:$_discoveryPort');
+      }
     } catch (e) {
       log.w('LanService: UDP broadcast failed — $e');
     }
@@ -294,6 +314,7 @@ class LanService {
           if (datagram == null) return;
           final msg = utf8.decode(datagram.data);
           _parseDiscoveryPacket(msg, datagram.address.address, service);
+          log.d('LanService: UDP discovery packet received with data $msg');
         }
       });
     } catch (e) {

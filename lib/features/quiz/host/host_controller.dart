@@ -2,20 +2,14 @@ import 'dart:async';
 import 'dart:math';
 
 import 'package:flutter/foundation.dart';
-import 'package:AlpenQuiz/config.dart';
 import 'package:AlpenQuiz/models/client_payload.dart';
 import 'package:AlpenQuiz/models/master_payload.dart';
 import 'package:AlpenQuiz/models/question.dart';
 import 'package:AlpenQuiz/models/reverse_qr_submission.dart';
 import 'package:AlpenQuiz/services/auth_service.dart';
-import 'package:AlpenQuiz/services/ble_service_base.dart';
-import 'package:AlpenQuiz/services/ble_service.dart';
 import 'package:AlpenQuiz/services/hive_service.dart';
 import 'package:AlpenQuiz/services/logger.dart';
-import 'package:AlpenQuiz/services/mock_ble_service.dart';
 import 'package:AlpenQuiz/services/quiz_history_service.dart';
-import 'package:AlpenQuiz/services/quiz/client_listener.dart';
-import 'package:AlpenQuiz/services/quiz/master_publisher.dart';
 import 'package:AlpenQuiz/services/reverse_qr_sync_service.dart';
 import 'package:AlpenQuiz/services/lan/lan_service.dart';
 import 'package:AlpenQuiz/services/lan/lan_client_listener.dart';
@@ -45,10 +39,6 @@ class ParticipantAnswer {
 }
 
 class HostController extends ChangeNotifier {
-  late BleServiceBase _bleService;
-  MasterPublisher? _publisher;
-  ClientListener? _clientListener;
-
   LanService? _lanService;
   LanMasterPublisher? _lanPublisher;
   LanClientListener? _lanClientListener;
@@ -122,14 +112,10 @@ class HostController extends ChangeNotifier {
     gameID: 0,
   );
 
-  HostController({BleServiceBase? bleService, required this.quizId}) {
+  HostController({required this.quizId}) {
     if (!_canCurrentUserHostQuiz(quizId)) {
       throw StateError('Anda tidak memiliki izin untuk memulai kuis ini.');
     }
-
-    _bleService = Config.isSessionMocked
-        ? MockBleService()
-        : bleService ?? BleService();
     questions = Question.fromQuizId(quizId);
     log.i(
       'HostController: loaded ${questions.length} questions for quiz $quizId',
@@ -155,72 +141,30 @@ class HostController extends ChangeNotifier {
     _sessionStartedAt = DateTime.now();
     _sessionFinishedAt = null;
 
-    if (Config.useLan) {
-      _lanService = await LanService.host(
-        gameId: _gameId,
-        questionCount: questions.length,
-      );
-      _lanPublisher = LanMasterPublisher(lanService: _lanService!);
-      _lanClientListener = LanClientListener(
-        lanService: _lanService!,
-        gameId: _gameId,
-      );
-      _clientSub = _lanClientListener!.stream.listen(_onClientPayload);
+    _lanService = await LanService.host(
+      gameId: _gameId,
+      questionCount: questions.length,
+    );
+    _lanPublisher = LanMasterPublisher(lanService: _lanService!);
+    _lanClientListener = LanClientListener(
+      lanService: _lanService!,
+      gameId: _gameId,
+    );
+    _clientSub = _lanClientListener!.stream.listen(_onClientPayload);
 
-      _currentPayload = MasterPayload(
-        questionCount: questions.length,
-        masterTimeMs: DateTime.now().millisecondsSinceEpoch,
-        nextQuestion: [],
-        gameID: _gameId,
-      );
-      _lanPublisher!.publish(_currentPayload);
-
-      _isAdvertising = true;
-      notifyListeners();
-      log.i(
-        'HostController: LAN game started gameId=$_gameId questionCount=${questions.length}',
-      );
-      return;
-    }
-
-    await _bleService.init();
-    await _bleService.requestAllPermissions();
-
-    _publisher = MasterPublisher(bleService: _bleService);
-    _clientListener = ClientListener(bleService: _bleService, gameId: _gameId);
-    _bleService.startScan(timeout: Duration(seconds: 120));
-
-    _clientSub = _clientListener!.stream.listen(_onClientPayload);
-
-    final payload = MasterPayload(
+    _currentPayload = MasterPayload(
       questionCount: questions.length,
       masterTimeMs: DateTime.now().millisecondsSinceEpoch,
       nextQuestion: [],
       gameID: _gameId,
     );
-    _currentPayload = payload;
-    _currentPayload = MasterPayload(
-      questionCount: questions.length,
-      masterTimeMs: payload.masterTimeMs,
-      nextQuestion: payload.nextQuestion,
-      duration: payload.duration,
-      choices: payload.choices,
-      skippedAt: payload.skippedAt,
-      gameFinished: payload.gameFinished,
-      gameID: _gameId,
-    );
-    _publishCurrentPayload();
+    _lanPublisher!.publish(_currentPayload);
 
     _isAdvertising = true;
     notifyListeners();
-  }
-
-  void _publishCurrentPayload() {
-    if (Config.useLan) {
-      _lanPublisher!.publish(_currentPayload);
-    } else {
-      _publishCurrentPayload();
-    }
+    log.i(
+      'HostController: game started gameId=$_gameId questionCount=${questions.length}',
+    );
   }
 
   void _onClientPayload(ClientPayload payload) {
@@ -277,7 +221,7 @@ class HostController extends ChangeNotifier {
     _currentPayload.duration.add(questionDuration);
     _currentPayload.choices.add(currentQuestion.options.length);
     _currentPayload.skippedAt.add(-1);
-    _publishCurrentPayload();
+    _lanPublisher!.publish(_currentPayload);
 
     _countdownTimer = Timer.periodic(const Duration(milliseconds: 100), (_) {
       _countdownRemainingMs -= 100;
@@ -289,6 +233,12 @@ class HostController extends ChangeNotifier {
         notifyListeners();
       }
     });
+  }
+
+  void skipCountdown() {
+    _countdownTimer?.cancel();
+    _countdownTimer = null;
+    _startQuestion();
   }
 
   void _startQuestion() {
@@ -321,7 +271,7 @@ class HostController extends ChangeNotifier {
     }
     _calculateScores();
     _phase = HostPhase.answerReveal;
-    _publishCurrentPayload();
+    _lanPublisher!.publish(_currentPayload);
     notifyListeners();
   }
 
@@ -374,7 +324,7 @@ class HostController extends ChangeNotifier {
     _currentPayload.duration.add(questionDuration);
     _currentPayload.choices.add(currentQuestion.options.length);
     _currentPayload.skippedAt.add(-1);
-    _publishCurrentPayload();
+    _lanPublisher!.publish(_currentPayload);
 
     _countdownTimer = Timer.periodic(const Duration(milliseconds: 100), (_) {
       _countdownRemainingMs -= 100;
@@ -397,7 +347,7 @@ class HostController extends ChangeNotifier {
     _sessionFinishedAt = DateTime.now();
 
     _currentPayload.gameFinished = true;
-    _publishCurrentPayload();
+    _lanPublisher!.publish(_currentPayload);
     _isAdvertising = false;
 
     final startedAt = _sessionStartedAt;
@@ -465,12 +415,9 @@ class HostController extends ChangeNotifier {
     _countdownTimer?.cancel();
     _questionTimer?.cancel();
     _clientSub?.cancel();
-    _clientListener?.dispose();
-    _publisher?.dispose();
     _lanClientListener?.dispose();
     _lanPublisher?.dispose();
     _lanService?.dispose();
-    _bleService.dispose();
     super.dispose();
   }
 }
