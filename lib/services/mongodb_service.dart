@@ -38,9 +38,9 @@ class MongoDatabase {
     try {
       _db = await Db.create(_connectionString);
       await _db!.open();
-      print('Berhasil terhubung ke database MongoDB');
+      print('Successfully connected to MongoDB database');
     } catch (e) {
-      print('Gagal terhubung ke database MongoDB: $e');
+      print('Failed to connect to MongoDB database: $e');
       rethrow;
     }
   }

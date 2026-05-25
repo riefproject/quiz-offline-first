@@ -44,7 +44,7 @@ class UnderConstructionWidget extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             Text(
-              'Fitur ini sedang dalam tahap pengembangan (Under Construction).\nSilakan periksa kembali nanti!',
+              'This feature is currently under development (Under Construction).\nPlease check back later!',
               style: textTheme.bodyLarge?.copyWith(
                 color: colors.mutedText,
                 height: 1.5,

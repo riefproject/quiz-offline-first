@@ -25,7 +25,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
     {
       'title': 'Tanpa Internet? Tidak Masalah.',
       'description':
-          'Tetap bisa main dengan koneksi lokal. Saat sinyal kembali, data otomatis tersinkronisasi!',
+          'Keep playing with a local connection. When the signal returns, data will automatically synchronize!',
       'image': 'assets/images/onboarding/2.png',
     },
     {

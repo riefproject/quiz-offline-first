@@ -168,7 +168,7 @@ class QuizSyncService {
       if (e.toString().contains('No master connection')) {
         syncError.value = null;
       } else {
-        syncError.value = "Gagal sinkronisasi: $e";
+        syncError.value = "Synchronization failed: $e";
       }
     } finally {
       _isSyncing = false;

@@ -347,7 +347,7 @@ class _NoLeaderboardState extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            'Sesi ${entry.session.id} belum memiliki hasil akhir yang tersimpan.',
+            'Session ${entry.session.id} does not have any saved final results yet.',
             textAlign: TextAlign.center,
             style: textTheme.bodyMedium?.copyWith(
               color: colors.mutedText,

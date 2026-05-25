@@ -1,5 +1,7 @@
+import 'dart:convert';
 import 'dart:math';
 
+import 'package:crypto/crypto.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:mongo_dart/mongo_dart.dart';
 
@@ -38,6 +40,11 @@ class AuthService {
 
   static void init(SharedPreferences prefs) {
     _prefs = prefs;
+  }
+
+  static String _hashPassword(String password) {
+    final bytes = utf8.encode(password);
+    return sha256.convert(bytes).toString();
   }
 
   // --- Gunakan SharedPreferences untuk stabilitas session ---
@@ -84,14 +91,18 @@ class AuthService {
     final normalizedPassword = password.trim();
 
     if (normalizedName.isEmpty) {
-      throw AuthException('Nama lengkap wajib diisi.');
+      throw AuthException('Full name is required.');
     }
     final passwordError = PasswordPolicy.validate(normalizedPassword);
     if (passwordError != null) {
       throw AuthException(passwordError);
     }
     if (normalizedEmail == null && normalizedPhone == null) {
-      throw AuthException('Isi email atau nomor HP untuk pemulihan akun.');
+      throw AuthException('Enter email or phone number for account recovery.');
+    }
+
+    if (!(await MongoDatabase.tryConnect())) {
+      throw AuthException('Registration requires an active internet connection.');
     }
 
     final existingUser = await _findUserByIdentifier(
@@ -99,15 +110,17 @@ class AuthService {
       phone: normalizedPhone,
     );
     if (existingUser != null) {
-      throw AuthException('Akun dengan email atau nomor HP tersebut sudah ada.');
+      throw AuthException('An account with this email or phone number already exists.');
     }
+
+    final hashedPassword = _hashPassword(normalizedPassword);
 
     final user = AppUser(
       id: _generateUserId(),
       namaLengkap: normalizedName,
       email: normalizedEmail,
       nomorHp: normalizedPhone,
-      password: normalizedPassword,
+      password: hashedPassword,
       isGuest: false,
       isSynced: false,
     );
@@ -128,7 +141,7 @@ class AuthService {
   }) async {
     final normalizedIdentifier = identifier.trim();
     if (normalizedIdentifier.isEmpty || password.trim().isEmpty) {
-      throw AuthException('Isi email/nomor HP dan password.');
+      throw AuthException('Please enter your email/phone number and password.');
     }
 
     final localUser = _findLocalUser(normalizedIdentifier);
@@ -142,10 +155,12 @@ class AuthService {
     }
 
     if (user == null) {
-      throw AuthException('Akun tidak ditemukan.');
+      throw AuthException('Account not found.');
     }
-    if ((user.password ?? '') != password.trim()) {
-      throw AuthException('Password tidak cocok.');
+    
+    final hashedPassword = _hashPassword(password.trim());
+    if ((user.password ?? '') != hashedPassword) {
+      throw AuthException('Incorrect password.');
     }
 
     if (!user.isSynced) {
@@ -169,7 +184,7 @@ class AuthService {
     final password = newPassword.trim();
 
     if (normalizedIdentifier.isEmpty) {
-      throw AuthException('Isi email atau nomor HP untuk memulihkan akun.');
+      throw AuthException('Enter email or phone number to recover your account.');
     }
     final passwordError = PasswordPolicy.validate(password);
     if (passwordError != null) {
@@ -178,10 +193,11 @@ class AuthService {
 
     final user = await _findUserByIdentifier(identifier: normalizedIdentifier);
     if (user == null) {
-      throw AuthException('Akun tidak ditemukan untuk data pemulihan itu.');
+      throw AuthException('No account found with this information.');
     }
 
-    final updatedUser = user.copyWith(password: password, isSynced: false);
+    final hashedPassword = _hashPassword(password);
+    final updatedUser = user.copyWith(password: hashedPassword, isSynced: false);
     return _persistUser(updatedUser);
   }
 
@@ -190,12 +206,12 @@ class AuthService {
   }) async {
     final normalizedIdentifier = identifier.trim();
     if (normalizedIdentifier.isEmpty) {
-      throw AuthException('Isi email atau nomor HP untuk memulihkan akun.');
+      throw AuthException('Enter email or phone number to recover your account.');
     }
 
     final user = await _findUserByIdentifier(identifier: normalizedIdentifier);
     if (user == null) {
-      throw AuthException('Akun tidak ditemukan untuk data pemulihan itu.');
+      throw AuthException('No account found with this information.');
     }
 
     final otp = _generateOtp();
@@ -212,13 +228,13 @@ class AuthService {
     final savedOtp = _prefs.getString(_passwordResetOtpKey);
 
     if (savedIdentifier == null || savedOtp == null) {
-      throw AuthException('Kode OTP belum dibuat. Mulai lagi dari langkah sebelumnya.');
+      throw AuthException('OTP code has not been generated. Please restart the process.');
     }
     if (savedIdentifier != identifier.trim()) {
-      throw AuthException('Data pemulihan tidak cocok. Mulai lagi dari awal.');
+      throw AuthException('Recovery information does not match. Please restart the process.');
     }
     if (savedOtp != otp.trim()) {
-      throw AuthException('Kode OTP tidak valid.');
+      throw AuthException('Invalid OTP code.');
     }
   }
 
@@ -245,7 +261,7 @@ class AuthService {
     final normalizedCode = joinCode?.trim();
 
     if (normalizedName.isEmpty) {
-      throw AuthException('Nama lengkap guest wajib diisi.');
+      throw AuthException('Guest full name is required.');
     }
 
     final session = AuthSession(
@@ -268,10 +284,10 @@ class AuthService {
 
   static Future<void> updateDisplayName(String newName) async {
     final session = currentSession;
-    if (session == null) throw AuthException('Tidak ada sesi aktif');
+    if (session == null) throw AuthException('No active session.');
 
     final normalized = newName.trim();
-    if (normalized.isEmpty) throw AuthException('Nama tidak boleh kosong');
+    if (normalized.isEmpty) throw AuthException('Name cannot be empty.');
 
     await _prefs.setString(_sessionDisplayNameKey, normalized);
 

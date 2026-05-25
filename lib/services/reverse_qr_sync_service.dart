@@ -43,7 +43,7 @@ class ReverseQrSyncService {
       );
     } on Object catch (error, stackTrace) {
       throw ReverseQrSyncException(
-        'Gagal membaca payload dari QR.',
+        'Failed to read payload from QR.',
         cause: error,
         stackTrace: stackTrace,
       );

@@ -39,7 +39,7 @@ class HiveService {
       Hive.openBox<HasilAkhir>(_hasilAkhirBox),
     ]);
     
-    print('Hive Local Database Berhasil Diinisialisasi');
+    print('Hive Local Database Initialized Successfully');
   }
 
   // --- Akses Boxes ---

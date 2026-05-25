@@ -26,18 +26,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: const Text('Ganti Nama Tampilan'),
+          title: const Text('Change Display Name'),
           content: Form(
             key: formKey,
             child: TextFormField(
               controller: controller,
               maxLength: 20,
               decoration: const InputDecoration(
-                hintText: 'Nama Tampilan',
+                hintText: 'Display Name',
               ),
               validator: (value) {
                 if (value == null || value.trim().isEmpty) {
-                  return 'Nama tidak boleh kosong';
+                  return 'Name cannot be empty';
                 }
                 return null;
               },
@@ -46,7 +46,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Batal'),
+              child: const Text('Cancel'),
             ),
             ElevatedButton(
               onPressed: () {
@@ -54,7 +54,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   Navigator.of(context).pop(controller.text.trim());
                 }
               },
-              child: const Text('Simpan'),
+              child: const Text('Save'),
             ),
           ],
         );
@@ -66,14 +66,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
         await AuthService.updateDisplayName(newName);
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Nama berhasil diperbarui')),
+            const SnackBar(content: Text('Name successfully updated')),
           );
           setState(() {});
         }
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Gagal memperbarui nama: $e')),
+            SnackBar(content: Text('Failed to update name: $e')),
           );
         }
       }
@@ -107,7 +107,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Text(
-                session?.displayName ?? 'Pengguna Anonim',
+                session?.displayName ?? 'Anonymous User',
                 style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
               ),
               if (!(session?.isGuest ?? true)) ...[
@@ -121,7 +121,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
           if (session?.isGuest ?? true)
             const Text(
-              'Akun Tamu',
+              'Guest Account',
               style: TextStyle(color: Colors.grey),
             ),
           const SizedBox(height: 24),
@@ -129,21 +129,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
             // Statistik Singkat
             ProfileMenuItem(
               icon: Icons.delete_outline,
-              title: 'Hapus Data Offline',
+              title: 'Clear Offline Data',
               onTap: () async {
                 final confirm = await AppConfirmModal.show(
                   context,
-                  title: 'Hapus Data',
-                  content: 'Apakah Anda yakin ingin menghapus seluruh local cache data kuis?',
-                  confirmText: 'Hapus',
-                  cancelText: 'Batal',
+                  title: 'Clear Data',
+                  content: 'Are you sure you want to clear all local quiz cache data?',
+                  confirmText: 'Clear',
+                  cancelText: 'Cancel',
                   isDestructive: true,
                 );
                 if (confirm == true) {
                   await HiveService.clearQuizCache();
                   if (context.mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Data offline berhasil dihapus')),
+                      const SnackBar(content: Text('Offline data successfully cleared')),
                     );
                   }
                 }
@@ -152,7 +152,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             const Divider(),
             ProfileMenuItem(
               icon: Icons.volume_up_outlined,
-              title: 'Suara & Getaran',
+              title: 'Sound & Vibration',
               onTap: () {
                 Navigator.of(context).push(
                   MaterialPageRoute(builder: (_) => const SoundSettingsScreen()),
@@ -171,7 +171,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
             ProfileMenuItem(
               icon: Icons.info_outline,
-              title: 'Tentang Aplikasi',
+              title: 'About App',
               onTap: () {
                 Navigator.of(context).push(
                   MaterialPageRoute(builder: (_) => const AboutScreen()),
@@ -181,17 +181,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
             const Divider(),
             ProfileMenuItem(
               icon: Icons.logout,
-              title: 'Keluar',
+              title: 'Logout',
               iconColor: Colors.red,
               textColor: Colors.red,
               trailing: const SizedBox(), // Menghilangkan panah untuk tombol Keluar
               onTap: () async {
                 final confirm = await AppConfirmModal.show(
                   context,
-                  title: 'Keluar Akun',
-                  content: 'Apakah Anda yakin ingin keluar dari akun ini?',
-                  confirmText: 'Keluar',
-                  cancelText: 'Batal',
+                  title: 'Logout',
+                  content: 'Are you sure you want to log out of this account?',
+                  confirmText: 'Logout',
+                  cancelText: 'Cancel',
                   isDestructive: true,
                 );
                 

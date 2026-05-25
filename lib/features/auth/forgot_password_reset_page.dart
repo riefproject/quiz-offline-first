@@ -55,7 +55,7 @@ class _ForgotPasswordResetPageState extends State<ForgotPasswordResetPage> {
       return;
     }
     if (_passwordController.text != _confirmPasswordController.text) {
-      _showMessage('Tulis ulang password harus sama.');
+      _showMessage('Passwords do not match.');
       return;
     }
 
@@ -71,13 +71,13 @@ class _ForgotPasswordResetPageState extends State<ForgotPasswordResetPage> {
       );
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Password berhasil diperbarui. Silakan login.')),
+        const SnackBar(content: Text('Password successfully updated. Please login.')),
       );
       Navigator.of(context).pushNamedAndRemoveUntil('/login', (route) => false);
     } on AuthException catch (e) {
       _showMessage(e.message);
     } catch (e) {
-      _showMessage('Update password gagal: $e');
+      _showMessage('Password update failed: $e');
     } finally {
       if (mounted) {
         setState(() {
@@ -119,29 +119,29 @@ class _ForgotPasswordResetPageState extends State<ForgotPasswordResetPage> {
             ),
             const SizedBox(height: 8),
             Text(
-              'Langkah 3 dari 3. Buat password baru lalu tulis ulang untuk konfirmasi.',
+              'Step 3 of 3. Create a new password and retype to confirm.',
               style: textTheme.bodyLarge,
             ),
             const SizedBox(height: 28),
             AppPasswordField(
-              label: 'Password Baru',
-              hintText: 'Minimal 8 karakter',
+              label: 'New Password',
+              hintText: 'Minimum 8 characters',
               controller: _passwordController,
             ),
             const SizedBox(height: 14),
             PasswordRequirementsPanel(password: _passwordController.text),
             const SizedBox(height: 18),
             AppPasswordField(
-              label: 'Tulis Ulang Password',
-              hintText: 'Masukkan password yang sama',
+              label: 'Retype Password',
+              hintText: 'Enter the same password',
               controller: _confirmPasswordController,
             ),
             const SizedBox(height: 10),
             if (_confirmPasswordController.text.isNotEmpty)
               Text(
                 _confirmPasswordController.text == _passwordController.text
-                    ? 'Password cocok.'
-                    : 'Password belum sama.',
+                    ? 'Passwords match.'
+                    : 'Passwords do not match.',
                 style: textTheme.bodyMedium?.copyWith(
                   color: _confirmPasswordController.text == _passwordController.text
                       ? Colors.green

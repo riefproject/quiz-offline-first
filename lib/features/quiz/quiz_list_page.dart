@@ -56,11 +56,11 @@ class _QuizListPageState extends State<QuizListPage> {
   Future<void> _deleteQuiz(String quizId) async {
     final confirm = await AppConfirmModal.show(
       context,
-      title: 'Hapus Kuis',
+      title: 'Delete Quiz',
       content:
-          'Apakah Anda yakin ingin menghapus kuis ini beserta seluruh pertanyaannya?',
-      confirmText: 'Hapus',
-      cancelText: 'Batal',
+          'Are you sure you want to delete this quiz and all of its questions?',
+      confirmText: 'Delete',
+      cancelText: 'Cancel',
       isDestructive: true,
     );
 
@@ -69,14 +69,14 @@ class _QuizListPageState extends State<QuizListPage> {
         await _quizController.deleteQuiz(quizId);
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Kuis berhasil dihapus')),
+            const SnackBar(content: Text('Quiz deleted successfully')),
           );
         }
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(
             context,
-          ).showSnackBar(SnackBar(content: Text('Gagal menghapus kuis: $e')));
+          ).showSnackBar(SnackBar(content: Text('Failed to delete quiz: $e')));
         }
       }
     }
@@ -178,7 +178,7 @@ class _QuizListPageState extends State<QuizListPage> {
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
-                      'Anda sedang offline. Perubahan akan disimpan secara lokal dan disinkronisasi saat koneksi pulih.',
+                      'You are offline. Changes will be saved locally and synchronized when connection is restored.',
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         color: Colors.redAccent,
                         fontWeight: FontWeight.w600,
@@ -256,8 +256,8 @@ class _QuizListPageState extends State<QuizListPage> {
                 child: Center(
                   child: Text(
                     _searchQuery.isNotEmpty
-                        ? 'Tidak ada kuis yang cocok dengan pencarian Anda.'
-                        : 'Belum ada kuis. Buat kuis pertama Anda!',
+                        ? 'No quizzes match your search.'
+                        : 'No quizzes yet. Create your first quiz!',
                     style: Theme.of(
                       context,
                     ).textTheme.bodyMedium?.copyWith(color: colors.mutedText),
@@ -299,7 +299,7 @@ class _QuizListPageState extends State<QuizListPage> {
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(
                               content: Text(
-                                'Anda hanya bisa memulai kuis milik Anda sendiri.',
+                                'You can only start your own quizzes.',
                               ),
                             ),
                           );
@@ -329,7 +329,7 @@ class _QuizListPageState extends State<QuizListPage> {
                               Icons.expand_less_rounded,
                               size: 18,
                             ),
-                            label: const Text('Lebih Sedikit'),
+                            label: const Text('Show Less'),
                             style: TextButton.styleFrom(
                               foregroundColor: colors.mutedText,
                               textStyle: const TextStyle(
@@ -356,7 +356,7 @@ class _QuizListPageState extends State<QuizListPage> {
                               Icons.expand_more_rounded,
                               size: 18,
                             ),
-                            label: const Text('Lebih Banyak'),
+                            label: const Text('Show More'),
                             style: TextButton.styleFrom(
                               foregroundColor: colors.primary,
                               textStyle: const TextStyle(

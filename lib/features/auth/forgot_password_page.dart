@@ -46,7 +46,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
     } on AuthException catch (e) {
       _showMessage(e.message);
     } catch (e) {
-      _showMessage('Pemulihan akun gagal: $e');
+      _showMessage('Account recovery failed: $e');
     } finally {
       if (mounted) {
         setState(() {
@@ -88,12 +88,12 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
             ),
             const SizedBox(height: 8),
             Text(
-              'Langkah 1 dari 3. Masukkan email atau nomor HP yang terdaftar untuk meminta kode OTP.',
+              'Step 1 of 3. Enter your registered email or phone number to request an OTP code.',
               style: textTheme.bodyLarge,
             ),
             const SizedBox(height: 28),
             AppTextField(
-              label: 'Email atau Nomor HP',
+              label: 'Email or Phone Number',
               hintText: 'name@example.com / 0812xxxxxxx',
               controller: _identifierController,
               keyboardType: TextInputType.emailAddress,

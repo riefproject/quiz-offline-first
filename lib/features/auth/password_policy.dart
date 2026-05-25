@@ -27,6 +27,6 @@ class PasswordPolicy {
   static String? validate(String value) {
     final result = evaluate(value);
     if (result.isValid) return null;
-    return 'Password minimal 8 karakter dan harus mengandung huruf kecil, huruf besar, dan angka.';
+    return 'Password must be at least 8 characters long and contain lowercase letters, uppercase letters, and numbers.';
   }
 }

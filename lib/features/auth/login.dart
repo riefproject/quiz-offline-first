@@ -41,7 +41,7 @@ class _LoginPageState extends State<LoginPage> {
     } on AuthException catch (e) {
       _showMessage(e.message);
     } catch (e) {
-      _showMessage('Login gagal: $e');
+      _showMessage('Login failed: $e');
     } finally {
       if (mounted) {
         setState(() {
@@ -109,7 +109,7 @@ class _LoginPageState extends State<LoginPage> {
               ),
               const SizedBox(height: 40),
               AppTextField(
-                label: 'Email atau Nomor HP',
+                label: 'Email or Phone Number',
                 hintText: 'name@example.com / 0812xxxxxxx',
                 controller: _identifierController,
                 keyboardType: TextInputType.emailAddress,

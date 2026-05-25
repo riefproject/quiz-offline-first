@@ -35,7 +35,7 @@ class _ReverseQrSubmissionPageState extends State<ReverseQrSubmissionPage> {
     }
 
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Payload QR berhasil disalin')),
+      const SnackBar(content: Text('QR Payload copied successfully')),
     );
   }
 
@@ -85,7 +85,7 @@ class _ReverseQrSubmissionPageState extends State<ReverseQrSubmissionPage> {
                     ),
                     const SizedBox(height: 18),
                     Text(
-                      'Tunjukkan QR ini ke pengajar jika sinkronisasi Bluetooth gagal.',
+                      'Show this QR to the instructor if Bluetooth synchronization fails.',
                       textAlign: TextAlign.center,
                       style: textTheme.bodyMedium,
                     ),

@@ -15,20 +15,20 @@ class _SoundSettingsScreenState extends State<SoundSettingsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Suara & Getaran'),
+        title: const Text('Sound & Vibration'),
         centerTitle: true,
       ),
       body: ListView(
         padding: const EdgeInsets.all(16.0),
         children: [
           const Text(
-            'Pengaturan Audio',
+            'Audio Settings',
             style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blue),
           ),
           const SizedBox(height: 8),
           SwitchListTile(
-            title: const Text('Efek Suara (SFX)'),
-            subtitle: const Text('Putar suara saat menjawab benar atau salah'),
+            title: const Text('Sound Effects (SFX)'),
+            subtitle: const Text('Play sound when answering correctly or incorrectly'),
             value: _isSoundEnabled,
             activeColor: Colors.blue,
             onChanged: (bool value) {
@@ -40,13 +40,13 @@ class _SoundSettingsScreenState extends State<SoundSettingsScreen> {
           const Divider(),
           const SizedBox(height: 8),
           const Text(
-            'Pengaturan Haptic',
+            'Haptic Settings',
             style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blue),
           ),
           const SizedBox(height: 8),
           SwitchListTile(
-            title: const Text('Getaran'),
-            subtitle: const Text('Getar saat waktu hampir habis'),
+            title: const Text('Vibration'),
+            subtitle: const Text('Vibrate when time is running out'),
             value: _isVibrationEnabled,
             activeColor: Colors.blue,
             onChanged: (bool value) {

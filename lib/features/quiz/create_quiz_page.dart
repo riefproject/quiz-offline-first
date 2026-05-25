@@ -82,7 +82,7 @@ class _CreateQuizPageState extends State<CreateQuizPage> {
         );
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Kuis berhasil dibuat')),
+            const SnackBar(content: Text('Quiz created successfully')),
           );
         }
       } else {
@@ -94,7 +94,7 @@ class _CreateQuizPageState extends State<CreateQuizPage> {
         );
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Kuis berhasil diperbarui')),
+            const SnackBar(content: Text('Quiz updated successfully')),
           );
         }
       }
@@ -104,7 +104,7 @@ class _CreateQuizPageState extends State<CreateQuizPage> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Gagal menyimpan kuis: $e')),
+          SnackBar(content: Text('Failed to save quiz: $e')),
         );
       }
     } finally {

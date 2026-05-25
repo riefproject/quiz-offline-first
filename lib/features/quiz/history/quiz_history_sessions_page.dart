@@ -235,7 +235,7 @@ class _EmptyHistoryState extends StatelessWidget {
           ),
           const SizedBox(height: 10),
           Text(
-            'Riwayat untuk "${quiz.judul}" akan muncul setelah sesi host selesai dan tersimpan di perangkat ini.',
+            'History for "${quiz.judul}" will appear after a host session is completed and saved on this device.',
             style: textTheme.bodyMedium?.copyWith(
               color: colors.mutedText,
               height: 1.45,

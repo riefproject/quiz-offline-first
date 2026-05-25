@@ -117,7 +117,7 @@ class _QuestionFormCardState extends State<QuestionFormCard> {
           });
           ScaffoldMessenger.of(
             context,
-          ).showSnackBar(SnackBar(content: Text('Gagal menyimpan gambar: $e')));
+          ).showSnackBar(SnackBar(content: Text('Failed to save image: $e')));
         }
       }
     }

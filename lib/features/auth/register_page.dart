@@ -49,13 +49,25 @@ class _RegisterPageState extends State<RegisterPage> {
   }
 
   Future<void> _handleRegister() async {
+    final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
+    if (_emailController.text.isNotEmpty && !emailRegex.hasMatch(_emailController.text)) {
+      _showMessage('Please enter a valid email address.');
+      return;
+    }
+    
+    final phoneRegex = RegExp(r'^(\+62|62|08)[0-9]{8,13}$');
+    if (_phoneController.text.isNotEmpty && !phoneRegex.hasMatch(_phoneController.text)) {
+      _showMessage('Please enter a valid Indonesian phone number (+62, 62, or 08).');
+      return;
+    }
+
     final passwordError = PasswordPolicy.validate(_passwordController.text);
     if (passwordError != null) {
       _showMessage(passwordError);
       return;
     }
     if (_passwordController.text != _confirmPasswordController.text) {
-      _showMessage('Tulis ulang password harus sama.');
+      _showMessage('Passwords do not match.');
       return;
     }
 
@@ -72,13 +84,13 @@ class _RegisterPageState extends State<RegisterPage> {
       );
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Akun berhasil dibuat.')),
+        const SnackBar(content: Text('Account successfully created.')),
       );
       Navigator.of(context).pushReplacementNamed('/app');
     } on AuthException catch (e) {
       _showMessage(e.message);
     } catch (e) {
-      _showMessage('Registrasi gagal: $e');
+      _showMessage('Registration failed: $e');
     } finally {
       if (mounted) {
         setState(() {
@@ -121,12 +133,12 @@ class _RegisterPageState extends State<RegisterPage> {
             ),
             const SizedBox(height: 8),
             Text(
-              'Isi minimal email atau nomor HP. Keduanya dipakai sebagai data pemulihan akun.',
+              'Enter at least an email or phone number. Both can be used for account recovery.',
               style: textTheme.bodyLarge,
             ),
             const SizedBox(height: 28),
             AppTextField(
-              label: 'Nama Lengkap',
+              label: 'Full Name',
               hintText: 'Ariana Rizki',
               controller: _nameController,
             ),
@@ -139,7 +151,7 @@ class _RegisterPageState extends State<RegisterPage> {
             ),
             const SizedBox(height: 18),
             AppTextField(
-              label: 'Nomor HP',
+              label: 'Phone Number',
               hintText: '081234567890',
               controller: _phoneController,
               keyboardType: TextInputType.phone,
@@ -147,22 +159,22 @@ class _RegisterPageState extends State<RegisterPage> {
             const SizedBox(height: 18),
             AppPasswordField(
               controller: _passwordController,
-              hintText: 'Minimal 8 karakter',
+              hintText: 'Minimum 8 characters',
             ),
             const SizedBox(height: 14),
             PasswordRequirementsPanel(password: _passwordController.text),
             const SizedBox(height: 18),
             AppPasswordField(
-              label: 'Tulis Ulang Password',
-              hintText: 'Masukkan password yang sama',
+              label: 'Retype Password',
+              hintText: 'Enter the same password',
               controller: _confirmPasswordController,
             ),
             const SizedBox(height: 10),
             if (_confirmPasswordController.text.isNotEmpty)
               Text(
                 _confirmPasswordController.text == _passwordController.text
-                    ? 'Password cocok.'
-                    : 'Password belum sama.',
+                    ? 'Passwords match.'
+                    : 'Passwords do not match.',
                 style: textTheme.bodyMedium?.copyWith(
                   color: _confirmPasswordController.text == _passwordController.text
                       ? colors.primary

@@ -35,7 +35,7 @@ class _ForgotPasswordOtpPageState extends State<ForgotPasswordOtpPage> {
 
     try {
       if (_otpController.text.trim().length != 8) {
-        throw AuthException('Kode OTP harus 8 digit.');
+        throw AuthException('OTP code must be 8 digits.');
       }
       await AuthService.verifyPasswordResetOtp(
         identifier: widget.identifier,
@@ -53,7 +53,7 @@ class _ForgotPasswordOtpPageState extends State<ForgotPasswordOtpPage> {
     } on AuthException catch (e) {
       _showMessage(e.message);
     } catch (e) {
-      _showMessage('Verifikasi OTP gagal: $e');
+      _showMessage('OTP verification failed: $e');
     } finally {
       if (mounted) {
         setState(() {
@@ -95,7 +95,7 @@ class _ForgotPasswordOtpPageState extends State<ForgotPasswordOtpPage> {
             ),
             const SizedBox(height: 8),
             Text(
-              'Langkah 2 dari 3. Masukkan 8 digit kode OTP untuk ${widget.identifier}.',
+              'Step 2 of 3. Enter the 8-digit OTP code sent to ${widget.identifier}.',
               style: textTheme.bodyLarge,
             ),
             const SizedBox(height: 28),
@@ -107,7 +107,7 @@ class _ForgotPasswordOtpPageState extends State<ForgotPasswordOtpPage> {
             ),
             const SizedBox(height: 12),
             Text(
-              'OTP saat ini masih placeholder untuk demo alur UI.',
+              'The current OTP is a placeholder for demo purposes.',
               style: textTheme.bodyMedium,
             ),
             const SizedBox(height: 24),
