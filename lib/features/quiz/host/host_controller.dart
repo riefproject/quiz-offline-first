@@ -17,6 +17,9 @@ import 'package:AlpenQuiz/services/quiz_history_service.dart';
 import 'package:AlpenQuiz/services/quiz/client_listener.dart';
 import 'package:AlpenQuiz/services/quiz/master_publisher.dart';
 import 'package:AlpenQuiz/services/reverse_qr_sync_service.dart';
+import 'package:AlpenQuiz/services/lan/lan_service.dart';
+import 'package:AlpenQuiz/services/lan/lan_client_listener.dart';
+import 'package:AlpenQuiz/services/lan/lan_master_publisher.dart';
 
 enum HostPhase {
   lobby,
@@ -45,6 +48,10 @@ class HostController extends ChangeNotifier {
   late BleServiceBase _bleService;
   MasterPublisher? _publisher;
   ClientListener? _clientListener;
+
+  LanService? _lanService;
+  LanMasterPublisher? _lanPublisher;
+  LanClientListener? _lanClientListener;
 
   int _gameId = 0;
   int get gameId => _gameId;
@@ -148,6 +155,34 @@ class HostController extends ChangeNotifier {
     _sessionStartedAt = DateTime.now();
     _sessionFinishedAt = null;
 
+    if (Config.useLan) {
+      _lanService = await LanService.host(
+        gameId: _gameId,
+        questionCount: questions.length,
+      );
+      _lanPublisher = LanMasterPublisher(lanService: _lanService!);
+      _lanClientListener = LanClientListener(
+        lanService: _lanService!,
+        gameId: _gameId,
+      );
+      _clientSub = _lanClientListener!.stream.listen(_onClientPayload);
+
+      _currentPayload = MasterPayload(
+        questionCount: questions.length,
+        masterTimeMs: DateTime.now().millisecondsSinceEpoch,
+        nextQuestion: [],
+        gameID: _gameId,
+      );
+      _lanPublisher!.publish(_currentPayload);
+
+      _isAdvertising = true;
+      notifyListeners();
+      log.i(
+        'HostController: LAN game started gameId=$_gameId questionCount=${questions.length}',
+      );
+      return;
+    }
+
     await _bleService.init();
     await _bleService.requestAllPermissions();
 
@@ -174,10 +209,18 @@ class HostController extends ChangeNotifier {
       gameFinished: payload.gameFinished,
       gameID: _gameId,
     );
-    _publisher!.publish(_currentPayload);
+    _publishCurrentPayload();
 
     _isAdvertising = true;
     notifyListeners();
+  }
+
+  void _publishCurrentPayload() {
+    if (Config.useLan) {
+      _lanPublisher!.publish(_currentPayload);
+    } else {
+      _publishCurrentPayload();
+    }
   }
 
   void _onClientPayload(ClientPayload payload) {
@@ -234,7 +277,7 @@ class HostController extends ChangeNotifier {
     _currentPayload.duration.add(questionDuration);
     _currentPayload.choices.add(currentQuestion.options.length);
     _currentPayload.skippedAt.add(-1);
-    _publisher!.publish(_currentPayload);
+    _publishCurrentPayload();
 
     _countdownTimer = Timer.periodic(const Duration(milliseconds: 100), (_) {
       _countdownRemainingMs -= 100;
@@ -278,7 +321,7 @@ class HostController extends ChangeNotifier {
     }
     _calculateScores();
     _phase = HostPhase.answerReveal;
-    _publisher!.publish(_currentPayload);
+    _publishCurrentPayload();
     notifyListeners();
   }
 
@@ -331,7 +374,7 @@ class HostController extends ChangeNotifier {
     _currentPayload.duration.add(questionDuration);
     _currentPayload.choices.add(currentQuestion.options.length);
     _currentPayload.skippedAt.add(-1);
-    _publisher!.publish(_currentPayload);
+    _publishCurrentPayload();
 
     _countdownTimer = Timer.periodic(const Duration(milliseconds: 100), (_) {
       _countdownRemainingMs -= 100;
@@ -354,7 +397,7 @@ class HostController extends ChangeNotifier {
     _sessionFinishedAt = DateTime.now();
 
     _currentPayload.gameFinished = true;
-    _publisher!.publish(_currentPayload);
+    _publishCurrentPayload();
     _isAdvertising = false;
 
     final startedAt = _sessionStartedAt;
@@ -424,6 +467,9 @@ class HostController extends ChangeNotifier {
     _clientSub?.cancel();
     _clientListener?.dispose();
     _publisher?.dispose();
+    _lanClientListener?.dispose();
+    _lanPublisher?.dispose();
+    _lanService?.dispose();
     _bleService.dispose();
     super.dispose();
   }

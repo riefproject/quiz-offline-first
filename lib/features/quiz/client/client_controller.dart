@@ -7,10 +7,15 @@ import 'package:AlpenQuiz/models/master_payload.dart';
 import 'package:AlpenQuiz/models/reverse_qr_submission.dart';
 import 'package:AlpenQuiz/services/ble_service.dart';
 import 'package:AlpenQuiz/services/ble_service_base.dart';
+import 'package:AlpenQuiz/services/logger.dart';
 import 'package:AlpenQuiz/services/mock_ble_service.dart';
 import 'package:AlpenQuiz/services/quiz/client_publisher.dart';
 import 'package:AlpenQuiz/services/quiz/master_list_listener.dart';
 import 'package:AlpenQuiz/services/quiz/master_listener.dart';
+import 'package:AlpenQuiz/services/lan/lan_service.dart';
+import 'package:AlpenQuiz/services/lan/lan_master_list_listener.dart';
+import 'package:AlpenQuiz/services/lan/lan_master_listener.dart';
+import 'package:AlpenQuiz/services/lan/lan_client_publisher.dart';
 
 enum ClientPhase { scanning, lobby, countdown, question, finished }
 
@@ -29,6 +34,12 @@ class ClientController extends ChangeNotifier {
   MasterListListener? _masterListListener;
   MasterListener? _masterListener;
   ClientPublisher? _clientPublisher;
+
+  LanService? _lanService;
+  LanService? _lanDiscoveryService;
+  LanMasterListListener? _lanMasterListListener;
+  LanMasterListener? _lanMasterListener;
+  LanClientPublisher? _lanClientPublisher;
 
   List<MasterPayload> _discoveredGames = [];
   List<MasterPayload> get discoveredGames => _discoveredGames;
@@ -82,14 +93,27 @@ class ClientController extends ChangeNotifier {
     notifyListeners();
 
     try {
-      await _bleService.init();
-      await _bleService.requestScanPermissions();
-      await _bleService.startScan(timeout: const Duration(seconds: 30));
+      if (Config.useLan) {
+        _lanDiscoveryService = await LanService.discovery();
+        _lanMasterListListener = LanMasterListListener(
+          lanService: _lanDiscoveryService!,
+        );
+        _masterListSub =
+            _lanMasterListListener!.stream.listen(_onDiscovery);
+        log.i(
+          'ClientController: LAN discovery started playerName=$_playerName',
+        );
+      } else {
+        await _bleService.init();
+        await _bleService.requestScanPermissions();
+        await _bleService.startScan(timeout: const Duration(seconds: 30));
 
-      _masterListListener = MasterListListener(bleService: _bleService);
-      _masterListSub = _masterListListener!.stream.listen(_onDiscovery);
+        _masterListListener = MasterListListener(bleService: _bleService);
+        _masterListSub = _masterListListener!.stream.listen(_onDiscovery);
+      }
     } catch (e) {
       _scanError = 'Scan failed: $e';
+      log.w('ClientController: scan failed — $e');
     } finally {
       _isScanning = false;
       notifyListeners();
@@ -108,12 +132,56 @@ class ClientController extends ChangeNotifier {
     _joinedGameId = game.gameID;
     _clientId = DateTime.now().millisecondsSinceEpoch % 100000;
 
-    // await _bleService.stopScan();
+    ({String hostIp, int wsPort})? connInfo;
+    if (Config.useLan) {
+      connInfo = _lanMasterListListener?.connectionInfoFor(game.gameID);
+    }
 
     _masterListSub?.cancel();
     _masterListSub = null;
     _masterListListener?.dispose();
     _masterListListener = null;
+    _lanMasterListListener?.dispose();
+    _lanMasterListListener = null;
+
+    if (Config.useLan) {
+      if (connInfo == null) {
+        _scanError = 'Host connection info not found for game #${game.gameID}';
+        notifyListeners();
+        return;
+      }
+
+      _lanService = await LanService.client(
+        hostIp: connInfo.hostIp,
+        wsPort: connInfo.wsPort,
+        gameId: game.gameID,
+        playerName: _playerName,
+        clientId: _clientId,
+      );
+
+      _lanMasterListener = LanMasterListener(
+        lanService: _lanService!,
+        gameId: game.gameID,
+      );
+      _masterSub = _lanMasterListener!.stream.listen(_onQuestion);
+
+      _lanClientPublisher = LanClientPublisher(lanService: _lanService!);
+
+      _phase = ClientPhase.lobby;
+      _lanClientPublisher!.publish(
+        ClientPayload(
+          name: _playerName,
+          answers: [],
+          gameID: _joinedGameId!,
+          clientId: _clientId,
+        ),
+      );
+      log.i(
+        'ClientController: joined game via LAN gameID=${game.gameID} host=${connInfo.hostIp}:${connInfo.wsPort}',
+      );
+      notifyListeners();
+      return;
+    }
 
     _masterListener = MasterListener(
       bleService: _bleService,
@@ -252,7 +320,12 @@ class ClientController extends ChangeNotifier {
       gameID: _joinedGameId!,
       clientId: _clientId,
     );
-    _clientPublisher?.publish(payload);
+
+    if (Config.useLan) {
+      _lanClientPublisher?.publish(payload);
+    } else {
+      _clientPublisher?.publish(payload);
+    }
   }
 
   ReverseQrSubmission buildReverseQrSubmission({
@@ -281,6 +354,11 @@ class ClientController extends ChangeNotifier {
     _masterListListener?.dispose();
     _masterListener?.dispose();
     _clientPublisher?.dispose();
+    _lanMasterListListener?.dispose();
+    _lanMasterListener?.dispose();
+    _lanClientPublisher = null;
+    _lanService?.dispose();
+    _lanDiscoveryService?.dispose();
     _bleService.dispose();
     super.dispose();
   }
