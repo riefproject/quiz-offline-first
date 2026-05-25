@@ -57,7 +57,7 @@ class UserView extends StatelessWidget {
                 ),
                 const SizedBox(height: 12),
                 Text(
-                  'Guest mode hanya dipakai untuk bergabung ke kuis. Buat akun jika Anda juga perlu membuat kuis atau mengelola bank soal.',
+                  'Guest mode is only for joining quizzes. Create an account if you also need to create quizzes or manage the question bank.',
                   style: textTheme.bodyMedium?.copyWith(color: Colors.white70),
                 ),
               ],

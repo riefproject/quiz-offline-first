@@ -114,7 +114,7 @@ class HostController extends ChangeNotifier {
 
   HostController({required this.quizId}) {
     if (!_canCurrentUserHostQuiz(quizId)) {
-      throw StateError('Anda tidak memiliki izin untuk memulai kuis ini.');
+      throw StateError('You do not have permission to start this quiz.');
     }
     questions = Question.fromQuizId(quizId);
     log.i(
@@ -133,7 +133,7 @@ class HostController extends ChangeNotifier {
 
   Future<void> startGame() async {
     if (!_canCurrentUserHostQuiz(quizId)) {
-      throw StateError('Anda tidak memiliki izin untuk memulai kuis ini.');
+      throw StateError('You do not have permission to start this quiz.');
     }
 
     _gameId = Random().nextInt(999999) + 100000;

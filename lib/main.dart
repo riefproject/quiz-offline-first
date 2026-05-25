@@ -75,7 +75,7 @@ class QuizApp extends StatelessWidget {
                 : const Scaffold(
                     body: Center(
                       child: Text(
-                        'Anda hanya bisa memulai kuis milik Anda sendiri.',
+                        'You can only start your own quizzes.',
                       ),
                     ),
                   ),

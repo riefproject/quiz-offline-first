@@ -28,13 +28,13 @@ class SyncStatusCard extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const Text(
-                        'Status Sinkronisasi',
+                        'Sync Status',
                         style: TextStyle(fontWeight: FontWeight.bold),
                       ),
                       Text(
                         lastSync != null 
-                            ? 'Terakhir: ${lastSync!.hour}:${lastSync!.minute.toString().padLeft(2, '0')}'
-                            : 'Belum pernah sinkronisasi',
+                            ? 'Last sync: ${lastSync!.hour}:${lastSync!.minute.toString().padLeft(2, '0')}'
+                            : 'Never synced',
                         style: const TextStyle(color: Colors.grey, fontSize: 13),
                       ),
                     ],

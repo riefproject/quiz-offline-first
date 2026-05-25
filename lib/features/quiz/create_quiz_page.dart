@@ -64,7 +64,7 @@ class _CreateQuizPageState extends State<CreateQuizPage> {
 
     if (_questions.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Tambahkan setidaknya satu soal')),
+        const SnackBar(content: Text('Please add at least one question')),
       );
       return;
     }
@@ -183,7 +183,7 @@ class _CreateQuizPageState extends State<CreateQuizPage> {
                     const SizedBox(height: 12),
                     TextFormField(
                       controller: _judulController,
-                      validator: (val) => val == null || val.isEmpty ? 'Judul kuis tidak boleh kosong' : null,
+                      validator: (val) => val == null || val.isEmpty ? 'Quiz title cannot be empty' : null,
                       decoration: InputDecoration(
                         hintText: 'e.g. Science Chapter 3',
                         hintStyle: TextStyle(color: colors.mutedText.withValues(alpha: 0.5)),
@@ -201,7 +201,7 @@ class _CreateQuizPageState extends State<CreateQuizPage> {
                     const SizedBox(height: 16),
                     TextFormField(
                       controller: _deskripsiController,
-                      validator: (val) => val == null || val.isEmpty ? 'Deskripsi kuis tidak boleh kosong' : null,
+                      validator: (val) => val == null || val.isEmpty ? 'Quiz description cannot be empty' : null,
                       maxLines: 2,
                       decoration: InputDecoration(
                         hintText: 'Enter quiz description...',

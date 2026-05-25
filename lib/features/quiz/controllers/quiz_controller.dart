@@ -9,7 +9,7 @@ class QuizController extends ChangeNotifier {
   AuthSession get _currentAccount {
     final session = AuthService.currentSession;
     if (session == null || session.isGuest) {
-      throw StateError('Anda harus login untuk mengelola kuis.');
+      throw StateError('You must be logged in to manage quizzes.');
     }
     return session;
   }
@@ -77,16 +77,16 @@ class QuizController extends ChangeNotifier {
     String deskripsi,
     List<Soal> questions,
   ) async {
-    final owner = _currentAccount;
+    final session = _currentAccount;
     final existingQuiz = HiveService.quizBox.get(quizId);
-    if (existingQuiz == null || !isOwnedByCurrentUser(existingQuiz)) {
-      throw StateError('Anda tidak memiliki izin untuk mengubah kuis ini.');
+    if (existingQuiz == null || (existingQuiz.pembuat != session.userId && existingQuiz.pembuat != session.displayName)) {
+      throw StateError('You do not have permission to modify this quiz.');
     }
 
     final updatedQuiz = existingQuiz.copyWith(
       judul: judul,
       deskripsi: deskripsi,
-      pembuat: owner.userId,
+      pembuat: session.userId,
       isSynced: false,
     );
     await HiveService.quizBox.put(quizId, updatedQuiz);
@@ -109,9 +109,10 @@ class QuizController extends ChangeNotifier {
   }
 
   Future<void> deleteQuiz(String quizId) async {
+    final session = _currentAccount;
     final quiz = HiveService.quizBox.get(quizId);
-    if (quiz == null || !isOwnedByCurrentUser(quiz)) {
-      throw StateError('Anda tidak memiliki izin untuk menghapus kuis ini.');
+    if (quiz == null || (quiz.pembuat != session.userId && quiz.pembuat != session.displayName)) {
+      throw StateError('You do not have permission to delete this quiz.');
     }
 
     final questions = getQuestionsForQuiz(quizId);

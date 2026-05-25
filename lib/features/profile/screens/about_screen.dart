@@ -53,7 +53,7 @@ class AboutScreen extends StatelessWidget {
             ),
             const SizedBox(height: 32),
             Text(
-              'A smart quiz application featuring seamless offline-first capabilities. Play anywhere, anytime, with intelligent synchronization when you reconnect to the internet.',
+              'AlpenQuiz is a state-of-the-art interactive learning platform designed for high-performance offline environments. Experience seamless, real-time multiplayer quizzes anywhere, anytime—with robust data synchronization powering your learning journey behind the scenes.',
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                     height: 1.6,
@@ -64,9 +64,10 @@ class AboutScreen extends StatelessWidget {
             const Divider(),
             const SizedBox(height: 24),
             Text(
-              'Development Team',
+              'Engineering Team',
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: -0.5,
                   ),
             ),
             const SizedBox(height: 24),
@@ -95,10 +96,11 @@ class AboutScreen extends StatelessWidget {
             ),
             const SizedBox(height: 48),
             Text(
-              'Built with passion and commitment to quality.',
+              'Engineered with precision for the modern learner.',
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                     color: Colors.grey.shade500,
-                    fontStyle: FontStyle.italic,
+                    fontWeight: FontWeight.w500,
+                    letterSpacing: 0.5,
                   ),
             ),
           ],

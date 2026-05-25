@@ -51,13 +51,13 @@ class _RegisterPageState extends State<RegisterPage> {
   Future<void> _handleRegister() async {
     final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
     if (_emailController.text.isNotEmpty && !emailRegex.hasMatch(_emailController.text)) {
-      _showMessage('Please enter a valid email address.');
+      _showMessage('Please enter a valid email address (e.g. name@example.com).');
       return;
     }
     
     final phoneRegex = RegExp(r'^(\+62|62|08)[0-9]{8,13}$');
     if (_phoneController.text.isNotEmpty && !phoneRegex.hasMatch(_phoneController.text)) {
-      _showMessage('Please enter a valid Indonesian phone number (+62, 62, or 08).');
+      _showMessage('Phone number must be a valid Indonesian format (+62, 62, or 08).');
       return;
     }
 
@@ -133,7 +133,7 @@ class _RegisterPageState extends State<RegisterPage> {
             ),
             const SizedBox(height: 8),
             Text(
-              'Enter at least an email or phone number. Both can be used for account recovery.',
+              'Enter at least an email or phone number. Both can be used for account recovery. An active internet connection is required to register.',
               style: textTheme.bodyLarge,
             ),
             const SizedBox(height: 28),

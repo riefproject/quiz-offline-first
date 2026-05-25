@@ -17,21 +17,21 @@ class _OnboardingPageState extends State<OnboardingPage> {
 
   final List<Map<String, String>> _onboardingData = [
     {
-      'title': 'Kuis Seru di Mana Saja!',
+      'title': 'Fun Quizzes Anywhere!',
       'description':
-          'Bermain kuis interaktif bersama teman-temanmu secara langsung. Jawab pertanyaan dan jadilah pemenang!',
+          'Play interactive quizzes with your friends in real-time. Answer questions and become the winner!',
       'image': 'assets/images/onboarding/1.png',
     },
     {
-      'title': 'Tanpa Internet? Tidak Masalah.',
+      'title': 'No Internet? No Problem.',
       'description':
           'Keep playing with a local connection. When the signal returns, data will automatically synchronize!',
       'image': 'assets/images/onboarding/2.png',
     },
     {
-      'title': 'Main Cepat atau Buat Sendiri',
+      'title': 'Play Fast or Create Your Own',
       'description':
-          'Gabung kuis secepat kilat sebagai tamu, atau login untuk menjadi Host dan membuat kuis kreatifmu sendiri.',
+          'Join a quiz at lightning speed as a guest, or log in to become a Host and create your own creative quizzes.',
       'image': 'assets/images/onboarding/3.png',
     },
   ];
@@ -73,7 +73,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
               alignment: Alignment.topRight,
               child: TextButton(
                 onPressed: _finishOnboarding,
-                child: Text('Lewati', style: TextStyle(color: colors.mutedText)),
+                child: Text('Skip', style: TextStyle(color: colors.mutedText)),
               ),
             ),
             Expanded(
@@ -152,8 +152,8 @@ class _OnboardingPageState extends State<OnboardingPage> {
                   ),
                   AppButton.primary(
                     label: _currentIndex == _onboardingData.length - 1
-                        ? 'Mulai'
-                        : 'Selanjutnya',
+                        ? 'Start'
+                        : 'Next',
                     onPressed: _nextPage,
                   ),
                 ],

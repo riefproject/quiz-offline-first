@@ -40,7 +40,7 @@ class _GuestJoinPageState extends State<GuestJoinPage> {
     } on AuthException catch (e) {
       _showMessage(e.message);
     } catch (e) {
-      _showMessage('Guest join gagal: $e');
+      _showMessage('Guest join failed: $e');
     } finally {
       if (mounted) {
         setState(() {

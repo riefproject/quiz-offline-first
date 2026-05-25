@@ -25,6 +25,16 @@ class TutorialScreen extends StatelessWidget {
             'Will I lose my data if I change devices?',
             'As long as you are registered and have successfully synchronized your progress to the Cloud using an internet connection, your data will be safely stored and can be retrieved on any device.',
           ),
+          _buildFaqItem(
+            context,
+            'How do I host a multiplayer game offline?',
+            'You can host a game on your local network (LAN or Wi-Fi Hotspot) by selecting "Host a Game" and choosing a quiz. Other players on the same network can join your session in real time without any internet connection.',
+          ),
+          _buildFaqItem(
+            context,
+            'How do I join a game as a client?',
+            'Ensure you are connected to the same local network as the Host. Go to the "Play Live Quiz" section, select "Join a Game", and your device will automatically discover and connect to the active session.',
+          ),
           const SizedBox(height: 16),
           _buildSectionHeader(context, 'Synchronization'),
           _buildFaqItem(
