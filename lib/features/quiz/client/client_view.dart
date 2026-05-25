@@ -219,13 +219,13 @@ class _ClientViewState extends State<ClientView> {
               child: Column(
                 children: [
                   Icon(
-                    Icons.bluetooth_searching_rounded,
+                    Icons.wifi_find_rounded,
                     size: 48,
                     color: colors.mutedText.withValues(alpha: 0.4),
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    'No games found yet.\nTap "Start Scanning" to discover nearby hosts.',
+                    'No games found yet.\nMake sure you\'re connected to\nthe same Wi-Fi or hotspot\nas the quiz host.',
                     textAlign: TextAlign.center,
                     style: textTheme.bodyMedium?.copyWith(
                       color: colors.mutedText,

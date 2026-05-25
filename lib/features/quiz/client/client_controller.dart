@@ -85,10 +85,8 @@ class ClientController extends ChangeNotifier {
       log.i('ClientController: discovery started playerName=$_playerName');
     } catch (e) {
       _scanError = 'Scan failed: $e';
-      log.w('ClientController: scan failed — $e');
-    } finally {
       _isScanning = false;
-      notifyListeners();
+      log.w('ClientController: scan failed — $e');
     }
   }
 

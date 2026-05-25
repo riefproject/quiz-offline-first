@@ -5,6 +5,7 @@ import 'dart:typed_data';
 
 import 'package:AlpenQuiz/config.dart';
 import 'package:AlpenQuiz/services/logger.dart';
+import 'package:network_info_plus/network_info_plus.dart';
 
 const _discoveryPort = 49152;
 const _discoveryPrefix = 'KAHOOF_DISCOVER';
@@ -157,11 +158,18 @@ class LanService {
         type: InternetAddressType.IPv4,
         includeLoopback: false,
       );
+      final info = NetworkInfo();
+      final broadcast = await info.getWifiBroadcast();
+      if (broadcast != null) {
+        addresses.add(InternetAddress(broadcast));
+      }
 
       log.d('LanService: scanning ${interfaces.length} network interface(s)');
 
       for (final interface in interfaces) {
-        log.d('LanService: iface name=${interface.name} index=${interface.index} addrs=${interface.addresses.length}');
+        log.d(
+          'LanService: iface name=${interface.name} index=${interface.index} addrs=${interface.addresses.length}',
+        );
         for (final address in interface.addresses) {
           final ip = address.address;
           log.d('LanService:   addr $ip');
@@ -190,7 +198,9 @@ class LanService {
       addresses.add(InternetAddress('255.255.255.255'));
     }
 
-    log.i('LanService: broadcast addresses: ${addresses.map((a) => a.address).toList()}');
+    log.i(
+      'LanService: broadcast addresses: ${addresses.map((a) => a.address).toList()}',
+    );
     return addresses;
   }
 
@@ -227,7 +237,9 @@ class LanService {
 
       for (final addr in addresses) {
         service._udpSender!.send(data, addr, _discoveryPort);
-        log.d('LanService: UDP discovery sent ${data.length}bytes to ${addr.address}:$_discoveryPort');
+        log.d(
+          'LanService: UDP discovery sent ${data.length}bytes to ${addr.address}:$_discoveryPort',
+        );
       }
     } catch (e) {
       log.w('LanService: UDP broadcast failed — $e');

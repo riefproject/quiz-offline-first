@@ -210,7 +210,7 @@ class _ClientGuestViewState extends State<ClientGuestView> {
               ? !isScanning
                     ? Center(
                         child: Text(
-                          'No games found yet.\nTap "Start Scanning" to discover nearby hosts.',
+                          'No games found yet.\nMake sure you\'re connected to\nthe same Wi-Fi or hotspot\nas the quiz host.',
                           textAlign: TextAlign.center,
                           style: textTheme.bodyMedium?.copyWith(
                             color: colors.mutedText,
