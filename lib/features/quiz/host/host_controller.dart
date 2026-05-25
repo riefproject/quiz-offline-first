@@ -72,11 +72,29 @@ class HostController extends ChangeNotifier {
   Map<int, int> get scores => _scores;
 
   List<({String name, int clientId, int score, int rank})> get leaderboard {
-    final entries = _scores.entries.where((e) => e.value > 0).map((e) {
+    var entries = _scores.entries.map((e) {
       final name = _participants[e.key] ?? 'Unknown';
       return (name: name, clientId: e.key, score: e.value, rank: 0);
     }).toList();
-    entries.sort((a, b) => b.score.compareTo(a.score));
+
+    for (final entry in _participants.entries) {
+      if (!_scores.containsKey(entry.key)) {
+        entries.add((
+          name: entry.value,
+          clientId: entry.key,
+          score: 0,
+          rank: 0,
+        ));
+      }
+    }
+
+    final hasAnyScore = entries.any((e) => e.score > 0);
+    if (hasAnyScore) {
+      entries.sort((a, b) => b.score.compareTo(a.score));
+    } else {
+      entries.sort((a, b) => a.name.compareTo(b.name));
+    }
+
     for (var i = 0; i < entries.length; i++) {
       entries[i] = (
         name: entries[i].name,
@@ -181,14 +199,19 @@ class HostController extends ChangeNotifier {
     _latestPayloads[payload.clientId] = payload;
 
     _answers = _latestPayloads.values.expand((p) {
-      return p.answers.map(
-        (a) => ParticipantAnswer(
+      if (_currentQuestionIndex < 0 ||
+          _currentQuestionIndex >= p.answers.length) {
+        return <ParticipantAnswer>[];
+      }
+      final a = p.answers[_currentQuestionIndex];
+      return [
+        ParticipantAnswer(
           name: p.name,
           clientId: p.clientId,
           answer: a.answer,
           offsetMs: a.answerMsOffset,
         ),
-      );
+      ];
     }).toList();
 
     notifyListeners();

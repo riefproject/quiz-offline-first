@@ -1669,12 +1669,8 @@ class _HostViewState extends State<HostView> {
                 ),
                 const SizedBox(height: 12),
                 AppButton.primary(
-                  label:
-                      _controller.currentQuestionIndex <
-                          _controller.questions.length - 1
-                      ? 'Next Question'
-                      : 'Finish Game',
-                  onPressed: () => _controller.nextQuestion(),
+                  label: 'End Question Early',
+                  onPressed: () => _controller.endQuestion(),
                 ),
                 const SizedBox(height: 12),
               ],
