@@ -126,8 +126,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
           const SizedBox(height: 24),
 
-            // Statistik Singkat
-            ProfileMenuItem(
+          // Statistik Singkat
+          ProfileMenuItem(
               icon: Icons.delete_outline,
               title: 'Clear Offline Data',
               onTap: () async {

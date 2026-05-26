@@ -16,16 +16,13 @@ class AboutScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            Container(
-              padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                Icons.quiz_rounded,
-                size: 80,
-                color: Theme.of(context).colorScheme.primary,
+            ClipRRect(
+              borderRadius: BorderRadius.circular(24),
+              child: Image.asset(
+                'assets/icon/app_icon.png',
+                width: 100,
+                height: 100,
+                fit: BoxFit.cover,
               ),
             ),
             const SizedBox(height: 24),
@@ -39,13 +36,13 @@ class AboutScreen extends StatelessWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
               decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.secondaryContainer,
+                color: Colors.grey.shade200,
                 borderRadius: BorderRadius.circular(16),
               ),
-              child: Text(
-                'Version 1.0.0 (Offline-First)',
+              child: const Text(
+                'Version 0.1.0',
                 style: TextStyle(
-                  color: Theme.of(context).colorScheme.onSecondaryContainer,
+                  color: Colors.black87,
                   fontWeight: FontWeight.w600,
                   fontSize: 12,
                 ),
@@ -161,18 +158,18 @@ class AboutScreen extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
                 color: role == 'Lead Developer'
-                    ? Theme.of(context).colorScheme.tertiaryContainer
-                    : Colors.grey.shade100,
+                    ? Colors.blue.shade600
+                    : Colors.grey.shade200,
                 borderRadius: BorderRadius.circular(20),
               ),
               child: Text(
                 role,
                 style: TextStyle(
                   fontSize: 12,
-                  fontWeight: FontWeight.w600,
+                  fontWeight: FontWeight.bold,
                   color: role == 'Lead Developer'
-                      ? Theme.of(context).colorScheme.onTertiaryContainer
-                      : Colors.grey.shade700,
+                      ? Colors.white
+                      : Colors.black87,
                 ),
               ),
             ),
