@@ -14,8 +14,8 @@ Sistem AlpenQuiz mengklasifikasikan penggunanya ke dalam dua peran utama:
 
 Infrastruktur sistem AlpenQuiz ditopang oleh empat modul fungsional inti:
 
-### 1. Modul Otentikasi & Keamanan Kredensial
-Modul ini mengelola siklus otentikasi masuk dan registrasi akun. Sistem menerapkan protokol validasi format masukan secara ketat di sisi klien (_client-side real-time validation_) sebelum transmisi HTTP dilakukan, guna meminimalisasi beban lalu-lintas jaringan akibat galat pengguna. Seluruh kredensial kata sandi diamankan menggunakan fungsi _hash_ kriptografi standar industri.
+### 1. Modul Autentikasi & Keamanan Kredensial
+Modul ini mengelola siklus autentikasi masuk dan registrasi akun. Sistem menerapkan protokol validasi format masukan secara ketat di sisi klien (_client-side real-time validation_) sebelum transmisi HTTP dilakukan, guna meminimalisasi beban lalu-lintas jaringan akibat galat pengguna. Seluruh kredensial kata sandi diamankan menggunakan fungsi _hash_ kriptografi standar industri.
 
 ### 2. Modul Penyimpanan Data Luring (_Local Persistence_)
 Modul ini merupakan inti dari arsitektur _Offline-First_. Alih-alih melakukan pemanggilan API secara berulang untuk memuat pertanyaan kuis, sistem mengunduh seluruh profil dan paket soal ke dalam basis data NoSQL lokal yang terenkripsi di memori internal perangkat. Strategi ini mengeliminasi latensi jaringan pada setiap transisi antarhalaman kuis.
