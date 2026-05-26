@@ -17,10 +17,10 @@ class PasswordRequirementsPanel extends StatelessWidget {
     final textTheme = Theme.of(context).textTheme;
     final result = PasswordPolicy.evaluate(password);
     final rules = [
-      _RuleState('Minimal 8 karakter', result.minLength),
-      _RuleState('Ada huruf kecil', result.hasLowercase),
-      _RuleState('Ada huruf besar', result.hasUppercase),
-      _RuleState('Ada angka', result.hasDigit),
+      _RuleState('At least 8 characters', result.minLength),
+      _RuleState('Contains lowercase letter', result.hasLowercase),
+      _RuleState('Contains uppercase letter', result.hasUppercase),
+      _RuleState('Contains number', result.hasDigit),
     ];
 
     return Container(
@@ -35,13 +35,24 @@ class PasswordRequirementsPanel extends StatelessWidget {
         children: [
           Row(
             children: List.generate(rules.length, (index) {
-              final fulfilled = rules[index].isMet;
+              final fulfilledCount = rules.where((r) => r.isMet).length;
+              final isFilled = index < fulfilledCount;
+              
+              Color progressColor = colors.secondary;
+              if (fulfilledCount <= 1) {
+                progressColor = Colors.red;
+              } else if (fulfilledCount == 2) {
+                progressColor = Colors.orange;
+              } else if (fulfilledCount == rules.length) {
+                progressColor = Colors.green;
+              }
+              
               return Expanded(
                 child: Container(
                   height: 7,
                   margin: EdgeInsets.only(right: index == rules.length - 1 ? 0 : 8),
                   decoration: BoxDecoration(
-                    color: fulfilled ? colors.secondary : colors.surfaceHigh,
+                    color: isFilled ? progressColor : colors.surfaceHigh,
                     borderRadius: BorderRadius.circular(999),
                   ),
                 ),
@@ -71,7 +82,7 @@ class PasswordRequirementsPanel extends StatelessWidget {
             ),
           ),
           Text(
-            'Simbol boleh dipakai, tapi tidak wajib.',
+            'Symbols are allowed, but not required.',
             style: textTheme.labelSmall?.copyWith(
               color: colors.mutedText,
               letterSpacing: 0,

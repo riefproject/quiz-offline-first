@@ -21,49 +21,112 @@ class _RegisterPageState extends State<RegisterPage> {
   final _phoneController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
+  final _passwordFocusNode = FocusNode();
   bool _isSubmitting = false;
+
+  final List<Map<String, String>> _countryCodes = [
+    {'name': 'Indonesia', 'code': 'ID', 'dial_code': '+62', 'flag': '🇮🇩'},
+    {'name': 'Malaysia', 'code': 'MY', 'dial_code': '+60', 'flag': '🇲🇾'},
+    {'name': 'Singapore', 'code': 'SG', 'dial_code': '+65', 'flag': '🇸🇬'},
+    {'name': 'Philippines', 'code': 'PH', 'dial_code': '+63', 'flag': '🇵🇭'},
+    {'name': 'Thailand', 'code': 'TH', 'dial_code': '+66', 'flag': '🇹🇭'},
+    {'name': 'Vietnam', 'code': 'VN', 'dial_code': '+84', 'flag': '🇻🇳'},
+    {'name': 'United States', 'code': 'US', 'dial_code': '+1', 'flag': '🇺🇸'},
+    {'name': 'United Kingdom', 'code': 'UK', 'dial_code': '+44', 'flag': '🇬🇧'},
+    {'name': 'Australia', 'code': 'AU', 'dial_code': '+61', 'flag': '🇦🇺'},
+  ];
+  Map<String, String>? _selectedCountry;
+
+  String? _emailError;
+  bool _isEmailValid = false;
+
+  String? _phoneError;
+  bool _isPhoneValid = false;
+
+  String? _passwordError;
+  bool _isPasswordValid = false;
+
+  final _emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
+  final _phoneRegex = RegExp(r'^[0-9]{8,15}$');
 
   @override
   void initState() {
     super.initState();
-    _passwordController.addListener(_onPasswordChanged);
-    _confirmPasswordController.addListener(_onPasswordChanged);
+    _selectedCountry = _countryCodes.firstWhere((c) => c['code'] == 'ID');
+    
+    _passwordFocusNode.addListener(() {
+      if (mounted) setState(() {});
+    });
+
+    _confirmPasswordController.addListener(() {
+      if (mounted) setState(() {});
+    });
   }
 
   @override
   void dispose() {
-    _passwordController.removeListener(_onPasswordChanged);
-    _confirmPasswordController.removeListener(_onPasswordChanged);
     _nameController.dispose();
     _emailController.dispose();
     _phoneController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
+    _passwordFocusNode.dispose();
     super.dispose();
   }
 
-  void _onPasswordChanged() {
-    if (mounted) {
-      setState(() {});
+  void _validateEmail(String value) {
+    if (value.isEmpty) {
+      setState(() {
+        _emailError = null;
+        _isEmailValid = false;
+      });
+      return;
     }
+    setState(() {
+      if (!_emailRegex.hasMatch(value)) {
+        _emailError = 'Please enter a valid email address';
+        _isEmailValid = false;
+      } else {
+        _emailError = null;
+        _isEmailValid = true;
+      }
+    });
+  }
+
+  void _validatePhone(String value) {
+    if (value.isEmpty) {
+      setState(() {
+        _phoneError = null;
+        _isPhoneValid = false;
+      });
+      return;
+    }
+    setState(() {
+      if (!_phoneRegex.hasMatch(value)) {
+        _phoneError = 'Must be 8-15 digits';
+        _isPhoneValid = false;
+      } else {
+        _phoneError = null;
+        _isPhoneValid = true;
+      }
+    });
+  }
+
+  void _validatePassword(String value) {
+    final error = PasswordPolicy.validate(value);
+    setState(() {
+      _passwordError = value.isEmpty ? null : error;
+      _isPasswordValid = error == null && value.isNotEmpty;
+    });
   }
 
   Future<void> _handleRegister() async {
-    final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
-    if (_emailController.text.isNotEmpty && !emailRegex.hasMatch(_emailController.text)) {
-      _showMessage('Please enter a valid email address (e.g. name@example.com).');
-      return;
-    }
-    
-    final phoneRegex = RegExp(r'^(\+62|62|08)[0-9]{8,13}$');
-    if (_phoneController.text.isNotEmpty && !phoneRegex.hasMatch(_phoneController.text)) {
-      _showMessage('Phone number must be a valid Indonesian format (+62, 62, or 08).');
-      return;
-    }
+    // Final check before submit
+    _validateEmail(_emailController.text);
+    _validatePhone(_phoneController.text);
+    _validatePassword(_passwordController.text);
 
-    final passwordError = PasswordPolicy.validate(_passwordController.text);
-    if (passwordError != null) {
-      _showMessage(passwordError);
+    if (_emailError != null || _phoneError != null || _passwordError != null) {
       return;
     }
     if (_passwordController.text != _confirmPasswordController.text) {
@@ -76,10 +139,14 @@ class _RegisterPageState extends State<RegisterPage> {
     });
 
     try {
+      final phone = _selectedCountry != null 
+          ? '${_selectedCountry!['dial_code']}${_phoneController.text}'
+          : _phoneController.text;
+
       await AuthService.register(
         namaLengkap: _nameController.text,
         email: _emailController.text,
-        nomorHp: _phoneController.text,
+        nomorHp: phone,
         password: _passwordController.text,
       );
       if (!mounted) return;
@@ -111,6 +178,14 @@ class _RegisterPageState extends State<RegisterPage> {
     final colors = Theme.of(context).extension<ColorsConfig>()!;
     final textTheme = Theme.of(context).textTheme;
 
+    final isFormValid = _emailController.text.isNotEmpty &&
+        _isEmailValid &&
+        _phoneController.text.isNotEmpty &&
+        _isPhoneValid &&
+        _isPasswordValid &&
+        _passwordController.text == _confirmPasswordController.text &&
+        _nameController.text.isNotEmpty;
+
     return AppShell(
       showHeader: false,
       showBottomNavigation: false,
@@ -141,6 +216,7 @@ class _RegisterPageState extends State<RegisterPage> {
               label: 'Full Name',
               hintText: 'Ariana Rizki',
               controller: _nameController,
+              onChanged: (v) => setState((){}),
             ),
             const SizedBox(height: 18),
             AppTextField(
@@ -148,21 +224,76 @@ class _RegisterPageState extends State<RegisterPage> {
               hintText: 'name@example.com',
               controller: _emailController,
               keyboardType: TextInputType.emailAddress,
+              onChanged: _validateEmail,
+              errorText: _emailError,
+              isValid: _isEmailValid,
             ),
             const SizedBox(height: 18),
             AppTextField(
               label: 'Phone Number',
-              hintText: '081234567890',
+              hintText: '81234567890',
               controller: _phoneController,
               keyboardType: TextInputType.phone,
+              onChanged: _validatePhone,
+              errorText: _phoneError,
+              isValid: _isPhoneValid,
+              prefix: _countryCodes.isEmpty 
+                  ? const Padding(
+                      padding: EdgeInsets.all(12), 
+                      child: SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
+                    )
+                  : Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const SizedBox(width: 12),
+                        DropdownButtonHideUnderline(
+                          child: DropdownButton<Map<String, String>>(
+                            value: _selectedCountry,
+                            icon: const Icon(Icons.arrow_drop_down, size: 18),
+                            isDense: true,
+                            style: TextStyle(color: colors.textOnSurface, fontSize: 14, fontWeight: FontWeight.w500),
+                            onChanged: (newValue) {
+                              setState(() {
+                                _selectedCountry = newValue;
+                                _validatePhone(_phoneController.text);
+                              });
+                            },
+                            items: _countryCodes.map<DropdownMenuItem<Map<String, String>>>((Map<String, String> value) {
+                              return DropdownMenuItem<Map<String, String>>(
+                                value: value,
+                                child: Text('${value['flag']}  ${value['code']} (${value['dial_code']})'),
+                              );
+                            }).toList(),
+                          ),
+                        ),
+                        Container(
+                          width: 1,
+                          height: 20,
+                          color: colors.outline,
+                          margin: const EdgeInsets.symmetric(horizontal: 12),
+                        ),
+                      ],
+                    ),
             ),
             const SizedBox(height: 18),
             AppPasswordField(
               controller: _passwordController,
+              focusNode: _passwordFocusNode,
               hintText: 'Minimum 8 characters',
+              onChanged: _validatePassword,
+              errorText: _passwordError,
+              isValid: _isPasswordValid,
             ),
-            const SizedBox(height: 14),
-            PasswordRequirementsPanel(password: _passwordController.text),
+            AnimatedSize(
+              duration: const Duration(milliseconds: 200),
+              curve: Curves.easeInOut,
+              child: _passwordFocusNode.hasFocus
+                  ? Padding(
+                      padding: const EdgeInsets.only(top: 14),
+                      child: PasswordRequirementsPanel(password: _passwordController.text),
+                    )
+                  : const SizedBox.shrink(),
+            ),
             const SizedBox(height: 18),
             AppPasswordField(
               label: 'Retype Password',
@@ -177,14 +308,14 @@ class _RegisterPageState extends State<RegisterPage> {
                     : 'Passwords do not match.',
                 style: textTheme.bodyMedium?.copyWith(
                   color: _confirmPasswordController.text == _passwordController.text
-                      ? colors.primary
+                      ? Colors.green
                       : Colors.red,
                 ),
               ),
             const SizedBox(height: 24),
             AppButton.primary(
               label: _isSubmitting ? 'Creating...' : 'Create Account',
-              onPressed: _isSubmitting ? null : _handleRegister,
+              onPressed: (_isSubmitting || !isFormValid) ? null : _handleRegister,
             ),
             const SizedBox(height: 14),
             AppButton.text(
