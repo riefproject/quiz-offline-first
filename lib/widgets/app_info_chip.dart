@@ -8,6 +8,7 @@ class AppInfoChip extends StatelessWidget {
   final Color? tintColor;
   /// If true, renders a subtle green tint (for "Synced" status)
   final bool isSynced;
+  final VoidCallback? onTap;
 
   const AppInfoChip({
     super.key,
@@ -15,6 +16,7 @@ class AppInfoChip extends StatelessWidget {
     required this.label,
     this.tintColor,
     this.isSynced = false,
+    this.onTap,
   });
 
   @override
@@ -22,7 +24,7 @@ class AppInfoChip extends StatelessWidget {
     final colors = Theme.of(context).extension<ColorsConfig>()!;
     final textColor = tintColor ?? colors.mutedText;
 
-    return Container(
+    Widget chipWidget = Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
         color: isSynced ? colors.tertiary : Colors.transparent,
@@ -51,5 +53,15 @@ class AppInfoChip extends StatelessWidget {
         ],
       ),
     );
+
+    if (onTap != null) {
+      return InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(4),
+        child: chipWidget,
+      );
+    }
+    
+    return chipWidget;
   }
 }

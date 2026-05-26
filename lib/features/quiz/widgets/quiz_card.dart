@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../models/db_models.dart';
 import '../../../services/hive_service.dart';
+import '../../../services/quiz_sync_service.dart';
 import '../../../theme/colors_config.dart';
 import '../../../widgets/app_info_chip.dart';
 import '../../../widgets/components/app_card.dart';
@@ -133,6 +134,19 @@ class QuizCard extends StatelessWidget {
                   tintColor: quiz.isSynced
                       ? const Color(0xFF2E7D32)
                       : const Color(0xFF8C6D00),
+                  onTap: () async {
+                    if (quiz.isSynced) return;
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Syncing quiz...')),
+                    );
+                    await QuizSyncService().syncNow();
+                    if (context.mounted) {
+                      final error = QuizSyncService().syncError.value;
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text(error ?? 'Sync complete!')),
+                      );
+                    }
+                  },
                 ),
               ],
             ),

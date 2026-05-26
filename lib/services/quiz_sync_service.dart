@@ -161,7 +161,7 @@ class QuizSyncService {
 
       debugPrint("Sync complete!");
       syncError.value = hasPendingImageUploads
-          ? 'Sebagian gambar belum tersinkronisasi. Akan dicoba lagi nanti.'
+          ? 'Some images failed to sync. Will try again later.'
           : null;
     } catch (e) {
       debugPrint("Sync failed: $e");
