@@ -1,0 +1,18 @@
+# Spesifikasi Kebutuhan Sistem: AlpenQuiz
+
+---
+
+## 3. Non-Functional Requirements (NFR)
+
+Evaluasi kriteria kualitas perangkat lunak mengacu pada standar **ISO/IEC 25010**. Bagian ini mendefinisikan batas minimum performa, keamanan, dan keandalan operasional sistem.
+
+| Kode NFR | Deskripsi | Quality Attribute | Sub Attribute | Prioritas | Parameter Ukur Keberhasilan |
+| :------- | :-------- | :---------------- | :------------ | :-------- | :-------------------------- |
+| **NFR-01** | Arsitektur perangkat lunak wajib menerapkan prinsip luring penuh (_Offline-First_), di mana interaksi aplikasi utama tidak terhambat oleh disparitas konektivitas jaringan. | Functional Suitability | Functional Completeness | High | Sistem mampu melayani fungsionalitas kuis (pemilihan jawaban hingga penyelesaian) secara 100% saat perangkat berada dalam kondisi pemutusan koneksi total. |
+| **NFR-02** | Proses render halaman dan interaksi transisi soal kuis tidak boleh memiliki latensi operasional yang menghambat pengguna. | Performance Efficiency | Time Behaviour | High | Waktu respons (_Time to First Byte/Render_) komponen kuis pada antarmuka klien harus di bawah 200 milidetik secara konsisten tanpa anomali pemuatan (*loading*). |
+| **NFR-03** | Rekayasa antarmuka (_UX_) harus mencegah pengguna dari tindakan pengiriman data formulir yang rusak (_malformed data_) sejak tahap pengetikan. | Interaction Capability | User Error Protection | High | Sistem melakukan terminasi akses (*disable*) pada tombol eksekusi transaksi (Submit) secara reaktif hingga validasi klien sepenuhnya lolos (_error free_), menekan angka penolakan HTTP 422 hingga 0%. |
+| **NFR-04** | Aplikasi harus mampu memitigasi anomali sistem (seperti interupsi penutupan paksa, kebocoran memori, atau kehilangan daya) tanpa merusak integritas _state_ jawaban kuis. | Reliability | Fault Tolerance, Recoverability | High | Mekanisme autosimpan (*auto-save*) lokal mencegah kehilangan data jawaban pengguna dengan tingkat akurasi pemulihan (_recovery_) sesi hingga >99% setelah proses *re-launch* aplikasi. |
+| **NFR-05** | Struktur _payload_ data JSON yang dikirim dan diterima selama proses sinkronisasi harus dipastikan kompatibel terhadap model skema _database_ pusat. | Compatibility | Interoperability | High | 100% proses unggahan (_upload_) dan unduhan (_download_) paket kuis tereksekusi tanpa insiden _type mismatch_ atau _parsing error_ antara sistem seluler dan struktur dokumen _MongoDB_. |
+| **NFR-06** | Keamanan penyimpanan dan pertukaran kredensial otentikasi (kata sandi) wajib dilindungi dari risiko paparan teks terang (_plaintext exposure_). | Security | Confidentiality | High | Pengaplikasian algoritma _hashing_ kriptografi (seperti SHA-256) secara ketat pada siklus penyimpanan internal hingga pengiriman transmisi (_transit_) ke peladen pusat. |
+| **NFR-07** | Siklus pengembangan (_SDLC_) diwajibkan menjunjung tinggi prinsip segregasi komponen UI dan logika kontrol (ARS/Architecture). | Maintainability | Modularity, Reusability | High | Seluruh komponen _input_ pengguna (seperti `AppTextField`) diekstraksi ke dalam blok *widgets* terpisah agar modifikasi struktural ke depannya tidak memecah integritas lintas modul. |
+| **NFR-08** | Apabila peladen utama (MongoDB) mengalami malfungsi operasional (_downtime_), sistem aplikasi seluler wajib meredam insiden tersebut agar tidak melumpuhkan pengalaman kuis. | Safety | Fail Safe | High | Penanganan eksepsi API (kegagalan respons HTTP 5xx) diwajibkan beralih secara halus ke dalam mode _Offline_ parsial, menyembunyikan pesan galat sistemik, dan merutekan aksi data baru ke dalam antrean lokal sementara. |
