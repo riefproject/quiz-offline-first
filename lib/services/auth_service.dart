@@ -2,11 +2,13 @@ import 'dart:convert';
 import 'dart:math';
 
 import 'package:crypto/crypto.dart';
+import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:mongo_dart/mongo_dart.dart';
 
 import '../features/auth/password_policy.dart';
 import '../models/db_models.dart';
+import 'emailjs_service.dart';
 import 'hive_service.dart';
 import 'mongodb_service.dart';
 
@@ -55,7 +57,9 @@ class AuthService {
   static const String _sessionJoinCodeKey = 'current_join_code';
   static const String _passwordResetIdentifierKey = 'password_reset_identifier';
   static const String _passwordResetOtpKey = 'password_reset_otp';
+  static const String _passwordResetOtpExpiryKey = 'password_reset_otp_expiry';
   static const String _onboardingSeenKey = 'has_seen_onboarding';
+  static const int _otpExpiryMinutes = 15;
 
   static bool get hasSeenOnboarding {
     return _prefs.getBool(_onboardingSeenKey) ?? false;
@@ -184,7 +188,7 @@ class AuthService {
     final password = newPassword.trim();
 
     if (normalizedIdentifier.isEmpty) {
-      throw AuthException('Enter email or phone number to recover your account.');
+      throw AuthException('Enter your email address to recover your account.');
     }
     final passwordError = PasswordPolicy.validate(password);
     if (passwordError != null) {
@@ -201,12 +205,12 @@ class AuthService {
     return _persistUser(updatedUser);
   }
 
-  static Future<String> requestPasswordResetOtp({
+  static Future<void> requestPasswordResetOtp({
     required String identifier,
   }) async {
     final normalizedIdentifier = identifier.trim();
     if (normalizedIdentifier.isEmpty) {
-      throw AuthException('Enter email or phone number to recover your account.');
+      throw AuthException('Enter your email address to recover your account.');
     }
 
     final user = await _findUserByIdentifier(identifier: normalizedIdentifier);
@@ -214,10 +218,25 @@ class AuthService {
       throw AuthException('No account found with this information.');
     }
 
+    if (user.email == null || user.email!.isEmpty) {
+      throw AuthException(
+        'This account has no email address. Password reset requires an email.',
+      );
+    }
+
     final otp = _generateOtp();
+    final expiry = DateTime.now().add(const Duration(minutes: _otpExpiryMinutes));
+    final expiryFormatted = DateFormat('HH:mm').format(expiry);
+
+    await EmailJsService.sendOtp(
+      toEmail: user.email!,
+      otpCode: otp,
+      expiryTime: expiryFormatted,
+    );
+
     await _prefs.setString(_passwordResetIdentifierKey, normalizedIdentifier);
     await _prefs.setString(_passwordResetOtpKey, otp);
-    return otp;
+    await _prefs.setInt(_passwordResetOtpExpiryKey, expiry.millisecondsSinceEpoch);
   }
 
   static Future<void> verifyPasswordResetOtp({
@@ -226,12 +245,21 @@ class AuthService {
   }) async {
     final savedIdentifier = _prefs.getString(_passwordResetIdentifierKey);
     final savedOtp = _prefs.getString(_passwordResetOtpKey);
+    final savedExpiryMs = _prefs.getInt(_passwordResetOtpExpiryKey);
 
     if (savedIdentifier == null || savedOtp == null) {
       throw AuthException('OTP code has not been generated. Please restart the process.');
     }
     if (savedIdentifier != identifier.trim()) {
       throw AuthException('Recovery information does not match. Please restart the process.');
+    }
+    if (savedExpiryMs != null) {
+      final expiry = DateTime.fromMillisecondsSinceEpoch(savedExpiryMs);
+      if (DateTime.now().isAfter(expiry)) {
+        await _prefs.remove(_passwordResetOtpKey);
+        await _prefs.remove(_passwordResetOtpExpiryKey);
+        throw AuthException('OTP code has expired. Please request a new one.');
+      }
     }
     if (savedOtp != otp.trim()) {
       throw AuthException('Invalid OTP code.');
@@ -250,6 +278,7 @@ class AuthService {
     );
     await _prefs.remove(_passwordResetIdentifierKey);
     await _prefs.remove(_passwordResetOtpKey);
+    await _prefs.remove(_passwordResetOtpExpiryKey);
     return user;
   }
 
@@ -456,6 +485,6 @@ class AuthService {
 
   static String _generateOtp() {
     final random = Random();
-    return List.generate(8, (_) => random.nextInt(10)).join();
+    return List.generate(6, (_) => random.nextInt(10)).join();
   }
 }

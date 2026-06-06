@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../services/auth_service.dart';
+import '../../services/emailjs_service.dart';
 import '../../widgets/components/app_button.dart';
 import '../../widgets/components/app_input.dart';
 import '../../widgets/layout/app_shell.dart';
@@ -29,12 +30,15 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
     });
 
     try {
-      final otp = await AuthService.requestPasswordResetOtp(
+      await AuthService.requestPasswordResetOtp(
         identifier: _identifierController.text,
       );
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Demo OTP: $otp')),
+        const SnackBar(
+          content: Text('OTP code has been sent to your email.'),
+          backgroundColor: Colors.green,
+        ),
       );
       Navigator.of(context).push(
         MaterialPageRoute(
@@ -43,6 +47,8 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
           ),
         ),
       );
+    } on EmailJsException catch (e) {
+      _showMessage(e.message);
     } on AuthException catch (e) {
       _showMessage(e.message);
     } catch (e) {
@@ -88,13 +94,13 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
             ),
             const SizedBox(height: 8),
             Text(
-              'Step 1 of 3. Enter your registered email or phone number to request an OTP code.',
+              'Step 1 of 3. Enter your registered email address to request an OTP code.',
               style: textTheme.bodyLarge,
             ),
             const SizedBox(height: 28),
             AppTextField(
-              label: 'Email or Phone Number',
-              hintText: 'name@example.com / 0812xxxxxxx',
+              label: 'Email Address',
+              hintText: 'name@example.com',
               controller: _identifierController,
               keyboardType: TextInputType.emailAddress,
             ),

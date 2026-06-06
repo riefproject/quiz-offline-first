@@ -34,8 +34,8 @@ class _ForgotPasswordOtpPageState extends State<ForgotPasswordOtpPage> {
     });
 
     try {
-      if (_otpController.text.trim().length != 8) {
-        throw AuthException('OTP code must be 8 digits.');
+      if (_otpController.text.trim().length != 6) {
+        throw AuthException('OTP code must be 6 digits.');
       }
       await AuthService.verifyPasswordResetOtp(
         identifier: widget.identifier,
@@ -95,19 +95,19 @@ class _ForgotPasswordOtpPageState extends State<ForgotPasswordOtpPage> {
             ),
             const SizedBox(height: 8),
             Text(
-              'Step 2 of 3. Enter the 8-digit OTP code sent to ${widget.identifier}.',
+              'Step 2 of 3. Enter the 6-digit OTP code sent to ${widget.identifier}.',
               style: textTheme.bodyLarge,
             ),
             const SizedBox(height: 28),
             AppTextField(
-              label: '8 Digit OTP',
-              hintText: '12345678',
+              label: '6 Digit OTP',
+              hintText: '123456',
               controller: _otpController,
               keyboardType: TextInputType.number,
             ),
             const SizedBox(height: 12),
             Text(
-              'The current OTP is a placeholder for demo purposes.',
+              'OTP code is valid for 15 minutes. Check your email inbox or spam folder.',
               style: textTheme.bodyMedium,
             ),
             const SizedBox(height: 24),
