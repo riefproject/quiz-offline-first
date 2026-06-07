@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
@@ -9,6 +10,7 @@ import 'package:AlpenQuiz/services/logger.dart';
 
 void main() {
   setUpAll(() {
+    TestWidgetsFlutterBinding.ensureInitialized();
     // Memaksa LanService untuk menggunakan LanMockService (in-memory bus)
     Config.mockSessionOverride = true;
     log = Logger(printer: PrettyPrinter());
@@ -113,6 +115,55 @@ void main() {
 
       hostService.dispose();
       clientService.dispose();
+      await sub.cancel();
+    });
+  });
+
+  group('LanService Real Network Tests', () {
+    setUp(() {
+      Config.mockSessionOverride = null; // Ensure real network
+    });
+
+
+    test('Client handles host disconnection gracefully', () async {
+      final host = await LanService.host(gameId: 505, questionCount: 10, wsPort: 12345);
+      final client = await LanService.client(
+        hostIp: '127.0.0.1',
+        wsPort: 12345,
+        gameId: 505,
+        playerName: 'Test Player',
+        clientId: 9,
+      );
+
+      // Disconnect host suddenly
+      host.dispose();
+
+      // Wait a bit
+      await Future.delayed(const Duration(milliseconds: 100));
+
+      // Client should ideally register as disconnected, or at least not crash
+      expect(client.isRunning, false);
+      client.dispose();
+    });
+
+    test('Discovery receives broadcast from real host', () async {
+      final discovery = await LanService.discovery();
+      DiscoveredGame? foundGame;
+      
+      final sub = discovery.onGameDiscovered.listen((game) {
+        if (game.gameId == 606) foundGame = game;
+      });
+
+      final host = await LanService.host(gameId: 606, questionCount: 20, hostName: 'Real Host', wsPort: 12346);
+      
+      // Wait for broadcast (happens every 1s, we wait 2s)
+      await Future.delayed(const Duration(seconds: 2));
+
+      expect(foundGame, isNotNull);
+      expect(foundGame?.hostName, 'Real Host');
+
+      host.dispose();
+      discovery.dispose();
       await sub.cancel();
     });
   });

@@ -76,6 +76,26 @@ class QuizHistoryService {
     return rankMap;
   }
 
+  static Future<void> deleteSession(String sessionId) async {
+    await HiveService.sesiKuisBox.delete(sessionId);
+    
+    final pesertaKeys = HiveService.pesertaSesiBox.values
+        .where((p) => p.idSesi == sessionId)
+        .map((p) => p.id);
+    await HiveService.pesertaSesiBox.deleteAll(pesertaKeys);
+    
+    final hasilKeys = HiveService.hasilAkhirBox.values
+        .where((h) => h.idSesi == sessionId)
+        .map((h) => h.id);
+    await HiveService.hasilAkhirBox.deleteAll(hasilKeys);
+  }
+
+  static Future<void> clearAllHistory() async {
+    await HiveService.sesiKuisBox.clear();
+    await HiveService.pesertaSesiBox.clear();
+    await HiveService.hasilAkhirBox.clear();
+  }
+
   static List<QuizHistoryEntry> loadHistoryForCreator(String creatorUserId) {
     final quizzes = HiveService.quizBox.values
         .where((quiz) => quiz.pembuat == creatorUserId)

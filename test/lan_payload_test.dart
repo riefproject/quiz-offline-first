@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
@@ -46,6 +47,21 @@ void main() {
       expect(
         () => ClientPayload.fromBytes(invalidBytes),
         throwsA(isA<Exception>()), 
+      );
+    });
+
+    test('ClientPayload handles missing or malformed fields gracefully or throws FormatException', () {
+      // String JSON yang rusak (malformed JSON)
+      final malformedJsonBytes = utf8.encode('{ "name": "Budi", "gameID": }');
+      expect(
+        () => ClientPayload.fromBytes(Uint8List.fromList(malformedJsonBytes)),
+        throwsA(isA<FormatException>()), 
+      );
+      
+      // JSON valid tetapi kehilangan field wajib (misal gameID)
+      expect(
+        () => ClientPayload.fromBytes(utf8.encode('{"clientId":5,"gameId":"invalid"}')),
+        throwsA(isA<FormatException>()),
       );
     });
   });

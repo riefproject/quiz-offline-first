@@ -7,11 +7,24 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:hive_flutter/hive_flutter.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:AlpenQuiz/features/quiz/quiz_list_page.dart';
 import 'package:AlpenQuiz/theme/theme_config.dart';
+import 'package:AlpenQuiz/services/hive_service.dart';
+import 'package:AlpenQuiz/models/db_models.dart';
 
 void main() {
+  setUpAll(() async {
+    SharedPreferences.setMockInitialValues({});
+    await HiveService.init();
+  });
+
+  tearDownAll(() async {
+    await Hive.close();
+  });
+
   testWidgets('shows quiz list layout', (WidgetTester tester) async {
     await tester.pumpWidget(
       MaterialApp(theme: ThemeConfig.lightTheme, home: const QuizListPage()),

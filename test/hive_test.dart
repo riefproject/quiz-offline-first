@@ -14,6 +14,12 @@ void main() {
     // Register semua Adapter yang sudah tergenerate
     Hive.registerAdapter(AppUserAdapter());
     Hive.registerAdapter(QuizAdapter());
+    Hive.registerAdapter(SesiKuisAdapter());
+    Hive.registerAdapter(HasilAkhirAdapter());
+    Hive.registerAdapter(PesertaSesiAdapter());
+    Hive.registerAdapter(SoalAdapter());
+    Hive.registerAdapter(PilihanJawabanAdapter());
+    Hive.registerAdapter(JawabanPesertaAdapter());
   });
 
   group('Hive Local Database Unit Tests', () {
@@ -58,6 +64,44 @@ void main() {
       // 6. Hapus / Bersihkan Data
       await userBox.delete('user_xyz');
       expect(userBox.containsKey('user_xyz'), isFalse);
+    });
+
+    test('Menangani custom adapter SesiKuis dan HasilAkhir', () async {
+      final sesiBox = await Hive.openBox<SesiKuis>('test_sesi_box');
+      
+      final sesi = SesiKuis(
+        id: 'sesi_123',
+        idQuiz: 'quiz_123',
+        waktuMulai: DateTime.now(),
+        status: 'aktif',
+      );
+      
+      await sesiBox.put(sesi.id, sesi);
+      final fetched = sesiBox.get('sesi_123');
+      
+      expect(fetched, isNotNull);
+      expect(fetched?.status, 'aktif');
+      
+      await sesiBox.clear();
+      expect(sesiBox.isEmpty, isTrue);
+    });
+
+    test('Mengakses Box yang belum dibuka akan melempar error', () {
+      expect(
+        () => Hive.box<AppUser>('box_belum_dibuka'),
+        throwsA(isA<HiveError>()),
+      );
+    });
+
+    test('Menghapus seluruh isi Box menggunakan clear()', () async {
+      final quizBox = await Hive.openBox<Quiz>('test_clear_quiz_box');
+      await quizBox.put('1', Quiz(id: '1', judul: 'A', pembuat: 'B', deskripsi: 'A'));
+      await quizBox.put('2', Quiz(id: '2', judul: 'C', pembuat: 'B', deskripsi: 'C'));
+      
+      expect(quizBox.length, 2);
+      
+      await quizBox.clear();
+      expect(quizBox.isEmpty, isTrue);
     });
   });
 

@@ -97,6 +97,60 @@ void main() {
     expect(history.first.leaderboard.first.score, equals(1200));
   });
 
+  test('loadHistoryForCreator returns empty list when no history exists', () {
+    final history = QuizHistoryService.loadHistoryForCreator('creator_kosong');
+    expect(history, isEmpty);
+  });
+
+  test('deleteSession removes session and associated data', () async {
+    // Save a session first
+    await QuizHistoryService.saveHostedSession(
+      quizId: 'quiz_hapus',
+      sessionId: 'sesi_dihapus',
+      startedAt: DateTime.now(),
+      finishedAt: DateTime.now(),
+      participants: const {1: 'A'},
+      scores: const {1: 100},
+    );
+
+    // Verify it exists in the box
+    expect(Hive.box<SesiKuis>('sesiKuisBox').containsKey('sesi_dihapus'), isTrue);
+
+    // Delete it
+    await QuizHistoryService.deleteSession('sesi_dihapus');
+
+    // Verify it is gone
+    expect(Hive.box<SesiKuis>('sesiKuisBox').containsKey('sesi_dihapus'), isFalse);
+  });
+
+  test('clearAllHistory removes everything from boxes', () async {
+    await QuizHistoryService.saveHostedSession(
+      quizId: 'quiz_1',
+      sessionId: 'sesi_1',
+      startedAt: DateTime.now(),
+      finishedAt: DateTime.now(),
+      participants: const {1: 'A'},
+      scores: const {1: 100},
+    );
+    await QuizHistoryService.saveHostedSession(
+      quizId: 'quiz_2',
+      sessionId: 'sesi_2',
+      startedAt: DateTime.now(),
+      finishedAt: DateTime.now(),
+      participants: const {2: 'B'},
+      scores: const {2: 200},
+    );
+
+    expect(Hive.box<SesiKuis>('sesiKuisBox').isNotEmpty, isTrue);
+    expect(Hive.box<PesertaSesi>('pesertaSesiBox').isNotEmpty, isTrue);
+
+    await QuizHistoryService.clearAllHistory();
+
+    expect(Hive.box<SesiKuis>('sesiKuisBox').isEmpty, isTrue);
+    expect(Hive.box<PesertaSesi>('pesertaSesiBox').isEmpty, isTrue);
+    expect(Hive.box<HasilAkhir>('hasilAkhirBox').isEmpty, isTrue);
+  });
+
   tearDownAll(() async {
     await Hive.close();
     final dir = Directory(testPath);

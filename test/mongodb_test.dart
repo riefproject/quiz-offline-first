@@ -82,6 +82,59 @@ void main() {
       final checkDeleted = await usersCollection.findOne(where.eq('_id', testId));
       expect(checkDeleted, isNull);
     });
+
+    test('Menyimpan dokumen tanpa _id (Auto-generate ObjectId)', () async {
+      final usersCollection = MongoDatabase.usersCollection;
+      
+      final writeResult = await usersCollection.insertOne({
+        'nama_lengkap': 'Auto ID Tester',
+        'is_guest': true,
+      });
+      
+      expect(writeResult.isSuccess, isTrue);
+      expect(writeResult.id, isNotNull, reason: 'MongoDB harus membuat ObjectId otomatis');
+      
+      // Cleanup
+      if (writeResult.id != null) {
+        await usersCollection.deleteOne(where.id(writeResult.id as ObjectId));
+      }
+    });
+
+    test('Pencarian data yang tidak eksis mengembalikan null', () async {
+      final usersCollection = MongoDatabase.usersCollection;
+      final result = await usersCollection.findOne(where.eq('_id', 'id_pasti_tidak_ada_123'));
+      expect(result, isNull);
+    });
+
+    test('Menghapus data yang tidak eksis (isSuccess true tetapi count deleted 0)', () async {
+      final usersCollection = MongoDatabase.usersCollection;
+      final deleteResult = await usersCollection.deleteOne(where.eq('_id', 'id_pasti_tidak_ada_123'));
+      
+      // isSuccess tetap true untuk deleteOne walaupun tidak ada yang dihapus
+      expect(deleteResult.isSuccess, isTrue);
+      // Tapi deletedCount harus 0
+      expect(deleteResult.nRemoved, 0);
+    });
+
+    test('Operasi CRUD Collection Quiz', () async {
+      final quizCollection = MongoDatabase.db.collection('quizzes');
+      
+      // Insert
+      final writeResult = await quizCollection.insertOne({
+        '_id': 'quiz_123',
+        'judul': 'Kuis Biologi',
+        'jumlah_soal': 10,
+      });
+      expect(writeResult.isSuccess, isTrue);
+
+      // Read
+      final found = await quizCollection.findOne(where.eq('_id', 'quiz_123'));
+      expect(found, isNotNull);
+      expect(found?['judul'], 'Kuis Biologi');
+
+      // Delete
+      await quizCollection.deleteOne(where.eq('_id', 'quiz_123'));
+    });
   });
 
   tearDownAll(() async {

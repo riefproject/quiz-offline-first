@@ -39,6 +39,7 @@ class LanService {
   int? _gameId;
   int? _questionCount;
   int _wsPort = _defaultWsPort;
+  String _hostName = 'Quiz Host';
   bool _isHost = false;
 
   // --- Client mode state ---
@@ -96,6 +97,7 @@ class LanService {
     service._gameId = gameId;
     service._questionCount = questionCount;
     service._wsPort = wsPort;
+    service._hostName = hostName;
     service._isHost = true;
 
     // Use port 0 to let the OS assign a random open port if the default is used
@@ -145,7 +147,7 @@ class LanService {
 
   static void _startDiscoveryBroadcast(LanService service) {
     final msg =
-        '$_discoveryPrefix|${service._gameId}|${service._questionCount}|${service._wsPort}|Quiz Host';
+        '$_discoveryPrefix|${service._gameId}|${service._questionCount}|${service._wsPort}|${service._hostName}';
     final data = utf8.encode(msg);
 
     _sendUdpBroadcast(data, service);
@@ -296,11 +298,13 @@ class LanService {
       },
       onDone: () {
         log.i('LanService: host connection closed');
+        service._isClient = false;
         service._connectionLostController.add(null);
         service._hostDataController.close();
       },
       onError: (e) {
         log.w('LanService: host connection error — $e');
+        service._isClient = false;
         service._connectionLostController.add(null);
         service._hostDataController.close();
       },
