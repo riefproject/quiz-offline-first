@@ -1,6 +1,7 @@
 class Config {
-  static const bool isSessionMocked = bool.fromEnvironment(
-    "MOCK_SESSION",
-    defaultValue: false,
-  );
+  static bool? mockSessionOverride;
+
+  static bool get isSessionMocked => 
+      mockSessionOverride ?? 
+      bool.fromEnvironment("MOCK_SESSION", defaultValue: false);
 }

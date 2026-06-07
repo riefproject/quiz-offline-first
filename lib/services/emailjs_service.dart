@@ -26,6 +26,7 @@ class EmailJsService {
     required String toEmail,
     required String otpCode,
     required String expiryTime,
+    http.Client? client,
   }) async {
     if (_serviceId.isEmpty || _templateId.isEmpty || _publicKey.isEmpty) {
       throw EmailJsException(
@@ -52,11 +53,12 @@ class EmailJsService {
     final body = jsonEncode(bodyParams);
 
     try {
-      final response = await http.post(
-        Uri.parse(_apiUrl),
-        headers: {'Content-Type': 'application/json'},
-        body: body,
-      );
+      final uri = Uri.parse(_apiUrl);
+      final headers = {'Content-Type': 'application/json'};
+      
+      final response = client != null
+          ? await client.post(uri, headers: headers, body: body)
+          : await http.post(uri, headers: headers, body: body);
 
       if (response.statusCode != 200) {
         log.e('EmailJS error: ${response.statusCode} — ${response.body}');
