@@ -11,6 +11,7 @@ import 'package:AlpenQuiz/services/hive_service.dart';
 import 'package:AlpenQuiz/services/logger.dart';
 import 'package:AlpenQuiz/services/quiz_history_service.dart';
 import 'package:AlpenQuiz/services/reverse_qr_sync_service.dart';
+import 'package:AlpenQuiz/services/audio_service.dart';
 import 'package:AlpenQuiz/services/lan/lan_service.dart';
 import 'package:AlpenQuiz/services/lan/lan_client_listener.dart';
 import 'package:AlpenQuiz/services/lan/lan_master_publisher.dart';
@@ -115,6 +116,7 @@ class HostController extends ChangeNotifier {
 
   int _countdownRemainingMs = 0;
   int get countdownRemainingMs => _countdownRemainingMs;
+  int _lastCountdownSecond = 0;
 
   int _questionRemainingMs = 0;
   int get questionRemainingMs => _questionRemainingMs;
@@ -179,6 +181,7 @@ class HostController extends ChangeNotifier {
     _lanPublisher!.publish(_currentPayload);
 
     _isAdvertising = true;
+    AudioService.instance.playBgm();
     notifyListeners();
     log.i(
       'HostController: game started gameId=$_gameId questionCount=${questions.length}',
@@ -234,6 +237,7 @@ class HostController extends ChangeNotifier {
 
     _phase = HostPhase.countdown;
     _countdownRemainingMs = 5000;
+    _lastCountdownSecond = (_countdownRemainingMs / 1000).ceil() + 1;
     notifyListeners();
 
     _currentPayload.nextQuestion.add(
@@ -253,6 +257,11 @@ class HostController extends ChangeNotifier {
         _countdownTimer = null;
         _startQuestion();
       } else {
+        final currentSecond = (_countdownRemainingMs / 1000).ceil();
+        if (currentSecond != _lastCountdownSecond) {
+          _lastCountdownSecond = currentSecond;
+          AudioService.instance.playTick();
+        }
         notifyListeners();
       }
     });
@@ -337,6 +346,7 @@ class HostController extends ChangeNotifier {
 
     _phase = HostPhase.countdown;
     _countdownRemainingMs = 5000;
+    _lastCountdownSecond = (_countdownRemainingMs / 1000).ceil() + 1;
     notifyListeners();
 
     _currentPayload.nextQuestion.add(
@@ -356,6 +366,11 @@ class HostController extends ChangeNotifier {
         _countdownTimer = null;
         _startQuestion();
       } else {
+        final currentSecond = (_countdownRemainingMs / 1000).ceil();
+        if (currentSecond != _lastCountdownSecond) {
+          _lastCountdownSecond = currentSecond;
+          AudioService.instance.playTick();
+        }
         notifyListeners();
       }
     });
@@ -368,6 +383,9 @@ class HostController extends ChangeNotifier {
     _questionTimer = null;
     _phase = HostPhase.results;
     _sessionFinishedAt = DateTime.now();
+
+    AudioService.instance.stopBgm();
+    AudioService.instance.playFanfare();
 
     _currentPayload.gameFinished = true;
     _lanPublisher!.publish(_currentPayload);

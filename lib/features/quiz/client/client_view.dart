@@ -303,10 +303,10 @@ class _ClientViewState extends State<ClientView> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          SizedBox(
-            width: 64,
-            height: 64,
-            child: Center(child: Lottie.asset("assets/lottie/waiting.json", height: 256, width: 256)),
+          Lottie.asset(
+            'assets/lottie/waiting.json',
+            height: 200,
+            width: 200,
           ),
           const SizedBox(height: 24),
           Text(

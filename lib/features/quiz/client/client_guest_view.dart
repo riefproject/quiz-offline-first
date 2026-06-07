@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:lottie/lottie.dart';
 
 import '../../../services/auth_service.dart';
 import '../qr/reverse_qr_submission_page.dart';
@@ -281,7 +282,11 @@ class _ClientGuestViewState extends State<ClientGuestView> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.hourglass_top_rounded, size: 56, color: colors.primary),
+          Lottie.asset(
+            'assets/lottie/waiting.json',
+            height: 200,
+            width: 200,
+          ),
           const SizedBox(height: 24),
           Text(
             'Waiting for host...',

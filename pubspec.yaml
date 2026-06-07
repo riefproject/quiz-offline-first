@@ -50,6 +50,7 @@ dependencies:
   qr_flutter: ^4.1.0
   mobile_scanner: ^5.2.3
   lottie: ^3.3.3
+  audioplayers: ^6.0.0
   network_info_plus: ^5.0.0
   crypto: ^3.0.7
   http: ^1.6.0
@@ -97,6 +98,9 @@ flutter:
     - assets/icon/
     - assets/images/onboarding/
     - assets/lottie/
+    - assets/audio/bgm/
+    - assets/audio/sfx/
+    - assets/audio/jingle/
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

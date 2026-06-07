@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:lottie/lottie.dart';
 import '../../../models/reverse_qr_submission.dart';
 import '../qr/reverse_qr_scanner_page.dart';
 import '../../../theme/colors_config.dart';
@@ -308,10 +309,10 @@ class _HostViewState extends State<HostView> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(
-                        Icons.people_outline_rounded,
-                        size: 48,
-                        color: colors.mutedText,
+                      Lottie.asset(
+                        'assets/lottie/waiting.json',
+                        height: 180,
+                        width: 180,
                       ),
                       const SizedBox(height: 12),
                       Text(
@@ -540,10 +541,10 @@ class _HostViewState extends State<HostView> {
                           child: Column(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              Icon(
-                                Icons.people_outline_rounded,
-                                size: 42,
-                                color: colors.mutedText,
+                              Lottie.asset(
+                                'assets/lottie/waiting.json',
+                                height: 140,
+                                width: 140,
                               ),
                               const SizedBox(height: 10),
                               Text(
@@ -1976,50 +1977,61 @@ class _HostViewState extends State<HostView> {
     final lb = _controller.leaderboard;
     final top3 = lb.take(3).toList();
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
+    return Stack(
       children: [
-        Container(
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            color: colors.primary,
-            borderRadius: BorderRadius.circular(16),
+        Positioned.fill(
+          child: Lottie.asset(
+            'assets/lottie/confetti.json',
+            fit: BoxFit.cover,
+            repeat: true,
           ),
-          child: Column(
-            children: [
-              Icon(Icons.emoji_events_rounded, size: 48, color: Colors.yellow.shade600),
-              const SizedBox(height: 8),
-              Text(
-                'FINAL LEADERBOARD',
-                style: textTheme.labelLarge?.copyWith(
-                  color: Colors.white70,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 1.5,
-                ),
+        ),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: colors.primary,
+                borderRadius: BorderRadius.circular(16),
               ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 32),
-        Expanded(
-          child: top3.isEmpty
-              ? Center(
-                  child: Text(
-                    'No scores yet',
-                    style: textTheme.bodyMedium?.copyWith(color: colors.mutedText),
+              child: Column(
+                children: [
+                  Icon(Icons.emoji_events_rounded, size: 48, color: Colors.yellow.shade600),
+                  const SizedBox(height: 8),
+                  Text(
+                    'FINAL LEADERBOARD',
+                    style: textTheme.labelLarge?.copyWith(
+                      color: Colors.white70,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 1.5,
+                    ),
                   ),
-                )
-              : Column(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    _buildPodiumRow(top3, colors, textTheme),
-                  ],
-                ),
-        ),
-        const SizedBox(height: 16),
-        AppButton.primary(
-          label: 'Finish Game',
-          onPressed: () => _controller.endGame(),
+                ],
+              ),
+            ),
+            const SizedBox(height: 32),
+            Expanded(
+              child: top3.isEmpty
+                  ? Center(
+                      child: Text(
+                        'No scores yet',
+                        style: textTheme.bodyMedium?.copyWith(color: colors.mutedText),
+                      ),
+                    )
+                  : Column(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        _buildPodiumRow(top3, colors, textTheme),
+                      ],
+                    ),
+            ),
+            const SizedBox(height: 16),
+            AppButton.primary(
+              label: 'Finish Game',
+              onPressed: () => _controller.endGame(),
+            ),
+          ],
         ),
       ],
     );
@@ -2031,63 +2043,74 @@ class _HostViewState extends State<HostView> {
     final lb = _controller.leaderboard;
     final top3 = lb.take(3).toList();
 
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
+    return Stack(
       children: [
-        SizedBox(
-          width: 250,
-          child: Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: colors.primary,
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Icon(
-                  Icons.emoji_events_rounded,
-                  size: 48,
-                  color: Colors.yellow.shade600,
-                ),
-                const SizedBox(height: 10),
-                Text(
-                  'FINAL LEADERBOARD',
-                  style: textTheme.labelLarge?.copyWith(
-                    color: Colors.white70,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: 1.5,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                const Spacer(),
-                AppButton.primary(
-                  label: 'Finish Game',
-                  onPressed: () => _controller.endGame(),
-                  color: colors.secondary,
-                ),
-              ],
-            ),
+        Positioned.fill(
+          child: Lottie.asset(
+            'assets/lottie/confetti.json',
+            fit: BoxFit.cover,
+            repeat: true,
           ),
         ),
-        const SizedBox(width: 16),
-        Expanded(
-          child: Container(
-            padding: const EdgeInsets.all(18),
-            decoration: BoxDecoration(
-              color: colors.surfaceLow,
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: colors.outline),
-            ),
-            child: top3.isEmpty
-                ? Center(
-                    child: Text(
-                      'No scores yet',
-                      style: textTheme.bodyMedium?.copyWith(color: colors.mutedText),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            SizedBox(
+              width: 250,
+              child: Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: colors.primary,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Icon(
+                      Icons.emoji_events_rounded,
+                      size: 48,
+                      color: Colors.yellow.shade600,
                     ),
-                  )
-                : _buildPodiumRow(top3, colors, textTheme),
-          ),
+                    const SizedBox(height: 10),
+                    Text(
+                      'FINAL LEADERBOARD',
+                      style: textTheme.labelLarge?.copyWith(
+                        color: Colors.white70,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 1.5,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const Spacer(),
+                    AppButton.primary(
+                      label: 'Finish Game',
+                      onPressed: () => _controller.endGame(),
+                      color: colors.secondary,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Container(
+                padding: const EdgeInsets.all(18),
+                decoration: BoxDecoration(
+                  color: colors.surfaceLow,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: colors.outline),
+                ),
+                child: top3.isEmpty
+                    ? Center(
+                        child: Text(
+                          'No scores yet',
+                          style: textTheme.bodyMedium?.copyWith(color: colors.mutedText),
+                        ),
+                      )
+                    : _buildPodiumRow(top3, colors, textTheme),
+              ),
+            ),
+          ],
         ),
       ],
     );
@@ -2199,45 +2222,56 @@ class _HostViewState extends State<HostView> {
     final lb = _controller.leaderboard;
     final top3 = lb.take(3).toList();
 
-    return SingleChildScrollView(
-      padding: const EdgeInsets.symmetric(vertical: 24),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.emoji_events_rounded, size: 64, color: colors.secondary),
-          const SizedBox(height: 24),
-          Text(
-            'Game Over!',
-            style: textTheme.headlineMedium?.copyWith(
-              fontWeight: FontWeight.w800,
-            ),
+    return Stack(
+      children: [
+        Positioned.fill(
+          child: Lottie.asset(
+            'assets/lottie/confetti.json',
+            fit: BoxFit.cover,
+            repeat: true,
           ),
-          const SizedBox(height: 8),
-          Text(
-            '${_controller.participants.length} participant(s) joined',
-            style: textTheme.bodyLarge?.copyWith(color: colors.mutedText),
+        ),
+        SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(vertical: 24),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.emoji_events_rounded, size: 64, color: colors.secondary),
+              const SizedBox(height: 24),
+              Text(
+                'Game Over!',
+                style: textTheme.headlineMedium?.copyWith(
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                '${_controller.participants.length} participant(s) joined',
+                style: textTheme.bodyLarge?.copyWith(color: colors.mutedText),
+              ),
+              const SizedBox(height: 24),
+              if (top3.isNotEmpty)
+                _buildPodiumRow(top3, colors, textTheme),
+              const SizedBox(height: 24),
+              Text(
+                'Use reverse QR if a participant answer did not arrive over LAN.',
+                style: textTheme.bodyMedium?.copyWith(color: colors.mutedText),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 24),
+              AppButton.outlined(
+                label: 'Scan Reverse QR',
+                onPressed: () => _openReverseQrScanner(context),
+              ),
+              const SizedBox(height: 12),
+              AppButton.primary(
+                label: 'Done',
+                onPressed: () => Navigator.of(context).pop(),
+              ),
+            ],
           ),
-          const SizedBox(height: 24),
-          if (top3.isNotEmpty)
-            _buildPodiumRow(top3, colors, textTheme),
-          const SizedBox(height: 24),
-          Text(
-            'Use reverse QR if a participant answer did not arrive over LAN.',
-            style: textTheme.bodyMedium?.copyWith(color: colors.mutedText),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 24),
-          AppButton.outlined(
-            label: 'Scan Reverse QR',
-            onPressed: () => _openReverseQrScanner(context),
-          ),
-          const SizedBox(height: 12),
-          AppButton.primary(
-            label: 'Done',
-            onPressed: () => Navigator.of(context).pop(),
-          ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
