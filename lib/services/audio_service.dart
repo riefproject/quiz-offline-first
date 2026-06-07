@@ -83,6 +83,12 @@ class AudioService {
         .catchError((e) => log.e('AudioService: playTick failed — $e'));
   }
 
+  void playCorrect() {
+    _getPlayer('sfx')
+        .play(AssetSource('audio/sfx/correct.mp3'), volume: 0.4)
+        .catchError((e) => log.e('AudioService: playCorrect failed — $e'));
+  }
+
   Future<void> playFanfare() async {
     try {
       await _getPlayer('jingle').play(

@@ -297,6 +297,7 @@ class HostController extends ChangeNotifier {
     _questionTimer?.cancel();
     _questionTimer = null;
     AudioService.instance.stopBgm();
+    AudioService.instance.playCorrect();
     if (_currentQuestionIndex < 0 || _currentQuestionIndex >= questions.length) {
       return;
     }
