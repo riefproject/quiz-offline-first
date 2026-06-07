@@ -2019,11 +2019,10 @@ class _HostViewState extends State<HostView> {
                         style: textTheme.bodyMedium?.copyWith(color: colors.mutedText),
                       ),
                     )
-                  : Column(
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: [
-                        _buildPodiumRow(top3, colors, textTheme),
-                      ],
+                  : FittedBox(
+                      fit: BoxFit.scaleDown,
+                      alignment: Alignment.bottomCenter,
+                      child: _buildPodiumRow(top3, colors, textTheme),
                     ),
             ),
             const SizedBox(height: 16),
@@ -2107,7 +2106,11 @@ class _HostViewState extends State<HostView> {
                           style: textTheme.bodyMedium?.copyWith(color: colors.mutedText),
                         ),
                       )
-                    : _buildPodiumRow(top3, colors, textTheme),
+                    : FittedBox(
+                        fit: BoxFit.scaleDown,
+                        alignment: Alignment.bottomCenter,
+                        child: _buildPodiumRow(top3, colors, textTheme),
+                      ),
               ),
             ),
           ],
@@ -2148,53 +2151,50 @@ class _HostViewState extends State<HostView> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              SizedBox(
-                height: heights[i],
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    CircleAvatar(
-                      radius: 28,
-                      backgroundColor: colors.primary.withValues(alpha: 0.14),
-                      child: Text(
-                        entry.name.isNotEmpty
-                            ? entry.name[0].toUpperCase()
-                            : '?',
-                        style: TextStyle(
-                          color: colors.primary,
+              Column(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  CircleAvatar(
+                    radius: 28,
+                    backgroundColor: colors.primary.withValues(alpha: 0.14),
+                    child: Text(
+                      entry.name.isNotEmpty
+                          ? entry.name[0].toUpperCase()
+                          : '?',
+                      style: TextStyle(
+                        color: colors.primary,
+                        fontWeight: FontWeight.w800,
+                        fontSize: 22,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    entry.name,
+                    style: textTheme.bodyMedium?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 4),
+                  TweenAnimationBuilder<int>(
+                    tween: IntTween(begin: 0, end: entry.score),
+                    duration: Duration(milliseconds: 500 + (i * 200)),
+                    curve: Curves.easeOutCubic,
+                    builder: (context, value, _) {
+                      return Text(
+                        '$value pts',
+                        style: textTheme.titleMedium?.copyWith(
                           fontWeight: FontWeight.w800,
-                          fontSize: 22,
+                          color: colors.primary,
                         ),
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      entry.name,
-                      style: textTheme.bodyMedium?.copyWith(
-                        fontWeight: FontWeight.w700,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 4),
-                    TweenAnimationBuilder<int>(
-                      tween: IntTween(begin: 0, end: entry.score),
-                      duration: Duration(milliseconds: 500 + (i * 200)),
-                      curve: Curves.easeOutCubic,
-                      builder: (context, value, _) {
-                        return Text(
-                          '$value pts',
-                          style: textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.w800,
-                            color: colors.primary,
-                          ),
-                        );
-                      },
-                    ),
-                    const SizedBox(height: 4),
-                    Text(medals[i], style: const TextStyle(fontSize: 32)),
-                  ],
-                ),
+                      );
+                    },
+                  ),
+                  const SizedBox(height: 4),
+                  Text(medals[i], style: const TextStyle(fontSize: 32)),
+                ],
               ),
               const SizedBox(height: 8),
               AnimatedContainer(

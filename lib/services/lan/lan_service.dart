@@ -94,8 +94,10 @@ class LanService {
     service._wsPort = wsPort;
     service._isHost = true;
 
-    service._server = await HttpServer.bind(InternetAddress.anyIPv4, wsPort);
-    log.i('LanService: WS server listening on port $wsPort');
+    // Use port 0 to let the OS assign a random open port if the default is used
+    service._server = await HttpServer.bind(InternetAddress.anyIPv4, wsPort == _defaultWsPort ? 0 : wsPort, shared: true);
+    service._wsPort = service._server!.port;
+    log.i('LanService: WS server listening on port ${service._wsPort}');
 
     service._server!.listen((request) async {
       final socket = await WebSocketTransformer.upgrade(request);
