@@ -342,6 +342,7 @@ class _QuestionFormCardState extends State<QuestionFormCard> {
                           ),
                         ),
                       ),
+
                       if (_pilihanControllers.length > 2)
                         IconButton(
                           icon: Icon(
@@ -397,31 +398,33 @@ class _QuestionFormCardState extends State<QuestionFormCard> {
               ),
             );
           }),
-          Align(
-            alignment: Alignment.centerLeft,
-            child: TextButton.icon(
-              onPressed: () {
-                setState(() {
-                  final newController = TextEditingController();
-                  newController.addListener(_notifyChange);
-                  _pilihanControllers.add(newController);
-                });
-                _notifyChange();
-              },
-              icon: Icon(
-                Icons.add_circle_outline_rounded,
-                color: colors.primary,
-                size: 20,
-              ),
-              label: Text(
-                'Add Option',
-                style: TextStyle(
+          if (_pilihanControllers.length < 4)
+            Align(
+              alignment: Alignment.centerLeft,
+              child: TextButton.icon(
+                onPressed: () {
+                  setState(() {
+                    final newController = TextEditingController();
+                    newController.addListener(_notifyChange);
+                    _pilihanControllers.add(newController);
+                  });
+                  _notifyChange();
+                },
+                icon: Icon(
+                  Icons.add_circle_outline_rounded,
                   color: colors.primary,
-                  fontWeight: FontWeight.w600,
+                  size: 20,
+                ),
+                label: Text(
+                  'Add Option',
+                  style: TextStyle(
+                    color: colors.primary,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ),
             ),
-          ),
+
         ],
       ),
     );

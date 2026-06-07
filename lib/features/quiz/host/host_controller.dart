@@ -386,7 +386,7 @@ class HostController extends ChangeNotifier {
     });
   }
 
-  Future<void> endGame() async {
+  Future<void> endGame({bool isEarly = false}) async {
     _countdownTimer?.cancel();
     _countdownTimer = null;
     _questionTimer?.cancel();
@@ -395,7 +395,9 @@ class HostController extends ChangeNotifier {
     _sessionFinishedAt = DateTime.now();
 
     AudioService.instance.stopBgm();
-    AudioService.instance.playFanfare();
+    if (!isEarly) {
+      AudioService.instance.playFanfare();
+    }
 
     _currentPayload.gameFinished = true;
     _lanPublisher!.publish(_currentPayload);

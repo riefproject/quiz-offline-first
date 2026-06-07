@@ -42,12 +42,6 @@ class FirstQuestionCountdown extends StatelessWidget {
       Colors.yellow.shade700,
       Colors.green.shade400,
     ];
-    final optionIcons = [
-      Icons.change_history_rounded,
-      Icons.diamond_rounded,
-      Icons.circle,
-      Icons.square_rounded,
-    ];
 
     return Material(
       color: colors.primary,
@@ -62,7 +56,6 @@ class FirstQuestionCountdown extends StatelessWidget {
                   seconds,
                   progress,
                   optionColors,
-                  optionIcons,
                 )
               : Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -80,7 +73,6 @@ class FirstQuestionCountdown extends StatelessWidget {
                               e.key,
                               e.value,
                               optionColors[e.key % optionColors.length],
-                              optionIcons[e.key % optionIcons.length],
                               textTheme,
                             ),
                           );
@@ -241,7 +233,6 @@ class FirstQuestionCountdown extends StatelessWidget {
     int index,
     String label,
     Color color,
-    IconData icon,
     TextTheme textTheme,
   ) {
     return Container(
@@ -253,8 +244,14 @@ class FirstQuestionCountdown extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Icon(icon, color: Colors.white, size: 20),
-          const SizedBox(width: 10),
+          Text(
+            String.fromCharCode(65 + index),
+            style: textTheme.titleMedium?.copyWith(
+              color: Colors.white,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+          const SizedBox(width: 12),
           Expanded(
             child: Text(
               label,
@@ -278,7 +275,6 @@ class FirstQuestionCountdown extends StatelessWidget {
     int seconds,
     double progress,
     List<Color> optionColors,
-    List<IconData> optionIcons,
   ) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -300,7 +296,6 @@ class FirstQuestionCountdown extends StatelessWidget {
                         e.key,
                         e.value,
                         optionColors[e.key % optionColors.length],
-                        optionIcons[e.key % optionIcons.length],
                         textTheme,
                       ),
                     );

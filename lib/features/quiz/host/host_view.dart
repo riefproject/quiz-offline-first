@@ -83,7 +83,7 @@ class _HostViewState extends State<HostView> {
       ),
     );
     if (confirmed == true && context.mounted) {
-      _controller.endGame();
+      _controller.endGame(isEarly: true);
       Navigator.of(context).pop();
     }
   }
@@ -126,8 +126,10 @@ class _HostViewState extends State<HostView> {
       backgroundColor: _controller.phase == HostPhase.countdown
           ? colors.primary
           : colors.background,
-      body: AnimatedSwitcher(
-        duration: const Duration(milliseconds: 420),
+      body: Stack(
+        children: [
+          AnimatedSwitcher(
+            duration: const Duration(milliseconds: 420),
         switchInCurve: Curves.easeOutCubic,
         switchOutCurve: Curves.easeInCubic,
         transitionBuilder: (child, animation) {
@@ -248,6 +250,18 @@ class _HostViewState extends State<HostView> {
                   ],
                 ),
               ),
+          ),
+          if (_controller.phase == HostPhase.results)
+            Positioned.fill(
+              child: IgnorePointer(
+                child: Lottie.asset(
+                  'assets/lottie/confetti.json',
+                  fit: BoxFit.cover,
+                  repeat: true,
+                ),
+              ),
+            ),
+        ],
       ),
     );
   }
@@ -832,7 +846,6 @@ class _HostViewState extends State<HostView> {
     int index,
     String text,
     Color color,
-    IconData icon,
     TextTheme textTheme,
   ) {
     return Container(
@@ -859,7 +872,15 @@ class _HostViewState extends State<HostView> {
                 color: Colors.white.withValues(alpha: 0.25),
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: Center(child: Icon(icon, color: Colors.white, size: 20)),
+              child: Center(
+                child: Text(
+                  String.fromCharCode(65 + index),
+                  style: textTheme.titleMedium?.copyWith(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+              ),
             ),
             const SizedBox(width: 12),
             Expanded(
@@ -883,7 +904,6 @@ class _HostViewState extends State<HostView> {
     int index,
     String text,
     Color color,
-    IconData icon,
     TextTheme textTheme,
   ) {
     return Container(
@@ -903,8 +923,14 @@ class _HostViewState extends State<HostView> {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            Icon(icon, color: Colors.white, size: 24),
-            const SizedBox(width: 12),
+            Text(
+              String.fromCharCode(65 + index),
+              style: textTheme.headlineSmall?.copyWith(
+                color: Colors.white,
+                fontWeight: FontWeight.w900,
+              ),
+            ),
+            const SizedBox(width: 16),
             Expanded(
               child: Text(
                 text,
@@ -926,7 +952,6 @@ class _HostViewState extends State<HostView> {
     BuildContext context,
     dynamic q,
     List<Color> optionColors,
-    List<IconData> optionIcons,
   ) {
     final colors = Theme.of(context).extension<ColorsConfig>()!;
     final textTheme = Theme.of(context).textTheme;
@@ -1047,7 +1072,6 @@ class _HostViewState extends State<HostView> {
                         0,
                         q.options.isNotEmpty ? q.options[0] : '',
                         optionColors[0],
-                        optionIcons[0],
                         textTheme,
                       ),
                     ),
@@ -1057,7 +1081,6 @@ class _HostViewState extends State<HostView> {
                         1,
                         q.options.length > 1 ? q.options[1] : '',
                         optionColors[1],
-                        optionIcons[1],
                         textTheme,
                       ),
                     ),
@@ -1075,7 +1098,6 @@ class _HostViewState extends State<HostView> {
                           2,
                           q.options[2],
                           optionColors[2],
-                          optionIcons[2],
                           textTheme,
                         ),
                       ),
@@ -1086,7 +1108,6 @@ class _HostViewState extends State<HostView> {
                             3,
                             q.options[3],
                             optionColors[3],
-                            optionIcons[3],
                             textTheme,
                           ),
                         )
@@ -1653,15 +1674,8 @@ class _HostViewState extends State<HostView> {
       Colors.yellow.shade700,
       Colors.green.shade400,
     ];
-    final optionIcons = [
-      Icons.change_history_rounded,
-      Icons.diamond_rounded,
-      Icons.circle,
-      Icons.square_rounded,
-    ];
-
     if (MediaQuery.of(context).orientation == Orientation.landscape) {
-      return _buildLandscapeQuestion(context, q, optionColors, optionIcons);
+      return _buildLandscapeQuestion(context, q, optionColors);
     }
 
     return LayoutBuilder(
@@ -1780,7 +1794,6 @@ class _HostViewState extends State<HostView> {
                       i,
                       q.options[i],
                       optionColors[i],
-                      optionIcons[i],
                       textTheme,
                     ),
                   );
@@ -2031,13 +2044,6 @@ class _HostViewState extends State<HostView> {
 
     return Stack(
       children: [
-        Positioned.fill(
-          child: Lottie.asset(
-            'assets/lottie/confetti.json',
-            fit: BoxFit.cover,
-            repeat: true,
-          ),
-        ),
         Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -2096,13 +2102,6 @@ class _HostViewState extends State<HostView> {
 
     return Stack(
       children: [
-        Positioned.fill(
-          child: Lottie.asset(
-            'assets/lottie/confetti.json',
-            fit: BoxFit.cover,
-            repeat: true,
-          ),
-        ),
         Row(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -2271,13 +2270,6 @@ class _HostViewState extends State<HostView> {
 
     return Stack(
       children: [
-        Positioned.fill(
-          child: Lottie.asset(
-            'assets/lottie/confetti.json',
-            fit: BoxFit.cover,
-            repeat: true,
-          ),
-        ),
         SingleChildScrollView(
           padding: const EdgeInsets.symmetric(vertical: 24),
           child: Column(
