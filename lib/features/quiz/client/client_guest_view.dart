@@ -377,6 +377,8 @@ class _ClientGuestViewState extends State<ClientGuestView> {
     ];
 
     final seconds = (_controller.remainingTimeMs / 1000).ceil();
+    final isLandscape =
+        MediaQuery.of(context).orientation == Orientation.landscape;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -431,11 +433,11 @@ class _ClientGuestViewState extends State<ClientGuestView> {
         Expanded(
           child: GridView.builder(
             physics: const NeverScrollableScrollPhysics(),
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 2,
               mainAxisSpacing: 12,
               crossAxisSpacing: 12,
-              childAspectRatio: 1.4,
+              childAspectRatio: isLandscape ? 3.0 : 1.4,
             ),
             itemCount: choiceCount,
             itemBuilder: (context, index) {

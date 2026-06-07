@@ -56,6 +56,38 @@ class _HostViewState extends State<HostView> {
     setState(() {});
   }
 
+  Future<void> _confirmLeave(BuildContext context) async {
+    final active = _controller.phase != HostPhase.lobby &&
+        _controller.phase != HostPhase.results;
+    if (!active) {
+      Navigator.of(context).pop();
+      return;
+    }
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('End the game?'),
+        content: const Text(
+          'This will disconnect all participants and end the quiz.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('End Game'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed == true && context.mounted) {
+      _controller.endGame();
+      Navigator.of(context).pop();
+    }
+  }
+
   @override
   void dispose() {
     SystemChrome.setPreferredOrientations([
@@ -122,7 +154,7 @@ class _HostViewState extends State<HostView> {
                                 Icons.arrow_back_rounded,
                                 color: colors.textOnSurface,
                               ),
-                              onPressed: () => Navigator.of(context).pop(),
+                              onPressed: () => _confirmLeave(context),
                             ),
                             const SizedBox(width: 8),
                             Expanded(
@@ -279,58 +311,83 @@ class _HostViewState extends State<HostView> {
           ),
           const SizedBox(height: 24),
         ],
-        Text(
-          'PARTICIPANTS (${_controller.participants.length})',
-          style: textTheme.labelLarge?.copyWith(
-            fontWeight: FontWeight.w800,
-            color: colors.mutedText,
-            letterSpacing: 1.2,
-          ),
-        ),
-        const SizedBox(height: 12),
-        Expanded(
-          child: _controller.participants.isEmpty
-              ? Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Lottie.asset(
-                        'assets/lottie/waiting.json',
-                        height: 180,
-                        width: 180,
-                      ),
-                      const SizedBox(height: 12),
-                      Text(
-                        'Waiting for participants to join...',
-                        style: textTheme.bodyMedium?.copyWith(
-                          color: colors.mutedText,
-                        ),
-                      ),
-                    ],
+        if (_controller.gameId == 0) ...[
+          const Spacer(),
+          Center(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.meeting_room_rounded,
+                  size: 56,
+                  color: colors.mutedText.withValues(alpha: 0.5),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'Open a room to let participants join',
+                  style: textTheme.titleMedium?.copyWith(
+                    color: colors.mutedText,
                   ),
-                )
-              : ListView.builder(
-                itemCount: _controller.participants.length,
-                itemBuilder: (context, index) {
-                  final entry = _controller.participants.entries.elementAt(
-                    index,
-                  );
-                  return Padding(
-                    padding: const EdgeInsets.only(bottom: 8),
-                    child: _buildParticipantTile(context, entry),
-                  );
-                },
-              ),
-        ),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+          ),
+        ] else ...[
+          Text(
+            'PARTICIPANTS (${_controller.participants.length})',
+            style: textTheme.labelLarge?.copyWith(
+              fontWeight: FontWeight.w800,
+              color: colors.mutedText,
+              letterSpacing: 1.2,
+            ),
+          ),
+          const SizedBox(height: 12),
+          Expanded(
+            child: _controller.participants.isEmpty
+                ? Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Lottie.asset(
+                          'assets/lottie/waiting.json',
+                          height: 180,
+                          width: 180,
+                        ),
+                        const SizedBox(height: 12),
+                        Text(
+                          'Waiting for participants to join...',
+                          style: textTheme.bodyMedium?.copyWith(
+                            color: colors.mutedText,
+                          ),
+                        ),
+                      ],
+                    ),
+                  )
+                : ListView.builder(
+                  itemCount: _controller.participants.length,
+                  itemBuilder: (context, index) {
+                    final entry = _controller.participants.entries.elementAt(
+                      index,
+                    );
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 8),
+                      child: _buildParticipantTile(context, entry),
+                    );
+                  },
+                ),
+          ),
+          const SizedBox(height: 16),
+        ],
         const SizedBox(height: 16),
         if (_controller.gameId == 0)
           AppButton.primary(
-            label: 'Start Game',
+            label: 'Open Room',
             onPressed: () => _controller.startGame(),
           )
         else
           AppButton.primary(
-            label: 'Send First Question',
+            label: 'Start Game',
             onPressed: () => _controller.nextQuestion(),
           ),
       ],
@@ -475,8 +532,8 @@ class _HostViewState extends State<HostView> {
                 const Spacer(),
                 AppButton.primary(
                   label: _controller.gameId == 0
-                      ? 'Start Game'
-                      : 'Send First Question',
+                      ? 'Open Room'
+                      : 'Start Game',
                   onPressed: _controller.gameId == 0
                       ? () => _controller.startGame()
                       : () => _controller.nextQuestion(),
@@ -521,26 +578,42 @@ class _HostViewState extends State<HostView> {
                 ),
                 const SizedBox(height: 14),
                 Expanded(
-                  child: participants.isEmpty
-                      ? Center(
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Lottie.asset(
-                                'assets/lottie/waiting.json',
-                                height: 140,
-                                width: 140,
-                              ),
-                              const SizedBox(height: 10),
-                              Text(
-                                'Waiting for participants to join...',
-                                style: textTheme.bodyMedium?.copyWith(
-                                  color: colors.mutedText,
-                                ),
-                              ),
-                            ],
-                          ),
-                        )
+                    child: participants.isEmpty
+                        ? Center(
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: _controller.gameId == 0
+                                  ? [
+                                      Icon(
+                                        Icons.meeting_room_rounded,
+                                        size: 48,
+                                        color: colors.mutedText.withValues(alpha: 0.5),
+                                      ),
+                                      const SizedBox(height: 12),
+                                      Text(
+                                        'Open a room to let participants join',
+                                        style: textTheme.titleSmall?.copyWith(
+                                          color: colors.mutedText,
+                                        ),
+                                        textAlign: TextAlign.center,
+                                      ),
+                                    ]
+                                  : [
+                                      Lottie.asset(
+                                        'assets/lottie/waiting.json',
+                                        height: 140,
+                                        width: 140,
+                                      ),
+                                      const SizedBox(height: 10),
+                                      Text(
+                                        'Waiting for participants to join...',
+                                        style: textTheme.bodyMedium?.copyWith(
+                                          color: colors.mutedText,
+                                        ),
+                                      ),
+                                    ],
+                            ),
+                          )
                       : GridView.builder(
                           gridDelegate:
                               const SliverGridDelegateWithMaxCrossAxisExtent(
