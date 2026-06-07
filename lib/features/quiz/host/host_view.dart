@@ -123,7 +123,9 @@ class _HostViewState extends State<HostView> {
     }
 
     return Scaffold(
-      backgroundColor: colors.background,
+      backgroundColor: _controller.phase == HostPhase.countdown
+          ? colors.primary
+          : colors.background,
       body: AnimatedSwitcher(
         duration: const Duration(milliseconds: 420),
         switchInCurve: Curves.easeOutCubic,
@@ -140,7 +142,12 @@ class _HostViewState extends State<HostView> {
             ),
           );
         },
-        child: SafeArea(
+        child: _controller.phase == HostPhase.countdown
+            ? KeyedSubtree(
+                key: const ValueKey('host-countdown'),
+                child: _buildCountdown(context),
+              )
+            : SafeArea(
                 key: ValueKey('host-${_controller.phase.name}'),
                 child: Column(
                   children: [
@@ -250,7 +257,7 @@ class _HostViewState extends State<HostView> {
       case HostPhase.lobby:
         return _buildLobby(context);
       case HostPhase.countdown:
-        return _buildCountdown(context);
+        return const SizedBox.shrink(); // Handled outside _buildBody
       case HostPhase.question:
         return _buildQuestion(context);
       case HostPhase.answerReveal:
@@ -696,141 +703,128 @@ class _HostViewState extends State<HostView> {
     final textTheme = Theme.of(context).textTheme;
     final q = _controller.currentQuestion;
     final seconds = (_controller.countdownRemainingMs / 1000).ceil();
+    final hasImage = (q.localPhotoPath != null && q.localPhotoPath!.isNotEmpty) ||
+        (q.photoUrl != null && q.photoUrl!.isNotEmpty);
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Container(
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            color: colors.primary,
-            borderRadius: BorderRadius.circular(16),
-          ),
+    return SafeArea(
+      child: SizedBox(
+        width: double.infinity,
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
           child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Text(
-                'Question ${_controller.currentQuestionIndex + 1} of ${_controller.questions.length}',
-                style: textTheme.labelLarge?.copyWith(
-                  color: Colors.white70,
-                  fontWeight: FontWeight.w700,
-                ),
+              Lottie.asset(
+                'assets/lottie/question_mark.json',
+                height: 100,
+                fit: BoxFit.contain,
               ),
               const SizedBox(height: 12),
               Text(
-                q.text,
-                style: textTheme.headlineSmall?.copyWith(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w800,
+                'Question ${_controller.currentQuestionIndex + 1}',
+                style: textTheme.titleMedium?.copyWith(
+                  color: Colors.white70,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 1.2,
                 ),
                 textAlign: TextAlign.center,
               ),
-              if ((q.localPhotoPath != null && q.localPhotoPath!.isNotEmpty) || (q.photoUrl != null && q.photoUrl!.isNotEmpty))
-                Container(
-                  margin: const EdgeInsets.only(top: 16),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(12),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.1),
-                        blurRadius: 10,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(12),
-                    child: q.localPhotoPath != null && q.localPhotoPath!.isNotEmpty
-                        ? Image.file(
-                            File(q.localPhotoPath!),
-                            height: 180,
-                            width: double.infinity,
-                            fit: BoxFit.cover,
-                            errorBuilder: (ctx, err, stack) => Image.network(
-                              q.photoUrl ?? '',
-                              height: 180,
-                              width: double.infinity,
-                              fit: BoxFit.cover,
-                              errorBuilder: (c, e, s) => const SizedBox(height: 180, child: Center(child: Icon(Icons.broken_image, color: Colors.white))),
-                            ),
-                          )
-                        : Image.network(
-                            q.photoUrl!,
-                            height: 180,
-                            width: double.infinity,
-                            fit: BoxFit.cover,
-                          ),
-                  ),
+              const SizedBox(height: 16),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 24),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.15),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
                 ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 16),
-        ...List.generate(q.options.length, (i) {
-          final optionColors = [
-            Colors.red.shade400,
-            Colors.blue.shade400,
-            Colors.yellow.shade700,
-            Colors.green.shade400,
-          ];
-          final optionIcons = [
-            Icons.change_history_rounded,
-            Icons.diamond_rounded,
-            Icons.circle,
-            Icons.square_rounded,
-          ];
-          return Padding(
-            padding: const EdgeInsets.only(bottom: 10),
-            child: _buildPortraitOptionButton(i, q.options[i], optionColors[i], optionIcons[i], textTheme),
-          );
-        }),
-        const Spacer(),
-        Center(
-          child: SizedBox(
-            width: 120,
-            height: 120,
-            child: Stack(
-              alignment: Alignment.center,
-              children: [
-                SizedBox(
-                  width: 120,
-                  height: 120,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 6,
-                    value: _controller.countdownRemainingMs / 5000,
-                    backgroundColor: colors.outline,
+                child: Text(
+                  q.text,
+                  style: textTheme.headlineSmall?.copyWith(
                     color: colors.primary,
+                    fontWeight: FontWeight.w800,
                   ),
+                  textAlign: TextAlign.center,
                 ),
-                Text(
-                  '$seconds',
-                  style: textTheme.displayLarge?.copyWith(
-                    fontWeight: FontWeight.w900,
-                    color: colors.primary,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-        const SizedBox(height: 12),
-        Container(
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: colors.surfaceLow,
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Row(
-            children: [
-              Icon(Icons.people_rounded, size: 18, color: colors.mutedText),
-              const SizedBox(width: 8),
-              Text(
-                '${_controller.participants.length} participant(s) ready',
-                style: textTheme.bodyMedium?.copyWith(color: colors.mutedText),
               ),
-            ],
+              const SizedBox(height: 24),
+              if (hasImage)
+                Expanded(
+                  child: Center(
+                    child: _buildUncroppedImage(q),
+                  ),
+                ),
+              if (hasImage) const SizedBox(height: 24),
+              Container(
+              padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.2),
+                borderRadius: BorderRadius.circular(100),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  SizedBox(
+                    width: 24,
+                    height: 24,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 3,
+                      value: _controller.countdownRemainingMs / 5000,
+                      backgroundColor: Colors.white24,
+                      color: Colors.white,
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Text(
+                    'Ready in $seconds...',
+                    style: textTheme.titleLarge?.copyWith(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              '${_controller.participants.length} participant(s) ready',
+              style: textTheme.bodyMedium?.copyWith(
+                color: Colors.white70,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
+      ),
+    ));
+  }
+
+  Widget _buildUncroppedImage(dynamic q) {
+    if (q.localPhotoPath != null && q.localPhotoPath!.isNotEmpty) {
+      return Image.file(
+        File(q.localPhotoPath!),
+        fit: BoxFit.contain,
+        errorBuilder: (ctx, err, stack) => Image.network(
+          q.photoUrl ?? '',
+          fit: BoxFit.contain,
+          errorBuilder: (c, e, s) => const Center(
+            child: Icon(Icons.broken_image, color: Colors.white70, size: 64),
           ),
         ),
-      ],
+      );
+    }
+    return Image.network(
+      q.photoUrl!,
+      fit: BoxFit.contain,
+      errorBuilder: (c, e, s) => const Center(
+        child: Icon(Icons.broken_image, color: Colors.white70, size: 64),
+      ),
     );
   }
 
