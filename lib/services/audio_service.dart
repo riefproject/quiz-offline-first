@@ -50,7 +50,7 @@ class AudioService {
         }
       });
 
-      await p.play(AssetSource(_currentBgmTrack!));
+      await p.play(AssetSource(_currentBgmTrack!), volume: 1.0);
       log.i('AudioService: BGM started — $_currentBgmTrack');
     } catch (e) {
       log.e('AudioService: playBgm failed — $e');
@@ -60,7 +60,7 @@ class AudioService {
   Future<void> _restartBgm() async {
     if (_currentBgmTrack == null) return;
     try {
-      await _bgmPlayer?.play(AssetSource(_currentBgmTrack!));
+      await _bgmPlayer?.play(AssetSource(_currentBgmTrack!), volume: 1.0);
       log.i('AudioService: BGM restarted');
     } catch (e) {
       log.e('AudioService: BGM restart failed — $e');
@@ -79,7 +79,7 @@ class AudioService {
 
   void playTick() {
     _getPlayer('sfx')
-        .play(AssetSource('audio/sfx/tick.mp3'))
+        .play(AssetSource('audio/sfx/tick.mp3'), volume: 1.0)
         .catchError((e) => log.e('AudioService: playTick failed — $e'));
   }
 
@@ -93,6 +93,7 @@ class AudioService {
     try {
       await _getPlayer('jingle').play(
         AssetSource('audio/jingle/fanfare-trumpets.mp3'),
+        volume: 1.0,
       );
       log.i('AudioService: fanfare played');
     } catch (e) {
