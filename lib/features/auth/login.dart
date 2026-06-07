@@ -206,13 +206,6 @@ class _LoginPageState extends State<LoginPage> {
                         );
                       },
               ),
-              const SizedBox(height: 12),
-              AppButton.text(
-                label: 'Play Live Quiz',
-                onPressed: _isSubmitting
-                    ? null
-                    : () => Navigator.of(context).pushNamed('/play'),
-              ),
             ],
           ),
         ),

@@ -113,6 +113,7 @@ class HostController extends ChangeNotifier {
 
   Timer? _countdownTimer;
   Timer? _questionTimer;
+  Timer? _periodicBroadcastTimer;
 
   int _countdownRemainingMs = 0;
   int get countdownRemainingMs => _countdownRemainingMs;
@@ -179,6 +180,11 @@ class HostController extends ChangeNotifier {
       gameID: _gameId,
     );
     _lanPublisher!.publish(_currentPayload);
+
+    _periodicBroadcastTimer = Timer.periodic(
+      const Duration(seconds: 2),
+      (_) => _lanPublisher!.publish(_currentPayload),
+    );
 
     _isAdvertising = true;
     AudioService.instance.playBgm();
@@ -395,6 +401,8 @@ class HostController extends ChangeNotifier {
 
     _currentPayload.gameFinished = true;
     _lanPublisher!.publish(_currentPayload);
+    _periodicBroadcastTimer?.cancel();
+    _periodicBroadcastTimer = null;
     _isAdvertising = false;
 
     final startedAt = _sessionStartedAt;
@@ -462,6 +470,7 @@ class HostController extends ChangeNotifier {
     AudioService.instance.stopBgm();
     _countdownTimer?.cancel();
     _questionTimer?.cancel();
+    _periodicBroadcastTimer?.cancel();
     _clientSub?.cancel();
     _lanClientListener?.dispose();
     _lanPublisher?.dispose();

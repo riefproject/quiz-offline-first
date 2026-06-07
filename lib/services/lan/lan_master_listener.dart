@@ -9,6 +9,7 @@ import 'package:AlpenQuiz/services/logger.dart';
 class LanMasterListener extends LanListener<MasterPayload> {
   final int _gameId;
   StreamSubscription? _sub;
+  Uint8List? _lastEmittedBytes;
 
   LanMasterListener({
     required LanService lanService,
@@ -16,11 +17,22 @@ class LanMasterListener extends LanListener<MasterPayload> {
   })  : _gameId = gameId,
         super(typeName: 'LanMasterListener') {
     _sub = lanService.onHostData.listen((data) {
+      if (_isDuplicate(data)) return;
       final payload = parse(data);
       if (payload != null) {
+        _lastEmittedBytes = data;
         emit(payload);
       }
     });
+  }
+
+  bool _isDuplicate(Uint8List data) {
+    if (_lastEmittedBytes == null) return false;
+    if (_lastEmittedBytes!.length != data.length) return false;
+    for (var i = 0; i < data.length; i++) {
+      if (_lastEmittedBytes![i] != data[i]) return false;
+    }
+    return true;
   }
 
   @override

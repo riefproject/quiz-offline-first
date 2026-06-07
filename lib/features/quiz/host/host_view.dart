@@ -2126,13 +2126,9 @@ class _HostViewState extends State<HostView> {
   ) {
     if (top3.isEmpty) return const SizedBox.shrink();
 
-    final ordered = <({int clientId, String name, int rank, int score})>[
-      top3.firstWhere((e) => e.rank == 2, orElse: () => top3[0]),
-      top3.firstWhere((e) => e.rank == 1, orElse: () => top3[0]),
-      top3.firstWhere((e) => e.rank == 3, orElse: () => top3[0]),
-    ];
+    final byRank = {for (final e in top3) e.rank: e};
 
-    final heights = [120.0, 170.0, 100.0];
+    final heights = [110.0, 80.0, 60.0];
     final podiumColors = [
       Colors.grey.shade400,
       Colors.yellow.shade600,
@@ -2140,67 +2136,66 @@ class _HostViewState extends State<HostView> {
     ];
     final medals = ['🥈', '🥇', '🥉'];
 
+    final slots = [byRank[2], byRank[1], byRank[3]];
+
     return Row(
       crossAxisAlignment: CrossAxisAlignment.end,
       mainAxisAlignment: MainAxisAlignment.center,
       children: List.generate(3, (i) {
-        final entry = ordered[i];
+        final entry = slots[i];
+        if (entry == null) return const SizedBox(width: 88);
+
         return AnimatedContainer(
           duration: const Duration(milliseconds: 500),
           curve: Curves.easeOutCubic,
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Column(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  CircleAvatar(
-                    radius: 28,
-                    backgroundColor: colors.primary.withValues(alpha: 0.14),
-                    child: Text(
-                      entry.name.isNotEmpty
-                          ? entry.name[0].toUpperCase()
-                          : '?',
-                      style: TextStyle(
-                        color: colors.primary,
-                        fontWeight: FontWeight.w800,
-                        fontSize: 22,
-                      ),
-                    ),
+              CircleAvatar(
+                radius: 24,
+                backgroundColor: colors.primary.withValues(alpha: 0.14),
+                child: Text(
+                  entry.name.isNotEmpty
+                      ? entry.name[0].toUpperCase()
+                      : '?',
+                  style: TextStyle(
+                    color: colors.primary,
+                    fontWeight: FontWeight.w800,
+                    fontSize: 20,
                   ),
-                  const SizedBox(height: 6),
-                  Text(
-                    entry.name,
-                    style: textTheme.bodyMedium?.copyWith(
-                      fontWeight: FontWeight.w700,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 4),
-                  TweenAnimationBuilder<int>(
-                    tween: IntTween(begin: 0, end: entry.score),
-                    duration: Duration(milliseconds: 500 + (i * 200)),
-                    curve: Curves.easeOutCubic,
-                    builder: (context, value, _) {
-                      return Text(
-                        '$value pts',
-                        style: textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w800,
-                          color: colors.primary,
-                        ),
-                      );
-                    },
-                  ),
-                  const SizedBox(height: 4),
-                  Text(medals[i], style: const TextStyle(fontSize: 32)),
-                ],
+                ),
               ),
+              const SizedBox(height: 4),
+              Text(
+                entry.name,
+                style: textTheme.bodySmall?.copyWith(
+                  fontWeight: FontWeight.w700,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+              const SizedBox(height: 2),
+              TweenAnimationBuilder<int>(
+                tween: IntTween(begin: 0, end: entry.score),
+                duration: Duration(milliseconds: 500 + (i * 200)),
+                curve: Curves.easeOutCubic,
+                builder: (context, value, _) {
+                  return Text(
+                    '$value pts',
+                    style: textTheme.labelMedium?.copyWith(
+                      fontWeight: FontWeight.w800,
+                      color: colors.primary,
+                    ),
+                  );
+                },
+              ),
+              const SizedBox(height: 2),
+              Text(medals[i], style: const TextStyle(fontSize: 26)),
               const SizedBox(height: 8),
               AnimatedContainer(
                 duration: const Duration(milliseconds: 500),
                 curve: Curves.easeOutCubic,
-                width: 104,
+                width: 88,
                 height: heights[i],
                 decoration: BoxDecoration(
                   color: podiumColors[i],
