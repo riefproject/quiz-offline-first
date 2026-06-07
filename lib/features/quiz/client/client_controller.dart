@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:AlpenQuiz/models/client_payload.dart';
 import 'package:AlpenQuiz/models/master_payload.dart';
-import 'package:AlpenQuiz/models/reverse_qr_submission.dart';
 import 'package:AlpenQuiz/services/logger.dart';
 import 'package:AlpenQuiz/services/lan/lan_service.dart';
 import 'package:AlpenQuiz/services/lan/lan_master_list_listener.dart';
@@ -49,12 +48,19 @@ class ClientController extends ChangeNotifier {
   StreamSubscription? _masterSub;
   Timer? _countdownTimer;
   Timer? _questionTimer;
+  Timer? _hostLostTimer;
+  StreamSubscription? _connectionLostSub;
+  StreamSubscription? _hostDataSub;
+  DateTime _lastHostMessageAt = DateTime.now();
+  bool _hostDisconnected = false;
 
   int _countdownRemainingMs = 0;
   int get countdownRemainingMs => _countdownRemainingMs;
 
   int _remainingTimeMs = 0;
   int get remainingTimeMs => _remainingTimeMs;
+
+  bool get hostDisconnected => _hostDisconnected;
 
   MasterQuestionInfo? get currentQuestionInfo {
     if (_currentPayload == null) return null;
@@ -134,6 +140,24 @@ class ClientController extends ChangeNotifier {
 
     _lanClientPublisher = LanClientPublisher(lanService: _lanService!);
 
+    _lastHostMessageAt = DateTime.now();
+    _hostDisconnected = false;
+
+    _connectionLostSub = _lanService!.onConnectionLost.listen((_) {
+      _markHostLost();
+    });
+
+    _hostDataSub = _lanService!.onHostData.listen((_) {
+      _lastHostMessageAt = DateTime.now();
+    });
+
+    _hostLostTimer = Timer.periodic(const Duration(seconds: 3), (_) {
+      if (_hostDisconnected) return;
+      if (DateTime.now().difference(_lastHostMessageAt).inSeconds > 6) {
+        _markHostLost();
+      }
+    });
+
     _phase = ClientPhase.lobby;
     _lanClientPublisher!.publish(
       ClientPayload(
@@ -150,6 +174,7 @@ class ClientController extends ChangeNotifier {
   }
 
   void _onQuestion(MasterPayload payload) {
+    _lastHostMessageAt = DateTime.now();
     _currentPayload = payload;
     _questionTimer?.cancel();
     _questionTimer = null;
@@ -269,27 +294,27 @@ class ClientController extends ChangeNotifier {
     _lanClientPublisher?.publish(payload);
   }
 
-  ReverseQrSubmission buildReverseQrSubmission({
-    required String participantUserId,
-  }) {
-    final gameId = _joinedGameId;
-    if (gameId == null) {
-      throw StateError('Participant is not connected to a game.');
-    }
-
-    return ReverseQrSubmission.fromClientAnswers(
-      participantUserId: participantUserId,
-      participantName: _playerName,
-      gameId: gameId,
-      clientId: _clientId,
-      answers: _myAnswers,
-    );
+  void _markHostLost() {
+    if (_hostDisconnected) return;
+    _hostDisconnected = true;
+    _hostLostTimer?.cancel();
+    _hostLostTimer = null;
+    _countdownTimer?.cancel();
+    _countdownTimer = null;
+    _questionTimer?.cancel();
+    _questionTimer = null;
+    _phase = ClientPhase.finished;
+    log.i('ClientController: host connection lost');
+    notifyListeners();
   }
 
   @override
   void dispose() {
     _countdownTimer?.cancel();
     _questionTimer?.cancel();
+    _hostLostTimer?.cancel();
+    _connectionLostSub?.cancel();
+    _hostDataSub?.cancel();
     _masterListSub?.cancel();
     _masterSub?.cancel();
     _lanMasterListListener?.dispose();

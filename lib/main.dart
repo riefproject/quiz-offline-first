@@ -9,9 +9,7 @@ import 'features/auth/login.dart';
 import 'features/auth/register_page.dart';
 import 'features/quiz/client/client_guest_view.dart';
 import 'features/quiz/host/host_view.dart';
-import 'features/quiz/qr/quiz_result_qr_page.dart';
 import 'features/quiz/role_choice_page.dart';
-import 'models/quiz_result.dart';
 import 'services/auth_service.dart';
 import 'services/hive_service.dart';
 import 'services/logger.dart';
@@ -79,12 +77,6 @@ class QuizApp extends StatelessWidget {
                       ),
                     ),
                   ),
-          );
-        }
-        if (settings.name == QuizResultQrPage.routeName) {
-          final quizResult = settings.arguments as QuizResult;
-          return MaterialPageRoute(
-            builder: (context) => QuizResultQrPage(quizResult: quizResult),
           );
         }
         return null;

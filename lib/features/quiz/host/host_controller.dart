@@ -5,12 +5,10 @@ import 'package:flutter/foundation.dart';
 import 'package:AlpenQuiz/models/client_payload.dart';
 import 'package:AlpenQuiz/models/master_payload.dart';
 import 'package:AlpenQuiz/models/question.dart';
-import 'package:AlpenQuiz/models/reverse_qr_submission.dart';
 import 'package:AlpenQuiz/services/auth_service.dart';
 import 'package:AlpenQuiz/services/hive_service.dart';
 import 'package:AlpenQuiz/services/logger.dart';
 import 'package:AlpenQuiz/services/quiz_history_service.dart';
-import 'package:AlpenQuiz/services/reverse_qr_sync_service.dart';
 import 'package:AlpenQuiz/services/audio_service.dart';
 import 'package:AlpenQuiz/services/lan/lan_service.dart';
 import 'package:AlpenQuiz/services/lan/lan_client_listener.dart';
@@ -418,51 +416,6 @@ class HostController extends ChangeNotifier {
     }
 
     notifyListeners();
-  }
-
-  Future<ReverseQrImportResult> importReverseQrSubmission(
-    ReverseQrSubmission submission,
-  ) async {
-    if (submission.gameId != _gameId) {
-      throw const ReverseQrSyncException(
-        'QR ini berasal dari game yang berbeda.',
-      );
-    }
-    final startedAt = _sessionStartedAt;
-    if (startedAt == null || _sessionId.isEmpty) {
-      throw const ReverseQrSyncException(
-        'Sesi host belum siap untuk menerima fallback QR.',
-      );
-    }
-
-    final result = await ReverseQrSyncService.importSubmission(
-      submission: submission,
-      quizId: quizId,
-      sessionId: _sessionId,
-      sessionStartedAt: startedAt,
-      sessionFinishedAt: _sessionFinishedAt,
-      questionStartOffsets: List<int>.from(_currentPayload.nextQuestion),
-      questionDurations: List<int>.from(_currentPayload.duration),
-    );
-
-    _participants[submission.clientId] = submission.participantName;
-    _scores[submission.clientId] = result.totalScore;
-    final rankMap = await QuizHistoryService.saveHostedSession(
-      quizId: quizId,
-      sessionId: _sessionId,
-      startedAt: startedAt,
-      finishedAt: _sessionFinishedAt ?? DateTime.now(),
-      participants: _participants,
-      scores: _scores,
-    );
-    notifyListeners();
-
-    return ReverseQrImportResult(
-      importedAnswerCount: result.importedAnswerCount,
-      totalScore: result.totalScore,
-      rank: rankMap[submission.clientId] ?? result.rank,
-      participantName: result.participantName,
-    );
   }
 
   @override

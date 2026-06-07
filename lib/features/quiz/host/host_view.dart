@@ -3,11 +3,8 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:lottie/lottie.dart';
-import '../../../models/reverse_qr_submission.dart';
-import '../qr/reverse_qr_scanner_page.dart';
 import '../../../theme/colors_config.dart';
 import '../../../widgets/components/app_button.dart';
-import '../widgets/first_question_countdown.dart';
 import 'host_controller.dart';
 
 class HostView extends StatefulWidget {
@@ -76,9 +73,6 @@ class _HostViewState extends State<HostView> {
   Widget build(BuildContext context) {
     final colors = Theme.of(context).extension<ColorsConfig>()!;
     final textTheme = Theme.of(context).textTheme;
-    final isFirstQuestionCountdown =
-        _controller.phase == HostPhase.countdown &&
-        _controller.currentQuestionIndex == 0;
 
     String title;
     switch (_controller.phase) {
@@ -97,9 +91,7 @@ class _HostViewState extends State<HostView> {
     }
 
     return Scaffold(
-      backgroundColor: isFirstQuestionCountdown
-          ? colors.primary
-          : colors.background,
+      backgroundColor: colors.background,
       body: AnimatedSwitcher(
         duration: const Duration(milliseconds: 420),
         switchInCurve: Curves.easeOutCubic,
@@ -116,14 +108,7 @@ class _HostViewState extends State<HostView> {
             ),
           );
         },
-        child: isFirstQuestionCountdown
-            ? FirstQuestionCountdown(
-                key: const ValueKey('host-first-countdown'),
-                remainingMs: _controller.countdownRemainingMs,
-                questionLabel: 'Question 1',
-                participantCount: _controller.participants.length,
-              )
-            : SafeArea(
+        child: SafeArea(
                 key: ValueKey('host-${_controller.phase.name}'),
                 child: Column(
                   children: [
@@ -2248,17 +2233,6 @@ class _HostViewState extends State<HostView> {
               if (top3.isNotEmpty)
                 _buildPodiumRow(top3, colors, textTheme),
               const SizedBox(height: 24),
-              Text(
-                'Use reverse QR if a participant answer did not arrive over LAN.',
-                style: textTheme.bodyMedium?.copyWith(color: colors.mutedText),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 24),
-              AppButton.outlined(
-                label: 'Scan Reverse QR',
-                onPressed: () => _openReverseQrScanner(context),
-              ),
-              const SizedBox(height: 12),
               AppButton.primary(
                 label: 'Done',
                 onPressed: () => Navigator.of(context).pop(),
@@ -2270,25 +2244,4 @@ class _HostViewState extends State<HostView> {
     );
   }
 
-  Future<void> _openReverseQrScanner(BuildContext context) async {
-    final result = await Navigator.of(context).push<ReverseQrImportResult>(
-      MaterialPageRoute(
-        builder: (_) => ReverseQrScannerPage(
-          onImport: _controller.importReverseQrSubmission,
-        ),
-      ),
-    );
-
-    if (!context.mounted || result == null) {
-      return;
-    }
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          'Imported ${result.participantName}: ${result.importedAnswerCount} jawaban, ${result.totalScore} pts, rank #${result.rank}.',
-        ),
-      ),
-    );
-  }
 }

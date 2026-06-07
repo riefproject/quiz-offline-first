@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
 import '../../../services/auth_service.dart';
-import '../qr/reverse_qr_submission_page.dart';
 import '../../../theme/colors_config.dart';
 import '../../../widgets/components/app_button.dart';
 import '../../../models/master_payload.dart';
@@ -489,32 +488,33 @@ class _ClientViewState extends State<ClientView> {
   Widget _buildFinished(BuildContext context) {
     final colors = Theme.of(context).extension<ColorsConfig>()!;
     final textTheme = Theme.of(context).textTheme;
+    final lost = _controller.hostDisconnected;
 
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.emoji_events_rounded, size: 64, color: colors.secondary),
+          Icon(
+            lost ? Icons.link_off_rounded : Icons.emoji_events_rounded,
+            size: 64,
+            color: lost ? Colors.redAccent.shade200 : colors.secondary,
+          ),
           const SizedBox(height: 24),
           Text(
-            'Game Over!',
+            lost ? 'Host Disconnected' : 'Game Over!',
             style: textTheme.headlineMedium?.copyWith(
               fontWeight: FontWeight.w800,
             ),
           ),
           const SizedBox(height: 8),
           Text(
-            'You submitted ${_controller.myAnswers.length} answer(s).',
+            lost
+                ? 'The host has left the game.\nYou submitted ${_controller.myAnswers.length} answer(s).'
+                : 'You submitted ${_controller.myAnswers.length} answer(s).',
+            textAlign: TextAlign.center,
             style: textTheme.bodyLarge?.copyWith(color: colors.mutedText),
           ),
           const SizedBox(height: 32),
-          AppButton.outlined(
-            label: 'Show Sync QR',
-            onPressed: _controller.myAnswers.isEmpty
-                ? null
-                : () => _openReverseQrSubmission(context),
-          ),
-          const SizedBox(height: 12),
           AppButton.primary(
             label: 'Done',
             onPressed: () {
@@ -529,22 +529,6 @@ class _ClientViewState extends State<ClientView> {
             },
           ),
         ],
-      ),
-    );
-  }
-
-  Future<void> _openReverseQrSubmission(BuildContext context) async {
-    final session = AuthService.currentSession;
-    final participantUserId =
-        session?.userId ??
-        'guest_${_controller.joinedGameId ?? 0}_${_controller.clientId}';
-    final submission = _controller.buildReverseQrSubmission(
-      participantUserId: participantUserId,
-    );
-
-    await Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => ReverseQrSubmissionPage(submission: submission),
       ),
     );
   }

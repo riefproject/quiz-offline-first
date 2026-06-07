@@ -44,6 +44,7 @@ class LanService {
   // --- Client mode state ---
   WebSocket? _socket;
   final _hostDataController = StreamController<Uint8List>.broadcast();
+  final _connectionLostController = StreamController<void>.broadcast();
   bool _isClient = false;
 
   // --- Discovery mode state ---
@@ -58,6 +59,9 @@ class LanService {
 
   /// Client mode: raw bytes from the host.
   Stream<Uint8List> get onHostData => _hostDataController.stream;
+
+  /// Client mode: fires when the host WebSocket connection is lost.
+  Stream<void> get onConnectionLost => _connectionLostController.stream;
 
   /// Discovery mode: games found via UDP broadcast.
   Stream<DiscoveredGame> get onGameDiscovered => _discoveryController.stream;
@@ -292,10 +296,12 @@ class LanService {
       },
       onDone: () {
         log.i('LanService: host connection closed');
+        service._connectionLostController.add(null);
         service._hostDataController.close();
       },
       onError: (e) {
         log.w('LanService: host connection error — $e');
+        service._connectionLostController.add(null);
         service._hostDataController.close();
       },
     );
@@ -434,6 +440,7 @@ class LanService {
 
     _clientDataController.close();
     _hostDataController.close();
+    _connectionLostController.close();
     _discoveryController.close();
 
     _isHost = false;
