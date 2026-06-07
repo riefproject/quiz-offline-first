@@ -221,6 +221,7 @@ class HostController extends ChangeNotifier {
   }
 
   Future<void> nextQuestion() async {
+    AudioService.instance.stopBgm();
     _countdownTimer?.cancel();
     _countdownTimer = null;
     _questionTimer?.cancel();
@@ -278,6 +279,8 @@ class HostController extends ChangeNotifier {
     _questionRemainingMs = questionDuration;
     notifyListeners();
 
+    AudioService.instance.playBgm();
+
     _questionTimer = Timer.periodic(const Duration(milliseconds: 100), (_) {
       _questionRemainingMs -= 100;
       if (_questionRemainingMs <= 0) {
@@ -293,6 +296,7 @@ class HostController extends ChangeNotifier {
   void endQuestion() {
     _questionTimer?.cancel();
     _questionTimer = null;
+    AudioService.instance.stopBgm();
     if (_currentQuestionIndex < 0 || _currentQuestionIndex >= questions.length) {
       return;
     }
@@ -330,6 +334,7 @@ class HostController extends ChangeNotifier {
   }
 
   Future<void> nextFromLeaderboard() async {
+    AudioService.instance.stopBgm();
     _countdownTimer?.cancel();
     _countdownTimer = null;
     _questionTimer?.cancel();
@@ -453,6 +458,7 @@ class HostController extends ChangeNotifier {
 
   @override
   void dispose() {
+    AudioService.instance.stopBgm();
     _countdownTimer?.cancel();
     _questionTimer?.cancel();
     _clientSub?.cancel();

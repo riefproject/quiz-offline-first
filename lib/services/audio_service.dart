@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math';
 
 import 'package:audioplayers/audioplayers.dart';
@@ -13,6 +14,10 @@ class AudioService {
   AudioPlayer? _bgmPlayer;
   AudioPlayer? _sfxPlayer;
   AudioPlayer? _jinglePlayer;
+
+  String? _currentBgmTrack;
+  bool _bgmStoppedIntentionally = false;
+  StreamSubscription? _bgmStateSub;
 
   static const _bgmTracks = [
     'audio/bgm/Points_On_The_Line.mp3',
@@ -34,18 +39,37 @@ class AudioService {
 
   Future<void> playBgm() async {
     try {
-      final track = _bgmTracks[Random().nextInt(_bgmTracks.length)];
+      _currentBgmTrack = _bgmTracks[Random().nextInt(_bgmTracks.length)];
       final p = _getPlayer('bgm');
-      await p.setReleaseMode(ReleaseMode.loop);
-      await p.play(AssetSource(track));
-      log.i('AudioService: BGM started — $track');
+      _bgmStoppedIntentionally = false;
+
+      _bgmStateSub?.cancel();
+      _bgmStateSub = p.onPlayerStateChanged.listen((state) {
+        if (state == PlayerState.completed && !_bgmStoppedIntentionally) {
+          _restartBgm();
+        }
+      });
+
+      await p.play(AssetSource(_currentBgmTrack!));
+      log.i('AudioService: BGM started — $_currentBgmTrack');
     } catch (e) {
       log.e('AudioService: playBgm failed — $e');
     }
   }
 
+  Future<void> _restartBgm() async {
+    if (_currentBgmTrack == null) return;
+    try {
+      await _bgmPlayer?.play(AssetSource(_currentBgmTrack!));
+      log.i('AudioService: BGM restarted');
+    } catch (e) {
+      log.e('AudioService: BGM restart failed — $e');
+    }
+  }
+
   Future<void> stopBgm() async {
     try {
+      _bgmStoppedIntentionally = true;
       await _bgmPlayer?.stop();
       log.i('AudioService: BGM stopped');
     } catch (e) {
@@ -71,6 +95,7 @@ class AudioService {
   }
 
   void dispose() {
+    _bgmStateSub?.cancel();
     _bgmPlayer?.dispose();
     _sfxPlayer?.dispose();
     _jinglePlayer?.dispose();
