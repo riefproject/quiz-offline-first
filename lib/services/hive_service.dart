@@ -11,6 +11,8 @@ class HiveService {
   static const String _pesertaSesiBox = 'pesertaSesiBox';
   static const String _jawabanPesertaBox = 'jawabanPesertaBox';
   static const String _hasilAkhirBox = 'hasilAkhirBox';
+  static const String _deletedQuizzesBox = 'deletedQuizzesBox';
+  static const String _deletedSoalsBox = 'deletedSoalsBox';
 
   static Future<void> init() async {
     // Inisialisasi storage lokal HP untuk Hive
@@ -37,6 +39,8 @@ class HiveService {
       Hive.openBox<PesertaSesi>(_pesertaSesiBox),
       Hive.openBox<JawabanPeserta>(_jawabanPesertaBox),
       Hive.openBox<HasilAkhir>(_hasilAkhirBox),
+      Hive.openBox<String>(_deletedQuizzesBox),
+      Hive.openBox<String>(_deletedSoalsBox),
     ]);
     
     print('Hive Local Database Initialized Successfully');
@@ -52,6 +56,8 @@ class HiveService {
   static Box<PesertaSesi> get pesertaSesiBox => Hive.box<PesertaSesi>(_pesertaSesiBox);
   static Box<JawabanPeserta> get jawabanPesertaBox => Hive.box<JawabanPeserta>(_jawabanPesertaBox);
   static Box<HasilAkhir> get hasilAkhirBox => Hive.box<HasilAkhir>(_hasilAkhirBox);
+  static Box<String> get deletedQuizzesBox => Hive.box<String>(_deletedQuizzesBox);
+  static Box<String> get deletedSoalsBox => Hive.box<String>(_deletedSoalsBox);
 
   static Future<void> clearQuizCache() async {
     await quizBox.clear();
@@ -61,6 +67,8 @@ class HiveService {
     await pesertaSesiBox.clear();
     await jawabanPesertaBox.clear();
     await hasilAkhirBox.clear();
+    await deletedQuizzesBox.clear();
+    await deletedSoalsBox.clear();
   }
 
   /// Menutup seluruh koneksi Hive (biasanya dipakai sebelum aplikasi dimatikan / dispose)
@@ -80,6 +88,8 @@ class HiveService {
     await pesertaSesiBox.clear();
     await jawabanPesertaBox.clear();
     await hasilAkhirBox.clear();
+    await deletedQuizzesBox.clear();
+    await deletedSoalsBox.clear();
     print('Semua data di dalam Hive telah dibersihkan');
   }
 }

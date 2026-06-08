@@ -59,10 +59,24 @@ class QuizSyncService {
 
       syncError.value = null; // Clear previous errors
 
+      // Process Deletions First
+      final deletedQuizzes = HiveService.deletedQuizzesBox.values.toList();
+      for (var id in deletedQuizzes) {
+        await MongoDatabase.quizCollection.deleteOne({'_id': id});
+        await HiveService.deletedQuizzesBox.delete(id);
+      }
+
+      final deletedSoals = HiveService.deletedSoalsBox.values.toList();
+      for (var id in deletedSoals) {
+        await MongoDatabase.soalCollection.deleteOne({'_id': id});
+        await HiveService.deletedSoalsBox.delete(id);
+      }
+
       // Fetch Quizzes from Mongo
       final mongoQuizzes = await MongoDatabase.quizCollection.find().toList();
       for (var qMap in mongoQuizzes) {
         final q = Quiz.fromJson(qMap);
+        if (HiveService.deletedQuizzesBox.containsKey(q.id)) continue;
         final localQ = HiveService.quizBox.get(q.id);
         if (localQ == null || localQ.isSynced) {
           await HiveService.quizBox.put(q.id, q);
@@ -73,6 +87,7 @@ class QuizSyncService {
       final mongoSoals = await MongoDatabase.soalCollection.find().toList();
       for (var sMap in mongoSoals) {
         final s = Soal.fromJson(sMap);
+        if (HiveService.deletedSoalsBox.containsKey(s.id)) continue;
         final localS = HiveService.soalBox.get(s.id);
         if (localS == null || localS.isSynced) {
           await HiveService.soalBox.put(s.id, s);

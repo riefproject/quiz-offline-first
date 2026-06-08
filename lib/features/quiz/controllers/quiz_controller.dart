@@ -94,6 +94,7 @@ class QuizController extends ChangeNotifier {
     final existingQuestions = getQuestionsForQuiz(quizId);
     for (var q in existingQuestions) {
       await HiveService.soalBox.delete(q.id);
+      await HiveService.deletedSoalsBox.put(q.id, q.id);
     }
 
     for (var q in questions) {
@@ -118,9 +119,12 @@ class QuizController extends ChangeNotifier {
     final questions = getQuestionsForQuiz(quizId);
     for (var q in questions) {
       await HiveService.soalBox.delete(q.id);
+      await HiveService.deletedSoalsBox.put(q.id, q.id);
     }
 
     await HiveService.quizBox.delete(quizId);
+    await HiveService.deletedQuizzesBox.put(quizId, quizId);
     notifyListeners();
+    QuizSyncService().syncNow();
   }
 }
