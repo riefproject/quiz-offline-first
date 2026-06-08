@@ -2179,7 +2179,7 @@ class _HostViewState extends State<HostView> {
 
     final byRank = {for (final e in top3) e.rank: e};
 
-    final heights = [110.0, 80.0, 60.0];
+    final heights = [80.0, 110.0, 60.0];
     final podiumColors = [
       Colors.grey.shade400,
       Colors.yellow.shade600,
